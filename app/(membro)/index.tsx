@@ -11,6 +11,15 @@ export default function NovaPagina() {
       <TouchableOpacity style={styles.adminButton} onPress={() => router.push('/loginadmin')}>
         <Text style={styles.adminButtonText}>Logar como Admin</Text>
       </TouchableOpacity>
+      <TouchableOpacity style={styles.adminButton} onPress={() => router.push('/loginscreen')}>
+        <Text style={styles.adminButtonText}>Logar usuário comum</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.adminButton} onPress={() => router.push('/criarusuario')}>
+        <Text style={styles.adminButtonText}>Criar conta</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.adminButton} onPress={() => router.push('/principal')}>
+        <Text style={styles.adminButtonText}>Principal</Text>
+      </TouchableOpacity>
 
       {/* Imagem */}
       <Image
