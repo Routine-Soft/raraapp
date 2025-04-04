@@ -20,6 +20,9 @@ export default function NovaPagina() {
       <TouchableOpacity style={styles.adminButton} onPress={() => router.push('/principal')}>
         <Text style={styles.adminButtonText}>Principal</Text>
       </TouchableOpacity>
+      <TouchableOpacity style={styles.adminButton} onPress={() => router.push('/igreja')}>
+        <Text style={styles.adminButtonText}>Criar igreja</Text>
+      </TouchableOpacity>
 
       {/* Imagem */}
       <Image

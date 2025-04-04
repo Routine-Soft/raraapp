@@ -9,7 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 
-const API_URL = 'http://192.168.247.102:3000';
+const API_URL = 'http://192.168.247.108:3000';
 
 type User = {
   _id: string;

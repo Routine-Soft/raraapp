@@ -27,7 +27,7 @@ export default function CriateUser() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // API URL
-  const API_URL = "http://192.168.247.104:3000"; // Substitua pelo seu IP e porta do servidor
+  const API_URL = "http://192.168.247.108:3000"; // Substitua pelo seu IP e porta do servidor
 
   // Handle the button register
   const handleRegister = async () => {
