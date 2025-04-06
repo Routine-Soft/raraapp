@@ -1,10 +1,11 @@
 // app/login.tsx
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ScrollView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import RNPickerSelect from 'react-native-picker-select';
+import axios from 'axios';
 
 export default function CriateUser() {
   //Expo Routes
@@ -25,9 +26,29 @@ export default function CriateUser() {
   const [ddd, setDdd] = useState('');
   const [selectedDDI, setSelectedDDI] = useState('+55'); // DDI padrão (Brasil)
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [listaIgrejas, setListaIgrejas] = useState([]);
 
   // API URL
-  const API_URL = "http://192.168.247.108:3000"; // Substitua pelo seu IP e porta do servidor
+  const API_URL = "http://192.168.162.60:8080"; // Substitua pelo seu IP e porta do servidor
+
+  // GET IGrejas
+  const getIGrejas = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/igreja/getall`)
+      const igrejas = response.data
+
+      const nomesDasIgrejas = igrejas.map((igreja: { name: any; }) => igreja.name)
+      setListaIgrejas(nomesDasIgrejas); // salva os nomes no estado
+      console.log('Igrejas buscadas com sucesso')
+    } catch (error) {
+      console.log('Erro ao buscar igrejas')
+    }
+  }
+
+  useEffect(() => {
+    getIGrejas();
+  }, []);
+  
 
   // Handle the button register
   const handleRegister = async () => {
@@ -49,7 +70,7 @@ export default function CriateUser() {
         password,
       };
 
-      const response = await fetch(`${API_URL}/user/criar`, {
+      const response = await fetch(`${API_URL}/user/post`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -88,6 +109,7 @@ export default function CriateUser() {
         source={require('@/assets/images/logo.jpg')}
         style={styles.headerImage}
       />
+            <Button title="pegar" onPress={getIGrejas}  />
       <Text style={styles.title}>Comunhão RARA</Text>
       <Text style={styles.subtitle}>Criar conta</Text>
 
@@ -191,6 +213,9 @@ export default function CriateUser() {
         style={styles.input}
       >
         <Picker.Item label="Selecione" value="" />
+        {listaIgrejas.map((nome, index) => (
+          <Picker.Item key={index} label={nome} value={nome} />
+        ))}
       </Picker>
 
       {/* Status */}

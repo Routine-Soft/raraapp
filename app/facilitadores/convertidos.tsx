@@ -9,17 +9,16 @@ import {
   ScrollView,
 } from 'react-native';
 
-const API_URL = 'http://192.168.247.108:3000';
+const API_URL = 'http://192.168.162.60:8080';
 
 type User = {
-  _id: string;
+  _id: string,
   name: string;
   whatsapp: string;
   email: string;
   gender: string;
   birthdate: string;
   endereco: string;
-  cg: string;
   igreja: string;
   status: string;
   batizado: string;
@@ -39,7 +38,7 @@ export default function UserListScreen() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/user/buscar/`);
+      const response = await fetch(`${API_URL}/user/getall/`);
       const data = await response.json();
 
       // Ordenar a lista pelo campo `createdAt` (mais recente primeiro)
@@ -66,15 +65,15 @@ export default function UserListScreen() {
       const monthYear = `${createdAt.getMonth() + 1}-${createdAt.getFullYear()}`; // Ex: "1-2025"
       const year = `${createdAt.getFullYear()}`;
 
-      // Relatório mensal
-      if (!monthlyReport[monthYear]) {
-        monthlyReport[monthYear] = { accepted: 0, reconciled: 0, changedChurch: 0, baptized: 0, notBaptized: 0 };
-      }
-      if (user.status === 'Aceitou') monthlyReport[monthYear].accepted += 1;
-      if (user.status === 'Reconciliado') monthlyReport[monthYear].reconciled += 1;
-      if (user.igreja !== 'Igreja de origem') monthlyReport[monthYear].changedChurch += 1;
-      if (user.batizado === 'Sim') monthlyReport[monthYear].baptized += 1;
-      else monthlyReport[monthYear].notBaptized += 1;
+      // // Relatório mensal
+      // if (!monthlyReport[monthYear]) {
+      //   monthlyReport[monthYear] = { accepted: 0, reconciled: 0, changedChurch: 0, baptized: 0, notBaptized: 0 };
+      // }
+      // if (user.status === 'Aceitou') monthlyReport[monthYear].accepted += 1;
+      // if (user.status === 'Reconciliado') monthlyReport[monthYear].reconciled += 1;
+      // if (user.igreja !== 'Deseja trocar de Igreja') monthlyReport[monthYear].changedChurch += 1;
+      // if (user.batizado === 'Sim') monthlyReport[monthYear].baptized += 1;
+      // else monthlyReport[monthYear].notBaptized += 1;
 
       // Relatório anual
       if (!yearlyReport[year]) {
@@ -82,7 +81,7 @@ export default function UserListScreen() {
       }
       if (user.status === 'Aceitou') yearlyReport[year].accepted += 1;
       if (user.status === 'Reconciliado') yearlyReport[year].reconciled += 1;
-      if (user.igreja !== 'Igreja de origem') yearlyReport[year].changedChurch += 1;
+      if (user.status === 'Deseja trocar de Igreja') yearlyReport[year].changedChurch += 1;
       if (user.batizado === 'Sim') yearlyReport[year].baptized += 1;
       else yearlyReport[year].notBaptized += 1;
     });
@@ -112,7 +111,7 @@ export default function UserListScreen() {
       ) : (
         <>
           {/* Relatório Mensal */}
-          <Text style={styles.reportTitle}>Relatório Mensal</Text>
+          {/* <Text style={styles.reportTitle}>Relatório Mensal</Text>
           {Object.keys(monthlyReport).map((monthYear) => {
             const report = monthlyReport[monthYear];
             return (
@@ -126,7 +125,7 @@ export default function UserListScreen() {
                 <Text>{`Total: ${report.accepted + report.reconciled + report.changedChurch}`}</Text>
               </View>
             );
-          })}
+          })} */}
 
           {/* Relatório Anual */}
           <Text style={styles.reportTitle}>Relatório Anual</Text>
@@ -137,10 +136,10 @@ export default function UserListScreen() {
                 <Text>{`Ano: ${year}`}</Text>
                 <Text>{`Aceitaram: ${report.accepted}`}</Text>
                 <Text>{`Reconciliado: ${report.reconciled}`}</Text>
-                <Text>{`Trocaram de Igreja: ${report.changedChurch}`}</Text>
+                <Text>{`Troca de Igreja: ${report.changedChurch}`}</Text>
                 <Text>{`Batizados: ${report.baptized}`}</Text>
                 <Text>{`Não Batizados: ${report.notBaptized}`}</Text>
-                <Text>{`Total: ${report.accepted + report.reconciled + report.changedChurch}`}</Text>
+                <Text>{`Total convite da graça: ${report.accepted + report.reconciled + report.changedChurch}`}</Text>
               </View>
             );
           })}
@@ -161,10 +160,7 @@ export default function UserListScreen() {
               <Text style={styles.cardText}>Email: {item.email}</Text>
               <Text style={styles.cardText}>Gênero: {item.gender}</Text>
               <Text style={styles.cardText}>Data de Nascimento: {item.birthdate}</Text>
-              <Text style={styles.cardText}>Endereço: {item.endereco}</Text>
-              <Text style={styles.cardText}>CG: {item.cg}</Text>
               <Text style={styles.cardText}>Igreja: {item.igreja}</Text>
-              <Text style={styles.cardText}>Admin: {item.admin ? 'Sim' : 'Não'}</Text>
             </View>
           ))}
         </>

@@ -14,10 +14,11 @@ export default function CriarIgreja() {
   const [pastor2, setPastor2] = useState('')
   const [pais, setPais] = useState('')
   const [estado, setEstado] = useState('')
-  const [endereco, setEndereco] = useState('');
+  const [endereço, setEndereço] = useState('');
   const [totalMembros, setTotalMembros] = useState<number>(0)
   // API URL
-  const API_URL = "http://192.168.247.108:3000"; // Substitua pelo seu IP e porta do servidor
+  //const API_URL = "http://192.168.247.108:3000"; // Substitua pelo seu IP e porta do servidor
+  const API_URL ='http://192.168.162.60:8080'
 
   // Handle the button register
   const handleRegister = async () => {
@@ -29,7 +30,7 @@ export default function CriarIgreja() {
         pastor2,
         pais,
         estado,
-        endereco,
+        endereço,
         totalMembros
       };
 
@@ -40,14 +41,18 @@ export default function CriarIgreja() {
         })
         console.log('Igreja criada com sucesso', response.data)
         alert('Igreja criada com sucesso')
+        
+        // Limpar os inputs
+        setName('')
+        setPastor1('')
+        setPastor2('')
+        setPais('')
+        setEstado('')
+        setEndereço('')
       } catch (error) {
         console.error('Erro ao criar igreja:', error)
         alert('Erro ao criar igreja')
       }
-
-      // Limpar os inputs
-      setName('');
-      setEndereco('');
     } catch (error) {
       console.error("Erro ao conectar ao servidor:", error);
       alert('Erro ao cadastrar usuário');
@@ -90,25 +95,7 @@ export default function CriarIgreja() {
         style={styles.input}
       />
 
-    <Text style={styles.label}>Co-Pastor</Text>
-      <TextInput
-        placeholder=""
-        value={pastor2}
-        onChangeText={setPastor2}
-        style={styles.input}
-      />
-
-      {/* Endereço */}
-      <Text style={styles.label}>Endereço</Text>
-      <TextInput
-        placeholder=""
-        value={endereco}
-        onChangeText={setEndereco}
-        style={styles.input}
-      />
-
-      {/* Endereço */}
-      <Text style={styles.label}>País</Text>
+    <Text style={styles.label}>País</Text>
       <TextInput
         placeholder=""
         value={pais}
@@ -129,21 +116,10 @@ export default function CriarIgreja() {
       <Text style={styles.label}>Endereço</Text>
       <TextInput
         placeholder=""
-        value={endereco}
-        onChangeText={setEndereco}
+        value={endereço}
+        onChangeText={setEndereço}
         style={styles.input}
       />
-
-      {/* Endereço */}
-      <Text style={styles.label}>Total de Membros</Text>
-      <TextInput
-        placeholder=""
-        value={estado}
-        onChangeText={setEstado}
-        style={styles.input}
-      />
-
-
 
       <Button title="Criar conta" onPress={handleRegister} />
     </ScrollView>
