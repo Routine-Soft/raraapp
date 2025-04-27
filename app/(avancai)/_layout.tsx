@@ -15,7 +15,7 @@ export default function TabLayout() {
         headerShown: false,
       }}>
       <Tabs.Screen
-        name="home"
+        name="index"
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
@@ -24,14 +24,24 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="avançai"
+        name="convertidos"
         options={{
-          title: 'Avançai',
+          title: 'Convertidos',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'book' : 'book-outline'} size={24} color={color} />
+            <Ionicons name={focused ? 'people' : 'people-outline'} size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="todosalunos"
+        options={{
+          title: 'Alunos & Membresia',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'people' : 'people-outline'} size={24} color={color} />
           ),
         }}
       />
     </Tabs>
+    
   );
 }

@@ -22,14 +22,14 @@ export default function CriateUser() {
   const [igreja, setIgreja] = useState('');
   const [status, setStatus] = useState('');
   const [batizado, setBatizado] = useState('');
-  const [password, setPassword] = useState('123');
+  const [password, setPassword] = useState('');
   const [ddd, setDdd] = useState('');
   const [selectedDDI, setSelectedDDI] = useState('+55'); // DDI padrão (Brasil)
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [listaIgrejas, setListaIgrejas] = useState([]);
 
   // API URL
-  const API_URL = "http://192.168.162.60:8080"; // Substitua pelo seu IP e porta do servidor
+  const API_URL = "http://192.168.247.103:8080"; // Substitua pelo seu IP e porta do servidor
 
   // GET IGrejas
   const getIGrejas = async () => {
@@ -70,32 +70,14 @@ export default function CriateUser() {
         password,
       };
 
-      const response = await fetch(`${API_URL}/user/post`, {
-        method: "POST",
+      const response = await axios.post(`${API_URL}/user/post`, userData, {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(userData),
       });
-      const data = await response.json();
-      console.log("Usuário cadastrado com sucesso:", data);
+      console.log("Usuário cadastrado com sucesso:", response.data);
       alert('Usuário cadastrado com sucesso');
-
-      // Limpar os inputs
-      setName('');
-      setEmail('');
-      setWhatsapp('');
-      setBirthday('');
-      setGender('');
-      setEndereco('');
-      setCg('');
-      setIgreja('');
-      setStatus('');
-      setBatizado('');
-      setPassword('');  // Caso queira limpar a senha também
-      setDdd('');
-      setSelectedDDI('+55');  // Resetar o DDI para o padrão
-      setSelectedImage(null);  // Limpar a imagem, caso haja
+      router.replace('/login')
     } catch (error) {
       console.error("Erro ao conectar ao servidor:", error);
       alert('Erro ao cadastrar usuário');
@@ -109,7 +91,6 @@ export default function CriateUser() {
         source={require('@/assets/images/logo.jpg')}
         style={styles.headerImage}
       />
-            <Button title="pegar" onPress={getIGrejas}  />
       <Text style={styles.title}>Comunhão RARA</Text>
       <Text style={styles.subtitle}>Criar conta</Text>
 
@@ -230,7 +211,7 @@ export default function CriateUser() {
         <Picker.Item label="Aceitou" value="Aceitou" />
         <Picker.Item label="Reconciliou" value="Reconciliou" />
         <Picker.Item label="Deseja trocar de Igreja" value="Deseja trocar de igreja" />
-        <Picker.Item label="Já sou Membro" value="Já sou membro" />
+        <Picker.Item label="Membro" value="Membro" />
       </Picker>
 
       {/* Batizado */}
@@ -244,6 +225,15 @@ export default function CriateUser() {
         <Picker.Item label="Sim" value="Sim" />
         <Picker.Item label="Não" value="Não" />
       </Picker>
+
+      {/* Endereço */}
+      <Text style={styles.label}>Senha</Text>
+      <TextInput
+        placeholder=""
+        value={password}
+        onChangeText={setPassword}
+        style={styles.input}
+      />
 
       <Button title="Criar conta" onPress={handleRegister} />
     </ScrollView>

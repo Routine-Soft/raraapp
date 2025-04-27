@@ -15,18 +15,18 @@ export default function HomeScreen() {
       <Text style={styles.title}>Comunhão Rara</Text>
 
       <Text style={styles.subtitle}>
-        Seja bem-vindo ao aplicativo da Comunhão Rara. Aqui você terá todas as informações da igreja na palma da sua mão.
+        Bem-vindo ao aplicativo da Comunhão Rara. Todas as informações da igreja na palma da sua mão.
       </Text>
 
       {/* Botão para Login */}
-      <TouchableOpacity style={styles.button} onPress={() => router.replace('/loginscreen')}>
+      <TouchableOpacity style={styles.button} onPress={() => router.push('/login')}>
         <Text style={styles.buttonText}>Fazer login</Text>
       </TouchableOpacity>
 
       {/* Botão para Criar Usuário */}
       <Text style={styles.signupText}>
         Não tem cadastro ainda?{' '}
-        <Text style={styles.signupLink} onPress={() => router.replace('/criarusuario')}>
+        <Text style={styles.signupLink} onPress={() => router.push('/criarusuario')}>
           Criar conta
         </Text>
       </Text>

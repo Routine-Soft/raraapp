@@ -5,6 +5,7 @@ import { View, Text, TextInput, Button, StyleSheet, ScrollView , Image} from 're
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import RNPickerSelect from 'react-native-picker-select';
+import AuthGuard from '../hooks/AuthGuard';
 
 export default function CGScreen() {
   //Expo Routes
@@ -83,7 +84,8 @@ export default function CGScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <AuthGuard>
+      <ScrollView contentContainerStyle={styles.container}>
       {/* Imagem acima do título */}
       <Image
         source={require('@/assets/images/logo.jpg')}
@@ -206,7 +208,7 @@ export default function CGScreen() {
         <Picker.Item label="Aceitou" value="Aceitou" />
         <Picker.Item label="Reconciliou" value="Reconciliou" />
         <Picker.Item label="Deseja trocar de Igreja" value="Deseja trocar de igreja" />
-        <Picker.Item label="Já sou Membro" value="Já sou membro" />
+        <Picker.Item label="Membro" value="Membro" />
       </Picker>
 
       {/* Batizado */}
@@ -224,6 +226,7 @@ export default function CGScreen() {
       <Button title="Cadastrar" onPress={handleRegister} />
 
     </ScrollView>
+    </AuthGuard>
   );
 }
 

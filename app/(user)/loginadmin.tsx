@@ -5,6 +5,7 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useRouter } from 'expo-router'; // Importar useRouter para navegação
+import AuthGuard from '../hooks/AuthGuard';
 
 // Tipagem do login
 type LoginInfo = {
@@ -18,6 +19,8 @@ const logins: LoginInfo[] = [
   {username: "liderlocalcg", password: "a2a2"},
   {username: "facilitadores", password: "a3a3"},
   {username: "lideravancai", password: "a4a4"},
+  {username: "midialocal", password: "a5a5"},
+  {username: "lidergeral", password: "a6a6"},
 ]
 
 export default function HomeScreen() {
@@ -39,10 +42,12 @@ export default function HomeScreen() {
     if (usuarioValido) {
       // Mapa de rotas associando usuários às suas respectivas páginas
       const rotas: { [key: string]: string } = {
-        supervisorcg: "/supervisorcg", // Rota para supervisorcg
-        liderlocalcg: "/liderlocalcg", // Rota para lider local
-        facilitadores: "/facilitadores", // Rota para facilitadores
-        lideravancai: "/lideravancai", // Rota para liderança avançai
+        supervisorcg: "/(supervisorcg)", // Rota para supervisorcg
+        liderlocalcg: "/(liderlocalcg)", // Rota para lider local
+        facilitadores: "/(facilitadores)", // Rota para facilitadores
+        lideravancai: "/(avancai)", // Rota para liderança avançai
+        midialocal: "/(midialocal)", // Rota para liderança avançai
+        lidergeral: "/(presidente)", // Rota para liderança avançai
       };
   
       // Buscar a rota correspondente ao usuário
@@ -62,8 +67,8 @@ export default function HomeScreen() {
   
 
   return (
-    
-    <View style={styles.container}>
+    <AuthGuard>
+      <View style={styles.container}>
       <View>
       <Image
                 source={require('@/assets/images/logopequena.jpg')}
@@ -97,6 +102,18 @@ export default function HomeScreen() {
         onPress={() => setModalVisible(true)} // Abre o modal
       >
         <Text style={styles.adminText}>Liderança Avançai</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.adminButton}
+        onPress={() => setModalVisible(true)} // Abre o modal
+      >
+        <Text style={styles.adminText}>Midia Local</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.adminButton}
+        onPress={() => setModalVisible(true)} // Abre o modal
+      >
+        <Text style={styles.adminText}>Liderança Geral</Text>
       </TouchableOpacity>
 
       {/* Modal */}
@@ -138,6 +155,7 @@ export default function HomeScreen() {
         </View>
       </Modal>
     </View>
+    </AuthGuard>
   );
 }
 

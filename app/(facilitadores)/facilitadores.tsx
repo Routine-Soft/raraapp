@@ -5,6 +5,7 @@ import { View, Text, TextInput, Button, StyleSheet, ScrollView, Image } from 're
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import RNPickerSelect from 'react-native-picker-select';
+import AuthGuard from '../hooks/AuthGuard';
 
 export default function FacilitadoresScreen() {
   //Expo Routes
@@ -27,7 +28,7 @@ export default function FacilitadoresScreen() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // API URL
-  const API_URL = "http://192.168.247.102:3000"; // Substitua pelo seu IP e porta do servidor
+  const API_URL = "http://192.168.247.103:8080"; // Substitua pelo seu IP e porta do servidor
 
   // Handle the button register
   const handleRegister = async () => {
@@ -49,7 +50,7 @@ export default function FacilitadoresScreen() {
         password,
       };
 
-      const response = await fetch(`${API_URL}/user/criar`, {
+      const response = await fetch(`${API_URL}/user/post`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -82,7 +83,8 @@ export default function FacilitadoresScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <AuthGuard>
+      <ScrollView contentContainerStyle={styles.container}>
       {/* Imagem acima do título */}
       <Image
         source={require('@/assets/images/logo.jpg')}
@@ -205,7 +207,7 @@ export default function FacilitadoresScreen() {
         <Picker.Item label="Aceitou" value="Aceitou" />
         <Picker.Item label="Reconciliou" value="Reconciliou" />
         <Picker.Item label="Deseja trocar de Igreja" value="Deseja trocar de igreja" />
-        <Picker.Item label="Já sou Membro" value="Já sou membro" />
+        <Picker.Item label="Membro" value="Membro" />
       </Picker>
 
       {/* Batizado */}
@@ -222,6 +224,7 @@ export default function FacilitadoresScreen() {
 
       <Button title="Cadastrar" onPress={handleRegister} />
     </ScrollView>
+    </AuthGuard>
   );
 }
 

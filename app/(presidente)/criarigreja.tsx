@@ -4,8 +4,10 @@ import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import RNPickerSelect from 'react-native-picker-select';
 import axios from 'axios'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import AuthGuard from '../hooks/AuthGuard';
 
-export default function CriarIgreja() {
+export default function CriarIgreja () {
     //Expo Routes
   const router = useRouter();
   // States
@@ -15,10 +17,11 @@ export default function CriarIgreja() {
   const [pais, setPais] = useState('')
   const [estado, setEstado] = useState('')
   const [endereço, setEndereço] = useState('');
+  const [cep, setCEP] = useState('')
   const [totalMembros, setTotalMembros] = useState<number>(0)
+
   // API URL
-  //const API_URL = "http://192.168.247.108:3000"; // Substitua pelo seu IP e porta do servidor
-  const API_URL ='http://192.168.162.60:8080'
+  const API_URL ='http://192.168.247.103:8080'
 
   // Handle the button register
   const handleRegister = async () => {
@@ -31,13 +34,19 @@ export default function CriarIgreja() {
         pais,
         estado,
         endereço,
+        cep,
         totalMembros
       };
+      const token = await AsyncStorage.getItem('token')
+      console.log('token', token)
 
       // envia os dados para o backend
       try {
         const response = await axios.post(`${API_URL}/igreja/post`, userData, {
-          headers: {"Content-Type": "application/json"}
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": token // Aqui é o formato correto
+          }
         })
         console.log('Igreja criada com sucesso', response.data)
         alert('Igreja criada com sucesso')
@@ -49,18 +58,20 @@ export default function CriarIgreja() {
         setPais('')
         setEstado('')
         setEndereço('')
-      } catch (error) {
+        setCEP('')
+      } catch (error: any) {
         console.error('Erro ao criar igreja:', error)
-        alert('Erro ao criar igreja')
+        Alert.alert('Erro: ', error.response.data.message);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao conectar ao servidor:", error);
       alert('Erro ao cadastrar usuário');
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <AuthGuard>
+      <ScrollView contentContainerStyle={styles.container}>
       {/* Imagem acima do título */}
       <Image
         source={require('@/assets/images/logo.jpg')}
@@ -120,9 +131,17 @@ export default function CriarIgreja() {
         onChangeText={setEndereço}
         style={styles.input}
       />
+      <Text style={styles.label}>CEP (somente números)</Text>
+      <TextInput
+        placeholder=""
+        value={cep}
+        onChangeText={setCEP}
+        style={styles.input}
+      />
 
       <Button title="Criar conta" onPress={handleRegister} />
     </ScrollView>
+    </AuthGuard>
   );
 }
 

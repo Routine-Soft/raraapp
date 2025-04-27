@@ -1,3 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -8,8 +10,9 @@ import {
   Linking,
   ScrollView,
 } from 'react-native';
+import AuthGuard from '../hooks/AuthGuard';
 
-const API_URL = 'http://192.168.162.60:8080';
+const API_URL = 'http://192.168.247.103:8080';
 
 type User = {
   _id: string,
@@ -36,13 +39,18 @@ export default function UserListScreen() {
 
   // Buscar lista de usuários
   const fetchUsers = async () => {
+    const token = await AsyncStorage.getItem('token'); // ou SecureStore se estiver usando
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/user/getall/`);
-      const data = await response.json();
+      const response = await axios.get(`${API_URL}/user/getall/`, {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `${token}` // Aqui é o formato correto
+        }
+      });
 
       // Ordenar a lista pelo campo `createdAt` (mais recente primeiro)
-      const sortedData = data.sort(
+      const sortedData = response.data.sort(
         (a: User, b: User) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
 
@@ -100,7 +108,8 @@ export default function UserListScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <AuthGuard>
+      <ScrollView style={styles.container}>
       <Text style={styles.title}>Lista de Usuários Cadastrados</Text>
       <TouchableOpacity style={styles.refreshButton} onPress={fetchUsers}>
         <Text style={styles.refreshButtonText}>Atualizar</Text>
@@ -166,6 +175,7 @@ export default function UserListScreen() {
         </>
       )}
     </ScrollView>
+    </AuthGuard>
   );
 }
 

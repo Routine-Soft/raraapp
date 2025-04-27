@@ -4,6 +4,7 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useRouter } from 'expo-router'; // Importar useRouter para navegação
+import AuthGuard from '../hooks/AuthGuard';
 
 export default function HomeScreen() {
   const router = useRouter(); // Inicializar o router
@@ -13,7 +14,8 @@ export default function HomeScreen() {
   };
 
   return (
-    <ParallaxScrollView
+    <AuthGuard>
+      <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
       headerImage={
         <Image
@@ -26,6 +28,7 @@ export default function HomeScreen() {
         <HelloWave />
       </ThemedView>
     </ParallaxScrollView>
+    </AuthGuard>
   );
 }
 

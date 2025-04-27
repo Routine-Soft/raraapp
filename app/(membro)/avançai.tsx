@@ -1,5 +1,5 @@
 // src/screens/AulasScreen.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -8,13 +8,20 @@ import {
   TouchableOpacity,
   Image,
   Button,
-  useWindowDimensions
+  useWindowDimensions,
+  Alert
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import HTMLView from 'react-native-htmlview';
-
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BackHandler } from 'react-native';
+import AuthGuard from '../hooks/AuthGuard';
+import { router } from 'expo-router';
 
 type Aula = {
+  modulo: string;
+  numero: string;
   titulo: string;
   videoUrl: string;
   descricao: string;
@@ -23,6 +30,8 @@ type Aula = {
 
 const reset: Aula[] = [
   {
+    modulo: 'reset',
+    numero: '1',
     titulo: 'Lição 1 - Reconhecendo a Cristo como Senhor',
     videoUrl: 'https://www.youtube.com/embed/fuh3jtveqD4?si=1oVPbPYH3tYsPuPZ',
     descricao:
@@ -84,6 +93,8 @@ Lembre-se dos passos básicos para se tornar em crente:
     imagem: require('@/assets/images/reset1.png'),
   },
   {
+    modulo: 'reset',
+    numero: '2',
     titulo: 'Lição 2 - Conhecendo Jesus Cristo',
     videoUrl: 'https://www.youtube.com/embed/_xtmwkQtx6w?si=wob4bSq7fvzHLO0S',
     descricao:
@@ -107,6 +118,8 @@ Deus pode nos ensinar muitas coisas, mesmo quando estamos cheios de dúvidas. Ha
     imagem: require('@/assets/images/reset2.png'),
   },
   {
+    modulo: 'reset',
+    numero: '3',
     titulo: 'Lição 3 - Graça e Justificação',
     videoUrl: 'https://www.youtube.com/embed/thLa8h6v5pI?si=sfeiM59AyJ9vTAAj',
     descricao:
@@ -141,6 +154,8 @@ Através de Jesus Cristo, o amor de Deus foi enraizado novamente na criação. A
     imagem: require('@/assets/images/reset3.png'),
   },
     {
+      modulo: 'reset',
+      numero: '4',
     titulo: 'Lição 4 - O Pecado e o Arrependimento',
     videoUrl: 'https://www.youtube.com/embed/ARZyyOPEGAQ?si=pnOBMeIpOlpMJWhR',
     descricao:
@@ -170,6 +185,8 @@ A trajetória de pecado tem sido uma prática da humanidade. Mesmo Jesus Cristo 
     imagem: require('@/assets/images/reset4.png'),
   },
   {
+    modulo: 'reset',
+    numero: '5',
     titulo: 'Lição 5 - Princípíos da Oração',
     videoUrl: 'https://www.youtube.com/embed/ENu07d8zIZA?si=qQewKnMmX8U7oZUB',
     descricao:
@@ -232,6 +249,8 @@ d)	Devemos orar sem cessar ( l Ts 5.17 / Cl 4.2 / Sl 40.1 / Ef 6.18 / Lc 18.1-8)
     imagem: require('@/assets/images/reset5.png'),
   },
   {
+    modulo: 'reset',
+    numero: '6',
     titulo: 'Lição 6 - Batismo',
     videoUrl: 'https://www.youtube.com/embed/mzPPMX60c4g?si=g4Dbbn4OMfXjMVQD',
     descricao:
@@ -296,6 +315,8 @@ Se você está realizando esse curso, sinta-se privilegiado por essas informaç�
     imagem: require('@/assets/images/reset6.png'),
   },
   {
+    modulo: 'reset',
+    numero: '7',
     titulo: 'Lição 7 - Santificação',
     videoUrl: 'https://www.youtube.com/embed/6BoZ8MQh_P8?si=7yWKmlks8-geWSuI',
     descricao:
@@ -352,6 +373,8 @@ Que em todo tempo possamos estar comprometidos em nos tornar pessoas mais santas
     imagem: require('@/assets/images/reset7.png'),
   },
   {
+    modulo: 'reset',
+    numero: '8',
     titulo: 'Lição 8 - Ceia do Senhor',
     videoUrl: 'https://www.youtube.com/embed/x3fofsEiiyw?si=FIftDDd3vgLngjsP',
     descricao:
@@ -388,6 +411,8 @@ Na CRIEP, todo mês há pelo menos um culto da Ceia. Esse culto não foi ideia d
     imagem: require('@/assets/images/reset8.png'),
   },
   {
+    modulo: 'reset',
+    numero: '9',
     titulo: 'Lição 9 - Vícios',
     videoUrl: 'https://www.youtube.com/embed/1w0_5drOyKM?si=kWgpvMpfRa1hFkIh',
     descricao:
@@ -431,6 +456,8 @@ Colossenses 2.14
     imagem: require('@/assets/images/reset9.png'),
   },
   {
+    modulo: 'reset',
+    numero: '10',
     titulo: 'Lição 10 - Jugo Desigual',
     videoUrl: 'https://www.youtube.com/embed/sWrRxP7sbJs?si=8nwuY1mRfT26HpM2',
     descricao:
@@ -459,6 +486,8 @@ Que possamos com toda a força do nosso ser e com a ajuda do Espírito Santo, se
     imagem: require('@/assets/images/reset10.png'),
   },
   {
+    modulo: 'reset',
+    numero: '11',
     titulo: 'Lição 11 - SERVO',
     videoUrl: 'https://www.youtube.com/embed/sWrRxP7sbJs?si=8nwuY1mRfT26HpM2',
     descricao:
@@ -523,6 +552,8 @@ vida. Tomar a cruz de Cristo não é um fardo e sim obediência a vontade de Deu
 
 const start: Aula[] = [
   {
+    modulo: 'start',
+    numero: '1',
     titulo: 'Lição 1 - Conhecendo a bíblia',
     videoUrl: 'https://www.youtube.com/embed/q-w0MYaLKS8?si=NODP5_RzTWoyvNJc',
     descricao:
@@ -576,6 +607,8 @@ Para anotações das observações e correlações do seu estudo.
     imagem: require('@/assets/images/start1.png'),
   },
   {
+    modulo: 'start',
+    numero: '2',
     titulo: 'Lição 2 - Conhecendo a Deus',
     videoUrl: 'https://www.youtube.com/embed/w4KbJsqNDC4?si=XN_Zz_gUgpULRD00',
     descricao:
@@ -619,6 +652,8 @@ O Pai, Jesus Cristo e o Espírito Santo existem em unidade são três pessoas re
     imagem: require('@/assets/images/start2.png'),
   },
   {
+    modulo: 'start',
+    numero: '3',
     titulo: 'Lição 3 - A Salvação',
     videoUrl: 'https://www.youtube.com/embed/nctL4jP0bHY?si=E3G6gwLGiiv9-SLq',
     descricao:
@@ -675,6 +710,8 @@ Romanos 6.19(b): “Assim apresentai agora os vossos membros à justiça para a 
     imagem: require('@/assets/images/start3.png'),
   },
     {
+      modulo: 'start',
+      numero: '4',
     titulo: 'Lição 4 - Conhecendo a Igreja',
     videoUrl: 'https://www.youtube.com/embed/5WUd_c4cQxA?si=iHzaeD69ctGbyu0e',
     descricao:
@@ -732,6 +769,8 @@ Há duas cerimônias ordenadas por Cristo para que os Cristãos as pratiquem: o 
     imagem: require('@/assets/images/start4.png'),
   },
   {
+    modulo: 'start',
+    numero: '5',
     titulo: 'Lição 5 - Princípios da Oração',
     videoUrl: 'https://www.youtube.com/embed/8XFZ2DwA3V0?si=pSTtmmRS3hR2LRcm',
     descricao:
@@ -780,6 +819,8 @@ Filipenses 4.6: “Não estejais inquietos por coisa alguma, antes as vossas pet
     imagem: require('@/assets/images/start5.png'),
   },
   {
+    modulo: 'start',
+    numero: '6',
     titulo: 'Lição 6 - O Discípulo Obediente',
     videoUrl: 'https://www.youtube.com/embed/QFN28g7PwZM?si=LHFCCQ5PHsJzTiat',
     descricao:
@@ -822,6 +863,8 @@ Para finalizar, veja na Bíblia os efeitos da obediência na vida dos que a prat
     imagem: require('@/assets/images/start6.png'),
   },
   {
+    modulo: 'start',
+    numero: '7',
     titulo: 'Lição 7 - O Dizimista e Ofertante',
     videoUrl: 'https://www.youtube.com/embed/iWb4GuuPmg8?si=eDIevtRkunejqxKT',
     descricao:
@@ -869,6 +912,8 @@ A visão missionária da CRIEP tem se amadurecido ao longo dos anos com o foco e
     imagem: require('@/assets/images/start7.png'),
   },
   {
+    modulo: 'start',
+    numero: '8',
     titulo: 'Lição 8 - O Discipulo e o Espírito Santo',
     videoUrl: 'https://www.youtube.com/embed/woaRLoYujx0?si=BWyOTmylSClQDIpj',
     descricao:
@@ -920,6 +965,8 @@ b)	No Cristão: Consola, conduz, ensina todas as coisas e lembra o que o Senhor 
     imagem: require('@/assets/images/start8.png'),
   },
   {
+    modulo: 'start',
+    numero: '9',
     titulo: 'Lição 9 - Vivendo Cheio do Espírito Santo',
     videoUrl: 'https://www.youtube.com/embed/1J4Gowxacow?si=-ut_UrvdJ9Vj6BwH',
     descricao:
@@ -969,6 +1016,8 @@ Cultive também o fruto do Espírito para que seus atos venham provas a todos qu
     imagem: require('@/assets/images/start9.png'),
   },
   {
+    modulo: 'start',
+    numero: '10',
     titulo: 'Lição 10 - Os dons do Espírito Santo',
     videoUrl: 'https://www.youtube.com/embed/ygEdcGRtvdY?si=8Uu12szTbR4sVWv5',
     descricao:
@@ -1007,6 +1056,8 @@ Dicas!
     imagem: require('@/assets/images/start10.png'),
   },
   {
+    modulo: 'start',
+    numero: '11',
     titulo: 'Lição 11 - O Fruto do Espírito',
     videoUrl: 'https://www.youtube.com/embed/8DyAAH2Mv_k?si=tU_PrNElZudDek2-',
     descricao:
@@ -1054,6 +1105,8 @@ O fruto do Espírito não é produzido na vida de alguém que vive de qualquer m
     imagem: require('@/assets/images/start11.png'),
   },
   {
+    modulo: 'start',
+    numero: '12',
     titulo: 'Lição 12 - Escatologia',
     videoUrl: 'https://www.youtube.com/embed/EHa57aT2WWE?si=Q8TnSbsSdVTNMYCB',
     descricao:
@@ -1087,6 +1140,8 @@ Arrebatamento, após a Grande Tribulação, após a Guerra de Armagedom, após o
 
 const cdv: Aula[] = [
   {
+    modulo: 'cdv',
+    numero: '1',
     titulo: 'Lição 1 - CDV: Visão e Pilares',
     videoUrl: 'https://www.youtube.com/embed/MkRQqATogCU?si=k2y1mzA92MtZTIrc',
     descricao:
@@ -1142,6 +1197,8 @@ Somos uma igreja que adora a Deus, crê em Jesus Cristo, a através do Espírito
     imagem: require('@/assets/images/cdv1.png'),
   },
   {
+    modulo: 'cdv',
+    numero: '2',
     titulo: 'Lição 2 - A igreja e sua missão',
     videoUrl: 'https://www.youtube.com/live/DK2qWOSDGic?si=SYpuf35vD1I86Ewl',
     descricao:
@@ -1187,7 +1244,7 @@ IGREJA LOCAL	1.	É visível - composta do povo de Deus de uma localidade, que se
 
 III.	A IGREJA E SUA MISSÃO
 A Igreja como organismo e organização só poderá realizar a sua missão de estabelecer o Reino de Deus na terra, partindo do princípio que sua relação com Deus e sua sinergia com as pessoas estejam firmadas e fundamentadas na palavra de Deus.
-Na CRIEP, em nosso programa de integração, apresentamos os passos básicos da fé (Reset); partilhamos nossas crenças (Start) e a Igreja que desejamos ser e direcionamos a mão de obra das pessoas para o serviço do Reino de Deus (CDV).
+Na CRIEP, em nosso programa de integração, apresentamos os passos básicos da cdv); partilhamos nossas crenças (Start) e a Igreja que desejamos ser e direcionamos a mão de obra das pessoas para o serviço do Reino de Deus (CDV).
 O processo de integração da CRIEP e seus respectivos pilares buscam desconstruir um evangelho guiado por propósitos e interesses pessoais, para um evangelho genuíno que está sensível à vontade de Deus, responsável e maduro, no que diz respeito à missão da Igreja.
 Como organização e instituição, buscamos na luz da palavra de Deus o aperfeiçoamento para cumprir com excelência a missão e propagação do evangelho.
  
@@ -1198,6 +1255,8 @@ Se os discípulos que fazem parte desta missão não estiverem devidamente orien
     imagem: require('@/assets/images/cdv2.png'),
   },
   {
+    modulo: 'cdv',
+    numero: '3',
     titulo: 'Lição 3 - O discípulo, a igreja e a cultura',
     videoUrl: 'https://www.youtube.com/embed/-ns29AeYozg?si=sLRQ-wKboJPTggNo',
     descricao:
@@ -1249,6 +1308,8 @@ CONCLUSÃO
     imagem: require('@/assets/images/cdv3.png'),
   },
     {
+      modulo: 'cdv',
+      numero: '4',
     titulo: 'Lição 4 - Descobrindo os Dons Espirituais',
     videoUrl: 'https://www.youtube.com/embed/hHdynW5aNKU?si=zzO5XwjCZGM1LbKq',
     descricao:
@@ -1334,6 +1395,8 @@ Em outras palavras, como Christian A. Schwarz diz: “À medida que os cristãos
     imagem: require('@/assets/images/cdv4.png'),
   },
   {
+    modulo: 'cdv',
+    numero: '5',
     titulo: 'Lição 5 - Os dons de serviço prático e a igreja',
     videoUrl: 'https://www.youtube.com/embed/0cNAqvWIqxQ?si=yb7fj2tCwGfUDpoI',
     descricao:
@@ -1451,6 +1514,8 @@ Intercessão	Oração e súplica por extensos períodos de tempo e recebem respo
     imagem: require('@/assets/images/cdv5.png'),
   },
   {
+    modulo: 'cdv',
+    numero: '6',
     titulo: 'Lição 6 - Os dons de ministério e a prática excelente',
     videoUrl: 'https://www.youtube.com/embed/UGEjmcza0aI?si=IJ0UdOHPU5A9sVyl',
     descricao:
@@ -1506,6 +1571,8 @@ Este é o segundo teste de dons. Logo abaixo, você encontrará 25 afirmações.
     imagem: require('@/assets/images/cdv6.png'),
   },
   {
+    modulo: 'cdv',
+    numero: '7',
     titulo: 'Lição 7 - A importância dos talentos naturais',
     videoUrl: 'https://www.youtube.com/embed/LGVvLI1cmjU?si=mkpPo-_JGbBJn-nG',
     descricao:
@@ -1572,6 +1639,8 @@ Deus precisa de você para a tarefa para a qual Ele o está preparando. Será ne
     imagem: require('@/assets/images/cdv7.png'),
   },
   {
+    modulo: 'cdv',
+    numero: '8',
     titulo: 'Lição 8 - A vocação e o chamado divino',
     videoUrl: 'https://www.youtube.com/embed/mzxQ6vxRwUI?si=Xo57p5F4LnsIJHcx',
     descricao:
@@ -1615,6 +1684,8 @@ O grande desafio é definir a motivação correta. Para que possamos ter um obje
     imagem: require('@/assets/images/cdv8.png'),
   },
   {
+    modulo: 'cdv',
+    numero: '9',
     titulo: 'Lição 9 - Motivação: Servindo melhor',
     videoUrl: 'https://www.youtube.com/embed/CThlekbyqiQ?si=C-mBpNN_2LwNh7z0',
     descricao:
@@ -1638,6 +1709,8 @@ Os elementos básicos do nosso estilo pessoal são motivação e organização. 
     imagem: require('@/assets/images/cdv9.png'),
   },
   {
+    modulo: 'cdv',
+    numero: '10',
     titulo: 'Lição 10 - Descobrindo seu estilo pessoal',
     videoUrl: 'https://www.youtube.com/embed/N01LKNkT4r0?si=UumwXY425D1vErKB',
     descricao:
@@ -1666,6 +1739,8 @@ Você tem oportunidades para realizar tarefas.	Você tem oportunidades para dese
     imagem: require('@/assets/images/cdv10.png'),
   },
   {
+    modulo: 'cdv',
+    numero: '11',
     titulo: 'Lição 11 - Compreendendo o temperamento pessoal',
     videoUrl: 'https://www.youtube.com/embed/4S2NmIkARpE?si=-VHqPWIHsie5FBSe',
     descricao:
@@ -1703,6 +1778,8 @@ A seguir, você vai responder a um teste sobre os 4 temperamentos. Assinale em c
     imagem: require('@/assets/images/cdv11.png'),
   },
   {
+    modulo: 'cdv',
+    numero: '12',
     titulo: 'Lição 12 Qual é a sua missão',
     videoUrl: 'https://www.youtube.com/embed/kFIYzCqkIqs?si=C_u7H0trsNawCHi2',
     descricao:
@@ -1759,8 +1836,51 @@ const AulasScreen: React.FC = () => {
   const [aulaSelecionada, setAulaSelecionada] = useState<Aula | null>(null);
   const { width } = useWindowDimensions();
 
+  useEffect(() => {
+    // só intercepta o botão se alguma aula estiver selecionada
+    const backAction = () => {
+      if (aulaSelecionada !== null) {
+        setAulaSelecionada(null)
+        return true; //impede que volte sozinho
+      }
+      return false; // impede voltar normalmente
+    }
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction)
+
+    // Remove listener ao desmontar
+    return () => backHandler.remove();
+  }, [aulaSelecionada])
+
+  const aulaConcluida = async () => {
+    const token = await AsyncStorage.getItem('token')
+    const userString = await AsyncStorage.getItem('user')
+
+    try {
+      if (userString) {
+        const user = JSON.parse(userString)
+        await axios.patch(`http://192.168.247.103:8080/user/addToArray/${user._id}`, 
+          {
+            field: aulaSelecionada?.modulo,
+            value: aulaSelecionada?.numero,
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: token // JWT
+            }
+          })
+      }
+      Alert.alert('Aula Concluída com Sucesso')
+    } catch (error) {
+      Alert.alert('Erro ao concluir aula')
+    }
+  }
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <AuthGuard>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text></Text>
       {!aulaSelecionada ? (
         <View>
           {/* Logo no topo */}
@@ -1768,6 +1888,11 @@ const AulasScreen: React.FC = () => {
             source={require('@/assets/images/avancai.jpg')}
             style={styles.logo}
           />
+           <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.push('/hidden/alunoavancai')}>
+            <Text style={styles.buttonText}>Históricos do Aluno</Text>
+          </TouchableOpacity>
           <Text style={styles.titulo}>RESET</Text>
           
           <ScrollView
@@ -1831,18 +1956,14 @@ const AulasScreen: React.FC = () => {
           />
           <TouchableOpacity
             style={styles.button}
-            onPress={() => setAulaSelecionada(null)}>
+            onPress={() => aulaConcluida()}>
             <Text style={styles.buttonText}>Aula Concluída</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => setAulaSelecionada(null)}>
-            <Text style={styles.buttonText}>Voltar</Text>
           </TouchableOpacity>
 		  <Text style={styles.descricao}>{aulaSelecionada.descricao}</Text>
         </View>
       )}
     </ScrollView>
+    </AuthGuard>
   );
 };
 

@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  const API_URL = 'http://192.168.247.103:8080'
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -18,25 +21,21 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://192.168.247.108:3000/user/login', {
-        method: 'POST',
+      const response = await axios.post(`${API_URL}/user/login`, {email, password}, {
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      await AsyncStorage.setItem('token', response.data.token);
+      await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Erro ao fazer login');
-      }
+      console.log('todos os dados do user: ' + JSON.stringify(response.data.user))
+      console.log('Token: ' + response.data.token)
 
-      await AsyncStorage.setItem('token', data.token);
-      await AsyncStorage.setItem('user', JSON.stringify(data.user));
-
-      Alert.alert('Sucesso', 'Login realizado com sucesso!');
-      router.replace('/'); // Redireciona para a tela principal
-    } catch (error) {
-      Alert.alert('Erro', (error as Error).message);
+      // Alert.alert('Sucesso', 'Login realizado com sucesso!');
+      router.replace('/home'); // Redireciona para a tela principal
+    } catch (error: any) {
+      Alert.alert('Erro: ', error.response.data.message);
+      console.log('Erro: ', error.response.data.message)
     } finally {
       setLoading(false);
     }
@@ -75,7 +74,7 @@ export default function LoginScreen() {
       </TouchableOpacity>
 
       <Text style={styles.signupText}>
-        Não tem conta? <Text style={styles.signupLink} onPress={() => router.replace('/criarusuario')}>Criar Conta</Text>
+        Não tem conta? <Text style={styles.signupLink} onPress={() => router.push('/criarusuario')}>Criar Conta</Text>
       </Text>
     </View>
   );
