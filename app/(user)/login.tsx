@@ -10,7 +10,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const API_URL = 'http://192.168.247.103:8080'
+  const API_URL = 'http://192.168.247.100:8080'
 
   const handleLogin = async () => {
     if (!email || !password) {

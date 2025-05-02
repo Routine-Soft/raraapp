@@ -21,7 +21,7 @@ export default function CriarIgreja () {
   const [totalMembros, setTotalMembros] = useState<number>(0)
 
   // API URL
-  const API_URL ='http://192.168.247.103:8080'
+  const API_URL ='http://192.168.247.100:8080'
 
   // Handle the button register
   const handleRegister = async () => {

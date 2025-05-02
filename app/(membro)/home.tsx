@@ -1,33 +1,68 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, Platform, ActivityIndicator, Alert } from 'react-native';
-import { useRouter } from 'expo-router'; // Para navegação
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  Platform,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+} from 'react-native';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../hooks/useAuth';
-import { BackHandler } from 'react-native'
-import { useEffect } from 'react'
-import { MaterialIcons, Feather } from '@expo/vector-icons'; // Ícone de logout
+import { BackHandler } from 'react-native';
+import { MaterialIcons, Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+
+type Midia = {
+  _id: string;
+  data: string;
+  hora: string;
+  titulo: string;
+  texto: string;
+  igreja: string;
+};
 
 export default function NovaPagina() {
-  const router = useRouter(); // Inicializar o router para navegação
-  const {authenticated, isLoading} = useAuth() // Usa o hook para verificar se está logado
+  const router = useRouter();
+  const { authenticated, isLoading } = useAuth();
+  const [midias, setMidias] = useState<Midia[]>([]);
 
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true)
-    return () => backHandler.remove()
-  }, [])
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true);
+    fetchMidias();
+    return () => backHandler.remove();
+  }, []);
+
+  const fetchMidias = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.get('http://192.168.247.100:8080/midiaLocal/get', {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token,
+        },
+      });
+      setMidias(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar mídias:', error);
+    }
+  };
 
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('token');
       await AsyncStorage.removeItem('user');
-      router.replace('/'); // Redireciona para tela de login
+      router.replace('/');
     } catch (err) {
       Alert.alert('Erro', 'Não foi possível sair. Tente novamente.');
     }
   };
-  
+
   if (isLoading) {
-    // Enquanto verifica o token, mostra loading
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#2cab77" />
@@ -36,69 +71,65 @@ export default function NovaPagina() {
   }
 
   if (!authenticated) {
-    // Caso não esteja autenticado, nem mostra a tela
     return null;
   }
 
   return (
-    <View style={styles.container}>
-
+    <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.topRow}>
-          {/*Colocar o EditUser aqui*/}
-          <TouchableOpacity onPress={() => router.push('/hidden/edituser')}>
-              <Feather name="edit" size={28} color="#fff" />
-            </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push('/hidden/edituser')}>
+          <Feather name="edit" size={28} color="#fff" />
+        </TouchableOpacity>
 
-          {/* Botão admin */}
-          <TouchableOpacity style={styles.adminButton} onPress={() => router.push('/loginadmin')}>
-            <Text style={styles.adminButtonText}>Logar como Admin</Text>
-          </TouchableOpacity>
+        <TouchableOpacity style={styles.adminButton} onPress={() => router.push('/loginadmin')}>
+          <Text style={styles.adminButtonText}>Logar como Admin</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity style={styles.adminButton} onPress={() => router.push('/(midialocal)/createAndUpdate')}>
-            <Text style={styles.adminButtonText}>TEste</Text>
-          </TouchableOpacity>
+        <TouchableOpacity style={styles.adminButton} onPress={() => router.push('/(midialocal)/createAndUpdate')}>
+          <Text style={styles.adminButtonText}>Criar Mídia</Text>
+        </TouchableOpacity>
 
-          {/* Botão de Logout*/}
-          <TouchableOpacity onPress={handleLogout}>
-            <MaterialIcons name="logout" size={28} color="#fff" />
-          </TouchableOpacity>
+        <TouchableOpacity onPress={handleLogout}>
+          <MaterialIcons name="logout" size={28} color="#fff" />
+        </TouchableOpacity>
       </View>
 
-      {/* Imagem */}
-      <Image
-        source={require('@/assets/images/logopequena.jpg')} // Corrigido o uso de require
-        style={styles.image}
-      />
+      <Image source={require('@/assets/images/logopequena.jpg')} style={styles.image} />
 
-      {/* Dizeres aleatórios */}
       <View style={styles.textContainer}>
         <Text style={styles.text}>Bem-vindo à nova página!</Text>
         <Text style={styles.text}>Aqui você pode explorar novas funcionalidades.</Text>
         <Text style={styles.text}>Sinta-se à vontade para testar!</Text>
       </View>
-    </View>
+
+      {/* Lista de informativos */}
+      <Text style={styles.subTitle}>Informativos:</Text>
+      {midias.map((midia) => (
+        <View key={midia._id} style={styles.card}>
+          <Text style={styles.cardTitle}>{midia.titulo}</Text>
+          <Text style={styles.cardText}>{midia.texto}</Text>
+          <Text style={styles.cardFooter}>📅 {midia.data} ⏰ {midia.hora}</Text>
+          <Text style={styles.cardFooter}>Igreja: {midia.igreja}</Text>
+        </View>
+      ))}
+    </ScrollView>
   );
 }
 
-// Estilos da página
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#000', // Cor de fundo
+    flexGrow: 1,
+    backgroundColor: '#000',
     alignItems: 'center',
-    justifyContent: 'flex-start', // Começar do topo
-    paddingTop: Platform.OS === 'ios' ? 50 : 30, // Padding para evitar sobreposição no iOS/Android
+    paddingTop: Platform.OS === 'ios' ? 50 : 30,
+    paddingHorizontal: 20,
   },
   adminButton: {
-    backgroundColor: '#2cab77', // Cor verde
+    backgroundColor: '#2cab77',
     paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5, // Sombras no Android
+    marginHorizontal: 5,
   },
   adminButtonText: {
     color: '#FFFFFF',
@@ -109,24 +140,52 @@ const styles = StyleSheet.create({
     width: 300,
     height: 200,
     borderRadius: 12,
-    marginBottom: 20, // Espaçamento abaixo da imagem
+    marginBottom: 20,
   },
   textContainer: {
-    paddingHorizontal: 20, // Espaçamento lateral para os textos
     alignItems: 'center',
+    marginBottom: 20,
   },
   text: {
     fontSize: 16,
     color: '#fff',
     textAlign: 'center',
-    marginBottom: 10, // Espaçamento entre os textos
+    marginBottom: 10,
   },
-
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '90%',
+    width: '100%',
     marginBottom: 20,
+    flexWrap: 'wrap',
+  },
+  subTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2cab77',
+    marginBottom: 10,
+    alignSelf: 'flex-start',
+  },
+  card: {
+    backgroundColor: '#1a1a1a',
+    padding: 16,
+    borderRadius: 10,
+    marginBottom: 16,
+    width: '100%',
+  },
+  cardTitle: {
+    color: '#2cab77',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  cardText: {
+    color: '#fff',
+    fontSize: 15,
+    marginBottom: 6,
+  },
+  cardFooter: {
+    color: '#ccc',
+    fontSize: 12,
   },
 });
