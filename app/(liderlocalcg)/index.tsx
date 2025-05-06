@@ -4,7 +4,7 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useRouter } from 'expo-router'; // Importar useRouter para navegação
-import AuthGuard from '../hooks/AuthGuard';
+import AuthGuard from '../../hooks/AuthGuard';
 
 export default function HomeScreen() {
   const router = useRouter(); // Inicializar o router

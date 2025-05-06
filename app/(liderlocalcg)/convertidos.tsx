@@ -10,9 +10,9 @@ import {
   Linking,
   ScrollView,
 } from 'react-native';
-import AuthGuard from '../hooks/AuthGuard';
+import AuthGuard from '../../hooks/AuthGuard';
 
-const API_URL = 'http://192.168.247.100:8080';
+const API_URL = 'http://192.168.247.103:8080';
 
 type User = {
   _id: string,

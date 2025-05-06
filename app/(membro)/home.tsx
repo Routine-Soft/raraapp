@@ -11,11 +11,11 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../hooks/useAuth';
 import { BackHandler } from 'react-native';
 import { MaterialIcons, Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import AuthGuard from '@/hooks/AuthGuard';
 
 type Midia = {
   _id: string;
@@ -28,7 +28,6 @@ type Midia = {
 
 export default function NovaPagina() {
   const router = useRouter();
-  const { authenticated, isLoading } = useAuth();
   const [midias, setMidias] = useState<Midia[]>([]);
 
   useEffect(() => {
@@ -40,7 +39,7 @@ export default function NovaPagina() {
   const fetchMidias = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await axios.get('http://192.168.247.100:8080/midiaLocal/get', {
+      const response = await axios.get('http://192.168.247.103:8080/midiaLocal/get', {
         headers: {
           'Content-Type': 'application/json',
           Authorization: token,
@@ -62,20 +61,9 @@ export default function NovaPagina() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#2cab77" />
-      </View>
-    );
-  }
-
-  if (!authenticated) {
-    return null;
-  }
-
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <AuthGuard>
+      <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.topRow}>
         <TouchableOpacity onPress={() => router.push('/hidden/edituser')}>
           <Feather name="edit" size={28} color="#fff" />
@@ -113,6 +101,7 @@ export default function NovaPagina() {
         </View>
       ))}
     </ScrollView>
+    </AuthGuard>
   );
 }
 

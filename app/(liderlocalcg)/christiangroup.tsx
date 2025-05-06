@@ -5,7 +5,7 @@ import { View, Text, TextInput, Button, StyleSheet, ScrollView , Image} from 're
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import RNPickerSelect from 'react-native-picker-select';
-import AuthGuard from '../hooks/AuthGuard';
+import AuthGuard from '../../hooks/AuthGuard';
 
 export default function CGScreen() {
   //Expo Routes

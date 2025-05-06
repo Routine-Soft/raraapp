@@ -4,7 +4,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import RNPickerSelect from 'react-native-picker-select';
-import AuthGuard from '../hooks/AuthGuard';
+import AuthGuard from '../../hooks/AuthGuard';
 
 
 interface EditarUsuarioProps {
@@ -33,7 +33,7 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({ userId, token }) => {
   const [loading, setLoading] = useState(true);
   const [listaIgrejas, setListaIgrejas] = useState([]);
   
-  const API_URL = 'http://192.168.247.100:8080'
+  const API_URL = 'http://192.168.247.103:8080'
 
   // GET IGrejas
   const getIGrejas = async () => {

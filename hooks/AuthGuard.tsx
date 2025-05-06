@@ -1,5 +1,4 @@
-// hooks/AuthGuard.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { useAuth } from './useAuth';
 import { useRouter } from 'expo-router';
@@ -12,6 +11,12 @@ export default function AuthGuard({ children }: Props) {
   const { authenticated, isLoading } = useAuth();
   const router = useRouter();
 
+  useEffect(() => {
+    if (!isLoading && !authenticated) {
+      router.replace('/');
+    }
+  }, [authenticated, isLoading]);
+
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -21,9 +26,8 @@ export default function AuthGuard({ children }: Props) {
   }
 
   if (!authenticated) {
-    router.replace('/'); // Redireciona para login
-    return null;
+    return null; // Evita render enquanto redireciona
   }
 
-  return (<>{children}</>);
+  return <>{children}</>;
 }

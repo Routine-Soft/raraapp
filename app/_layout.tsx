@@ -5,7 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { useAuth } from './hooks/useAuth';
+import { useAuth } from '../hooks/useAuth';
 
 SplashScreen.preventAutoHideAsync();
 

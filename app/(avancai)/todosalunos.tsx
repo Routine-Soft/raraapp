@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; // Ícones do Expo
 import axios from 'axios';
-import AuthGuard from '../hooks/AuthGuard';
+import AuthGuard from '../../hooks/AuthGuard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 
@@ -33,7 +33,7 @@ const Membresia: React.FC = () => {
   const fetchUsuarios = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await axios.get('http://192.168.247.100:8080/user/getall', {
+      const response = await axios.get('http://192.168.247.103:8080/user/getall', {
         headers: {
           'Content-Type': 'application/json',
           Authorization: token
@@ -70,7 +70,7 @@ const Membresia: React.FC = () => {
   const updateStatus = async (userId: string, status: string) => {
     try {
       const token = await AsyncStorage.getItem('token');
-      await axios.patch(`http://192.168.247.100:8080/user/patch/${userId}`, { status }, {
+      await axios.patch(`http://192.168.247.103:8080/user/patch/${userId}`, { status }, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: token

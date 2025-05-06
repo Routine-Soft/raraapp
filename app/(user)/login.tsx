@@ -10,7 +10,17 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const API_URL = 'http://192.168.247.100:8080'
+  const API_URL = 'http://192.168.247.103:8080'
+
+  const handleSubmit = async () => {
+    if (!email) return Alert.alert('Erro', 'Informe seu e-mail');
+    try {
+      await axios.post('http://192.168.247.103:8080/user/forgot-password', { email });
+      Alert.alert('Sucesso', 'Verifique seu e-mail para redefinir sua senha.');
+    } catch (err: any) {
+      Alert.alert('Erro', err.response?.data?.message || 'Erro ao enviar');
+    }
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -72,6 +82,10 @@ export default function LoginScreen() {
       <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
         {loading ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.buttonText}>Entrar</Text>}
       </TouchableOpacity>
+      <Text style={styles.forgotPassword} onPress={() => router.push('/resetpassword')}>
+      Esqueci minha senha
+      </Text>
+
 
       <Text style={styles.signupText}>
         Não tem conta? <Text style={styles.signupLink} onPress={() => router.push('/criarusuario')}>Criar Conta</Text>
@@ -123,6 +137,11 @@ const styles = StyleSheet.create({
   signupText: {
     color: '#ccc',
     fontSize: 14,
+    marginTop: 16,
+  },
+  forgotPassword: {
+    color: '#007BFF',
+    fontSize: 16,
     marginTop: 16,
   },
   signupLink: {

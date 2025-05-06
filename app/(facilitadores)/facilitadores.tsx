@@ -5,7 +5,7 @@ import { View, Text, TextInput, Button, StyleSheet, ScrollView, Image } from 're
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import RNPickerSelect from 'react-native-picker-select';
-import AuthGuard from '../hooks/AuthGuard';
+import AuthGuard from '../../hooks/AuthGuard';
 
 export default function FacilitadoresScreen() {
   //Expo Routes
@@ -28,7 +28,7 @@ export default function FacilitadoresScreen() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // API URL
-  const API_URL = "http://192.168.247.100:8080"; // Substitua pelo seu IP e porta do servidor
+  const API_URL = "http://192.168.247.103:8080"; // Substitua pelo seu IP e porta do servidor
 
   // Handle the button register
   const handleRegister = async () => {

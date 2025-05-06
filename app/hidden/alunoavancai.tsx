@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator, ScrollView, BackHandler } fr
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import AuthGuard from '@/app/hooks/AuthGuard';
+import AuthGuard from '@/hooks/AuthGuard';
 
 type AulasConcluidas = {
   reset: string[];
@@ -28,7 +28,7 @@ const AlunoAvancai: React.FC = () => {
         if (!userStr) return;
 
         const user = JSON.parse(userStr);
-        const response = await axios.get(`http://192.168.247.100:8080/user/get/${user._id}`, {
+        const response = await axios.get(`http://192.168.247.103:8080/user/get/${user._id}`, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: token

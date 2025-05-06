@@ -18,7 +18,7 @@ export function useAuth() {
         console.log('Token não existe')
         setAuthenticated(false);
         setIsLoading(false);
-        router.replace('/');
+        // router.replace('/'); // aqui
         return;
       }
 
@@ -31,7 +31,7 @@ export function useAuth() {
           console.log('Token expirou')
           await AsyncStorage.removeItem('token');
           setAuthenticated(false);
-          router.replace('/');
+          // router.replace('/');
         } else {
           // Token válido
           console.log('Token válido')
@@ -42,7 +42,7 @@ export function useAuth() {
         console.log('Erro ao decodificar Token')
         await AsyncStorage.removeItem('token');
         setAuthenticated(false);
-        router.replace('/');
+        // router.replace('/');
       }
 
       setIsLoading(false); // Finaliza o carregamento

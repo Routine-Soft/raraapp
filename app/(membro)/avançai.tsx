@@ -16,7 +16,7 @@ import HTMLView from 'react-native-htmlview';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BackHandler } from 'react-native';
-import AuthGuard from '../hooks/AuthGuard';
+import AuthGuard from '../../hooks/AuthGuard';
 import { router } from 'expo-router';
 
 type Aula = {
@@ -1859,7 +1859,7 @@ const AulasScreen: React.FC = () => {
     try {
       if (userString) {
         const user = JSON.parse(userString)
-        await axios.patch(`http://192.168.247.100:8080/user/addToArray/${user._id}`, 
+        await axios.patch(`http://192.168.247.103:8080/user/addToArray/${user._id}`, 
           {
             field: aulaSelecionada?.modulo,
             value: aulaSelecionada?.numero,
