@@ -9,7 +9,7 @@ export default function ResetPasswordScreen() {
   const [loading, setLoading] = useState(false);
   const { token } = useLocalSearchParams();
   const router = useRouter();
-  const API_URL = 'http://192.168.247.103:8080';
+  const API_URL = 'https://rara.cestsegtrabalho.com.br';
 
   const handleReset = async () => {
     if (!password || !confirmPassword) {

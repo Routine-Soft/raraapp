@@ -10,12 +10,12 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const API_URL = 'http://192.168.247.103:8080'
+  const API_URL = 'https://rara.cestsegtrabalho.com.br'
 
   const handleSubmit = async () => {
     if (!email) return Alert.alert('Erro', 'Informe seu e-mail');
     try {
-      await axios.post('http://192.168.247.103:8080/user/forgot-password', { email });
+      await axios.post('https://rara.cestsegtrabalho.com.br/user/forgot-password', { email });
       Alert.alert('Sucesso', 'Verifique seu e-mail para redefinir sua senha.');
     } catch (err: any) {
       Alert.alert('Erro', err.response?.data?.message || 'Erro ao enviar');
