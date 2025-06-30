@@ -79,12 +79,12 @@ export default function LoginScreen() {
         secureTextEntry
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+      {/* <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
         {loading ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.buttonText}>Entrar</Text>}
       </TouchableOpacity>
       <Text style={styles.forgotPassword} onPress={() => router.push('/resetpassword')}>
       Esqueci minha senha
-      </Text>
+      </Text> */}
 
 
       <Text style={styles.signupText}>
