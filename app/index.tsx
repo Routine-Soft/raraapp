@@ -9,7 +9,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       {/* Imagem */}
       <Image
-        source={require('@/assets/images/logopequena.jpg')} // Coloque a imagem desejada
+        source={require('@/assets/images/icon.png')} // Coloque a imagem desejada
         style={styles.image}
       />
       <Text style={styles.title}>Comunhão Rara</Text>

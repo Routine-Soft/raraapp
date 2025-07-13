@@ -88,7 +88,7 @@ export default function CGScreen() {
       <ScrollView contentContainerStyle={styles.container}>
       {/* Imagem acima do título */}
       <Image
-        source={require('@/assets/images/logo.jpg')}
+        source={require('@/assets/images/logo.png')}
         style={styles.headerImage}
       />
       <Text style={styles.title}>Christian Group</Text>

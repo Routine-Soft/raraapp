@@ -55,7 +55,7 @@ export default function LoginScreen() {
     <View style={styles.container}>
       {/* Imagem */}
       <Image
-        source={require('@/assets/images/logopequena.jpg')} // Corrigido o uso de require
+        source={require('@/assets/images/icon.png')} // Corrigido o uso de require
         style={styles.image}
       />
       <Text style={styles.title}>Fazer login</Text>

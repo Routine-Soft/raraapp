@@ -82,7 +82,7 @@ export default function NovaPagina() {
         </TouchableOpacity>
       </View>
 
-      <Image source={require('@/assets/images/logopequena.jpg')} style={styles.image} />
+      <Image source={require('@/assets/images/icon.png')} style={styles.image} />
 
       <View style={styles.textContainer}>
         <Text style={styles.text}>Bem-vindo à nova página!</Text>

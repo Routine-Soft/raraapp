@@ -71,7 +71,7 @@ export default function HomeScreen() {
       <View style={styles.container}>
       <View>
       <Image
-                source={require('@/assets/images/logopequena.jpg')}
+                source={require('@/assets/images/icon.png')}
                 style={styles.reactLogo}
               />
       </View>
