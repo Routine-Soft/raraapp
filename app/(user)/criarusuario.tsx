@@ -29,7 +29,7 @@ export default function CriateUser() {
   const [listaIgrejas, setListaIgrejas] = useState([]);
 
   // API URL
-  const API_URL = "https://rara.cestsegtrabalho.com.br"; // Substitua pelo seu IP e porta do servidor
+  const API_URL = "https://api.comunhaorara.com"; // Substitua pelo seu IP e porta do servidor
 
   // GET IGrejas
   const getIGrejas = async () => {

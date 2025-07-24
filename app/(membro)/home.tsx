@@ -39,7 +39,7 @@ export default function NovaPagina() {
   const fetchMidias = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await axios.get('https://rara.cestsegtrabalho.com.br/midiaLocal/get', {
+      const response = await axios.get('https://api.comunhaorara.com/midiaLocal/get', {
         headers: {
           'Content-Type': 'application/json',
           Authorization: token,

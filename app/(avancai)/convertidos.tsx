@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import AuthGuard from '../../hooks/AuthGuard';
 
-const API_URL = 'https://rara.cestsegtrabalho.com.br';
+const API_URL = 'https://api.comunhaorara.com';
 
 type User = {
   _id: string,

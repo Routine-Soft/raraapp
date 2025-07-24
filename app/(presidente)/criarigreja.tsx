@@ -21,7 +21,7 @@ export default function CriarIgreja () {
   const [totalMembros, setTotalMembros] = useState<number>(0)
 
   // API URL
-  const API_URL ='https://rara.cestsegtrabalho.com.br'
+  const API_URL ='https://api.comunhaorara.com'
 
   // Handle the button register
   const handleRegister = async () => {

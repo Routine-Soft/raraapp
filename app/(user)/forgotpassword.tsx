@@ -7,7 +7,7 @@ export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const API_URL = 'https://rara.cestsegtrabalho.com.br';
+  const API_URL = 'https://api.comunhaorara.com';
 
   const handleForgotPassword = async () => {
     if (!email) {

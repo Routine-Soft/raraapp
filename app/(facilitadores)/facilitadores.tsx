@@ -28,7 +28,7 @@ export default function FacilitadoresScreen() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // API URL
-  const API_URL = "https://rara.cestsegtrabalho.com.br"; // Substitua pelo seu IP e porta do servidor
+  const API_URL = "https://api.comunhaorara.com"; // Substitua pelo seu IP e porta do servidor
 
   // Handle the button register
   const handleRegister = async () => {

@@ -33,7 +33,7 @@ const Membresia: React.FC = () => {
   const fetchUsuarios = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await axios.get('https://rara.cestsegtrabalho.com.br/user/getall', {
+      const response = await axios.get('https://api.comunhaorara.com/user/getall', {
         headers: {
           'Content-Type': 'application/json',
           Authorization: token
@@ -70,7 +70,7 @@ const Membresia: React.FC = () => {
   const updateStatus = async (userId: string, status: string) => {
     try {
       const token = await AsyncStorage.getItem('token');
-      await axios.patch(`https://rara.cestsegtrabalho.com.br/user/patch/${userId}`, { status }, {
+      await axios.patch(`https://api.comunhaorara.com/user/patch/${userId}`, { status }, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: token

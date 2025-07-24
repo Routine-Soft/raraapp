@@ -33,7 +33,7 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({ userId, token }) => {
   const [loading, setLoading] = useState(true);
   const [listaIgrejas, setListaIgrejas] = useState([]);
   
-  const API_URL = 'https://rara.cestsegtrabalho.com.br'
+  const API_URL = 'https://api.comunhaorara.com'
 
   // GET IGrejas
   const getIGrejas = async () => {

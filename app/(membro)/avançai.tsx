@@ -1859,7 +1859,7 @@ const AulasScreen: React.FC = () => {
     try {
       if (userString) {
         const user = JSON.parse(userString)
-        await axios.patch(`https://rara.cestsegtrabalho.com.br/user/addToArray/${user._id}`, 
+        await axios.patch(`https://api.comunhaorara.com/user/addToArray/${user._id}`, 
           {
             field: aulaSelecionada?.modulo,
             value: aulaSelecionada?.numero,

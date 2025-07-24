@@ -15,6 +15,11 @@
     "ios": {
       "supportsTablet": true
     },
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "url": "https://u.expo.dev/80d63a73-bb33-49b9-a63e-f46b3e6db31f"
+    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
@@ -42,6 +47,9 @@
       "eas": {
         "projectId": "80d63a73-bb33-49b9-a63e-f46b3e6db31f"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

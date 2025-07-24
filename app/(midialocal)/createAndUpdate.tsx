@@ -31,7 +31,7 @@ const CreateAndUpdate: React.FC = () => {
   const fetchMidias = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await axios.get('https://rara.cestsegtrabalho.com.br/midiaLocal/get', {
+      const response = await axios.get('https://api.comunhaorara.com/midiaLocal/get', {
         headers: {
           'Content-Type': 'application/json',
           Authorization: token,
@@ -58,14 +58,14 @@ const CreateAndUpdate: React.FC = () => {
       
       if (editandoId) {
         // Atualizar mídia existente
-        await axios.patch(`https://rara.cestsegtrabalho.com.br/midiaLocal/patch/${editandoId}`, 
+        await axios.patch(`https://api.comunhaorara.com/midiaLocal/patch/${editandoId}`, 
           { data, hora, titulo, texto, igreja: igreja },
           { headers: { 'Content-Type': 'application/json', Authorization: token } }
         );
         Alert.alert('Mídia atualizada com sucesso!');
       } else {
         // Criar nova mídia
-        await axios.post('https://rara.cestsegtrabalho.com.br/midiaLocal/post',
+        await axios.post('https://api.comunhaorara.com/midiaLocal/post',
           { data, hora, titulo, texto, igreja: igreja },
           { headers: { 'Content-Type': 'application/json', Authorization: token } }
         );
@@ -102,7 +102,7 @@ const CreateAndUpdate: React.FC = () => {
         onPress: async () => {
           try {
             const token = await AsyncStorage.getItem('token');
-            await axios.delete(`https://rara.cestsegtrabalho.com.br/midiaLocal/delete/${id}`, {
+            await axios.delete(`https://api.comunhaorara.com/midiaLocal/delete/${id}`, {
               headers: { 'Content-Type': 'application/json', Authorization: token },
             });
             Alert.alert('Mídia deletada com sucesso!');

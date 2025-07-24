@@ -28,7 +28,7 @@ const AlunoAvancai: React.FC = () => {
         if (!userStr) return;
 
         const user = JSON.parse(userStr);
-        const response = await axios.get(`https://rara.cestsegtrabalho.com.br/user/get/${user._id}`, {
+        const response = await axios.get(`https://api.comunhaorara.com/user/get/${user._id}`, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: token

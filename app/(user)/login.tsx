@@ -10,12 +10,12 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const API_URL = 'https://rara.cestsegtrabalho.com.br'
+  const API_URL = 'https://api.comunhaorara.com'
 
   const handleSubmit = async () => {
     if (!email) return Alert.alert('Erro', 'Informe seu e-mail');
     try {
-      await axios.post('https://rara.cestsegtrabalho.com.br/user/forgot-password', { email });
+      await axios.post('https://api.comunhaorara.com/user/forgot-password', { email });
       Alert.alert('Sucesso', 'Verifique seu e-mail para redefinir sua senha.');
     } catch (err: any) {
       Alert.alert('Erro', err.response?.data?.message || 'Erro ao enviar');
