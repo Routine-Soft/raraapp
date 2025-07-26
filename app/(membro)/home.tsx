@@ -73,10 +73,6 @@ export default function NovaPagina() {
           <Text style={styles.adminButtonText}>Logar como Admin</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.adminButton} onPress={() => router.push('/(midialocal)/createAndUpdate')}>
-          <Text style={styles.adminButtonText}>Criar Mídia</Text>
-        </TouchableOpacity>
-
         <TouchableOpacity onPress={handleLogout}>
           <MaterialIcons name="logout" size={28} color="#fff" />
         </TouchableOpacity>
@@ -85,9 +81,7 @@ export default function NovaPagina() {
       <Image source={require('@/assets/images/icon.png')} style={styles.image} />
 
       <View style={styles.textContainer}>
-        <Text style={styles.text}>Bem-vindo à nova página!</Text>
-        <Text style={styles.text}>Aqui você pode explorar novas funcionalidades.</Text>
-        <Text style={styles.text}>Sinta-se à vontade para testar!</Text>
+        <Text style={styles.text}>Bem-vindo à Comunhão RARA</Text>
       </View>
 
       {/* Lista de informativos */}
@@ -96,8 +90,8 @@ export default function NovaPagina() {
         <View key={midia._id} style={styles.card}>
           <Text style={styles.cardTitle}>{midia.titulo}</Text>
           <Text style={styles.cardText}>{midia.texto}</Text>
-          <Text style={styles.cardFooter}>📅 {midia.data} ⏰ {midia.hora}</Text>
-          <Text style={styles.cardFooter}>Igreja: {midia.igreja}</Text>
+          <Text style={styles.cardFooter}>{midia.data} {midia.hora}</Text>
+          {/* <Text style={styles.cardFooter}>Igreja: {midia.igreja}</Text> */}
         </View>
       ))}
     </ScrollView>

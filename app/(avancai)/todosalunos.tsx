@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   verMais: {
-    color: '#2cab77',
+    color: '#f8f8f8ff',
     fontSize: 16,
     textDecorationLine: 'underline',
   },

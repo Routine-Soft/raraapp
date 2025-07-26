@@ -14,7 +14,7 @@ export default function TabLayout() {
         tabBarInactiveTintColor: '#fff', // Ícones brancos mesmo quando inativos
         headerShown: false,
       }}>
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
@@ -22,9 +22,9 @@ export default function TabLayout() {
             <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />
           ),
         }}
-      />
+      /> */}
       <Tabs.Screen
-        name="christiangroup"
+        name="index"
         options={{
           title: 'Christian Group',
           tabBarIcon: ({ color, focused }) => (
@@ -33,7 +33,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="convertidos"
+        name="christiangroup"
         options={{
           title: 'Convertidos',
           tabBarIcon: ({ color, focused }) => (

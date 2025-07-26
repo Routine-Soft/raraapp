@@ -15,12 +15,12 @@ type LoginInfo = {
 
 // Array de usuários para validação
 const logins: LoginInfo[] = [
-  {username: "supervisorcg", password: "a1a1"},
-  {username: "liderlocalcg", password: "a2a2"},
-  {username: "facilitadores", password: "a3a3"},
-  {username: "lideravancai", password: "a4a4"},
-  {username: "midialocal", password: "a5a5"},
-  {username: "lidergeral", password: "a6a6"},
+  {username: "supervisorcg", password: "0101"},
+  {username: "liderlocalcg", password: "0202"},
+  {username: "facilitadores", password: "0303"},
+  {username: "lideravancai", password: "0404"},
+  {username: "midialocal", password: "0505"},
+  {username: "lidergeral", password: "0606"},
 ]
 
 export default function HomeScreen() {
@@ -140,7 +140,6 @@ export default function HomeScreen() {
               placeholder="Senha"
               value={password}
               onChangeText={setPassword}
-              secureTextEntry
             />
 
             <View style={styles.buttonContainer}>
@@ -164,16 +163,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-
     backgroundColor: "#000",
   },
   reactLogo: {
-    height: 278,
-    width: 420,
+    height: 200,
+    width: 400,
     bottom: 0,
     left: -5,
     right: 0,
-    position: 'absolute',
+    alignSelf: 'center',
   },
   titleText: {
     color: "#fff",
@@ -237,6 +235,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 16,
     backgroundColor: "#fff",
+    color: '#000'
   },
   buttonContainer: {
     flexDirection: "row",

@@ -1,11 +1,12 @@
 // app/login.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ScrollView , Image} from 'react-native';
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import RNPickerSelect from 'react-native-picker-select';
 import AuthGuard from '../../hooks/AuthGuard';
+import axios from 'axios';
 
 export default function CGScreen() {
   //Expo Routes
@@ -26,9 +27,28 @@ export default function CGScreen() {
   const [ddd, setDdd] = useState('');
   const [selectedDDI, setSelectedDDI] = useState('+55'); // DDI padrão (Brasil)
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [listaIgrejas, setListaIgrejas] = useState([]);
 
   // API URL
-  const API_URL = "http://192.168.247.102:3000"; // Substitua pelo seu IP e porta do servidor
+  const API_URL = "https://api.comunhaorara.com"; // Substitua pelo seu IP e porta do servidor
+
+  // GET IGrejas
+  const getIGrejas = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/igreja/getall`)
+      const igrejas = response.data
+
+      const nomesDasIgrejas = igrejas.map((igreja: { name: any; }) => igreja.name)
+      setListaIgrejas(nomesDasIgrejas); // salva os nomes no estado
+      console.log('Igrejas buscadas com sucesso')
+    } catch (error) {
+      console.log('Erro ao buscar igrejas')
+    }
+  }
+
+  useEffect(() => {
+    getIGrejas();
+  }, []);
 
   // Handle the button register
   const handleRegister = async () => {
@@ -194,6 +214,9 @@ export default function CGScreen() {
         style={styles.input}
       >
         <Picker.Item label="Selecione" value="" />
+        {listaIgrejas.map((nome, index) => (
+          <Picker.Item key={index} label={nome} value={nome} />
+        ))}
       </Picker>
 
       {/* Status */}

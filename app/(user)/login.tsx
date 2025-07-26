@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -51,6 +51,18 @@ export default function LoginScreen() {
     }
   };
 
+  // Função para abrir o WhatsApp no número indicado
+  const RedefinirZap = () => {
+    // Cria o link direto para o WhatsApp
+    const phoneNumber = '5521977401773'; // número com DDI e DDD
+    const message = encodeURIComponent('Olá, preciso redefinir minha senha.');
+    const url = `https://wa.me/${phoneNumber}?text=${message}`;
+
+    Linking.openURL(url).catch(() => {
+      Alert.alert('Erro', 'Não foi possível abrir o WhatsApp.');
+    });
+  };
+
   return (
     <View style={styles.container}>
       {/* Imagem */}
@@ -76,16 +88,16 @@ export default function LoginScreen() {
         value={password}
         onChangeText={setPassword}
         style={styles.input}
-        secureTextEntry
       />
 
       <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
         {loading ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.buttonText}>Entrar</Text>}
       </TouchableOpacity>
 
-      {/* <Text style={styles.forgotPassword} onPress={() => router.push('/resetpassword')}>
-      Esqueci minha senha
-      </Text> */}
+      {/* Botão de Esqueci minha senha que abre o WhatsApp */}
+      <TouchableOpacity style={styles.whatsButton} onPress={RedefinirZap}>
+        <Text style={styles.whatsButtonText}>Esqueci minha senha</Text>
+      </TouchableOpacity>
 
       <Text style={styles.signupText}>
         Não tem conta? <Text style={styles.signupLink} onPress={() => router.push('/criarusuario')}>Criar Conta</Text>
@@ -153,5 +165,17 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 12,
     marginBottom: 20, // Espaçamento abaixo da imagem
+  },
+  whatsButton: {
+  marginTop: 20,
+  paddingVertical: 10,
+  paddingHorizontal: 16,
+  borderRadius: 10,
+
+  },
+  whatsButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
