@@ -1,0 +1,106 @@
+import 'package:raraapp/constants/api_constants.dart';
+import 'package:raraapp/models/midialocal.dart';
+import 'package:raraapp/services/api_service.dart';
+
+class MidiaLocalService {
+  // ============ Públicas ============
+
+  /// Create midia local
+  static Future<MidiaLocalDTO> createMidiaLocal({
+    required DateTime date,
+    required String time,
+    required String title,
+    required String text,
+    required String churchId,
+    required String image,
+    required String token,
+  }) async {
+    try {
+      final body = {
+        'date': date.toIso8601String(),
+        'time': time,
+        'title': title,
+        'text': text,
+        'churchId': churchId,
+        'image': image,
+      };
+
+      // Remove valores null
+      body.removeWhere((key, value) => value == null);
+
+      final response = await ApiService.post(
+        ApiConstants.createMidiaLocal,
+        body: body,
+        token: token,
+      );
+      return MidiaLocalDTO.fromJson(response);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Get todas as mídias locais (protegido, requer token)
+  static Future<List<MidiaLocalDTO>> getAllMidiasLocais({
+    required String token,
+  }) async {
+    try {
+      final response = await ApiService.get(ApiConstants.getAllMidiaLocals, token: token);
+
+      final List<dynamic> midiasLocais = response['data'] ?? response;
+      return midiasLocais
+          .map((m) => MidiaLocalDTO.fromJson(m as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Get mídia local por ID
+  static Future<MidiaLocalDTO> getMidiaLocalById(
+    String midiaLocalId, {
+    required String token,
+  }) async {
+    try {
+      final response = await ApiService.get(
+        ApiConstants.getMidiaLocalById.replaceFirst(':id', midiaLocalId),
+        token: token,
+      );
+      return MidiaLocalDTO.fromJson(response);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Update mídia local
+  static Future<MidiaLocalDTO> updateMidiaLocal(
+    String midiaLocalId, {
+    required Map<String, dynamic> data,
+    required String token,
+  }) async { 
+    try {
+      final response = await ApiService.patch(
+        ApiConstants.updateMidiaLocal.replaceFirst(':id', midiaLocalId),
+        body: data,
+        token: token,
+      );
+      return MidiaLocalDTO.fromJson(response);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Delete mídia local
+  static Future<void> deleteMidiaLocal(
+    String midiaLocalId, {
+    required String token,
+  }) async {
+    try { 
+      await ApiService.delete(
+        ApiConstants.deleteMidiaLocal.replaceFirst(':id', midiaLocalId),
+        token: token,
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+}
