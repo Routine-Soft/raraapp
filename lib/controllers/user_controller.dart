@@ -36,7 +36,11 @@ class UserController extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      if (e is Exception) {
+        _error = e.toString();
+      } else {
+        _error = 'Erro ao fazer login';
+      }
       _isLoading = false;
       notifyListeners();
       return false;
@@ -82,7 +86,11 @@ class UserController extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      if (e is Exception) {
+        _error = e.toString();
+      } else {
+        _error = 'Erro ao registrar';
+      }
       _isLoading = false;
       notifyListeners();
       return false;

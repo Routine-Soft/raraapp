@@ -20,11 +20,43 @@ class UserService {
         },
       );
 
-      // Backend retorna { accessToken, refreshToken, user: {...} }
-      final user = UserDTO.fromJson(response['user'] ?? response);
+      // Resposta padronizada: { success: true, data: { user, accessToken, refreshToken, ... } }
+      if (response is! Map<String, dynamic>) {
+        throw Exception('Resposta inválida do servidor');
+      }
+
+      if (!response.containsKey('data')) {
+        throw Exception('Campo "data" não encontrado na resposta');
+      }
+
+      final data = response['data'];
+      
+      if (data is! Map<String, dynamic>) {
+        throw Exception('Campo "data" não é um Map');
+      }
+
+      if (!data.containsKey('user')) {
+        throw Exception('Campo "user" não encontrado em data');
+      }
+
+      if (!data.containsKey('accessToken')) {
+        throw Exception('Campo "accessToken" não encontrado em data');
+      }
+
+      if (!data.containsKey('refreshToken')) {
+        throw Exception('Campo "refreshToken" não encontrado em data');
+      }
+
+      final userData = data['user'];
+      if (userData is! Map<String, dynamic>) {
+        throw Exception('Campo "user" não é um Map');
+      }
+
+      final user = UserDTO.fromJson(userData);
+      
       return user.copyWith(
-        accessToken: response['accessToken'],
-        refreshToken: response['refreshToken'],
+        accessToken: data['accessToken'] as String?,
+        refreshToken: data['refreshToken'] as String?,
       );
     } catch (e) {
       rethrow;
@@ -70,7 +102,8 @@ class UserService {
         body: body,
       );
 
-      return UserDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return UserDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -87,8 +120,9 @@ class UserService {
         },
       );
 
-      // Backend retorna { accessToken: "..." }
-      return response['accessToken'] ?? '';
+      // Resposta padronizada: { success: true, data: { accessToken: "..." } }
+      final data = response['data'] as Map<String, dynamic>;
+      return data['accessToken'] ?? '';
     } catch (e) {
       rethrow;
     }
@@ -122,7 +156,8 @@ class UserService {
         token: token,
       );
 
-      final List<dynamic> users = response['data'] ?? response;
+      // Resposta padronizada: { success: true, data: [...] }
+      final List<dynamic> users = response['data'] as List<dynamic>;
       return users
           .map((u) => UserDTO.fromJson(u as Map<String, dynamic>))
           .toList();
@@ -142,7 +177,8 @@ class UserService {
         token: token,
       );
 
-      return UserDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return UserDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -161,7 +197,8 @@ class UserService {
         token: token,
       );
 
-      return UserDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return UserDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -246,7 +283,8 @@ class UserService {
         token: token,
       );
 
-      return UserDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return UserDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -267,7 +305,8 @@ class UserService {
         token: token,
       );
 
-      return UserDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return UserDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -290,7 +329,8 @@ class UserService {
         token: token,
       );
 
-      return UserDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return UserDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }

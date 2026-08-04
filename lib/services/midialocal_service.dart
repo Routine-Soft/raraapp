@@ -33,7 +33,8 @@ class MidiaLocalService {
         body: body,
         token: token,
       );
-      return MidiaLocalDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return MidiaLocalDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -46,7 +47,8 @@ class MidiaLocalService {
     try {
       final response = await ApiService.get(ApiConstants.getAllMidiaLocals, token: token);
 
-      final List<dynamic> midiasLocais = response['data'] ?? response;
+      // Resposta padronizada: { success: true, data: [...] }
+      final List<dynamic> midiasLocais = response['data'] as List<dynamic>;
       return midiasLocais
           .map((m) => MidiaLocalDTO.fromJson(m as Map<String, dynamic>))
           .toList();
@@ -65,7 +67,8 @@ class MidiaLocalService {
         ApiConstants.getMidiaLocalById.replaceFirst(':id', midiaLocalId),
         token: token,
       );
-      return MidiaLocalDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return MidiaLocalDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -83,7 +86,8 @@ class MidiaLocalService {
         body: data,
         token: token,
       );
-      return MidiaLocalDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return MidiaLocalDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }

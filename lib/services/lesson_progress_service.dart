@@ -15,7 +15,8 @@ class LessonProgressService {
         token: token,
       );
 
-      final List<dynamic> progresses = response['data'] ?? response;
+      // Resposta padronizada: { success: true, data: [...] }
+      final List<dynamic> progresses = response['data'] as List<dynamic>;
       return progresses
           .map((p) => LessonProgressDTO.fromJson(p as Map<String, dynamic>))
           .toList();
@@ -36,7 +37,8 @@ class LessonProgressService {
         token: token,
       );
 
-      final List<dynamic> progresses = response['data'] ?? response;
+      // Resposta padronizada: { success: true, data: [...] }
+      final List<dynamic> progresses = response['data'] as List<dynamic>;
       return progresses
           .map((p) => LessonProgressDTO.fromJson(p as Map<String, dynamic>))
           .toList();
@@ -55,7 +57,8 @@ class LessonProgressService {
         ApiConstants.lessonProgressGetById.replaceFirst(':id', progressId),
         token: token,
       );
-      return LessonProgressDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return LessonProgressDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -89,7 +92,8 @@ class LessonProgressService {
         body: body,
         token: token,
       );
-      return LessonProgressDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return LessonProgressDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -112,7 +116,8 @@ class LessonProgressService {
         token: token,
       );
 
-      return response as Map<String, dynamic>;
+      // Resposta padronizada: { success: true, data: {...} }
+      return response['data'] as Map<String, dynamic>;
     } catch (e) {
       rethrow;
     }
@@ -130,7 +135,8 @@ class LessonProgressService {
         body: data,
         token: token,
       );
-      return LessonProgressDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return LessonProgressDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }

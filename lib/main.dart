@@ -7,6 +7,7 @@ import 'package:raraapp/controllers/lesson_controller.dart';
 import 'package:raraapp/controllers/lesson_progress_controller.dart';
 import 'package:raraapp/controllers/cura_controller.dart';
 import 'package:raraapp/controllers/christian_group_controller.dart';
+import 'package:raraapp/screens/welcome_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -49,12 +50,8 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        // Altere 'home' quando implementar suas screens
-        home: const Scaffold(
-          body: Center(
-            child: Text('Rara App - Frontend preparado para consumir API'),
-          ),
-        ),
+        // TELA DE ENTRADA: Boas-vindas
+        home: const WelcomeScreen(),
       ),
     );
   }

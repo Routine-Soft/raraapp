@@ -1,4 +1,4 @@
-class Validators {
+class RegisterValidators {
   // ============ Email ============
   
   static String? validateEmail(String? value) {

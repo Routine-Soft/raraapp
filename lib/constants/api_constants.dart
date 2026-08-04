@@ -1,6 +1,6 @@
 class ApiConstants {
   // Base URL do backend
-  static const String baseUrl = 'http://localhost:3000/api';
+  static const String baseUrl = 'http://localhost:8080/api';
   
   // ============ User Endpoints ============
   // Public

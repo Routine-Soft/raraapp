@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CustomTextField extends StatefulWidget {
   final String label;
@@ -10,6 +11,7 @@ class CustomTextField extends StatefulWidget {
   final int? maxLines;
   final int? minLines;
   final String? hintText;
+  final List<TextInputFormatter>? inputFormatters;
 
   const CustomTextField({
     super.key,
@@ -22,6 +24,7 @@ class CustomTextField extends StatefulWidget {
     this.maxLines = 1,
     this.minLines,
     this.hintText,
+    this.inputFormatters,
   });
 
   @override
@@ -45,6 +48,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       obscureText: _obscureText,
       maxLines: _obscureText ? 1 : widget.maxLines,
       minLines: widget.minLines,
+      inputFormatters: widget.inputFormatters,
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hintText,

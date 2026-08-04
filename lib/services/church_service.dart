@@ -9,13 +9,25 @@ class ChurchService {
   /// Get todas as igrejas (público, sem token)
   static Future<List<ChurchDTO>> getAllChurches() async {
     try {
+      print('[ChurchService] getAllChurches() called');
+      print('[ChurchService] Endpoint: ${ApiConstants.churchGetAll}');
+      
       final response = await ApiService.get(ApiConstants.churchGetAll);
+      print('[ChurchService] Response: $response');
 
-      final List<dynamic> churches = response['data'] ?? response;
+      // Resposta padronizada: { success: true, data: [...] }
+      if (response is! Map<String, dynamic>) {
+        throw Exception('Unexpected response format');
+      }
+
+      final churches = response['data'] as List<dynamic>;
+      print('[ChurchService] Churches count: ${churches.length}');
+      
       return churches
           .map((c) => ChurchDTO.fromJson(c as Map<String, dynamic>))
           .toList();
     } catch (e) {
+      print('[ChurchService] Error: $e');
       rethrow;
     }
   }
@@ -26,7 +38,8 @@ class ChurchService {
       final response = await ApiService.get(
         ApiConstants.churchGetById.replaceFirst(':id', churchId),
       );
-      return ChurchDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return ChurchDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -64,8 +77,8 @@ class ChurchService {
         body: body,
         token: token,
       );
-
-      return ChurchDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return ChurchDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -83,8 +96,8 @@ class ChurchService {
         body: data,
         token: token,
       );
-
-      return ChurchDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return ChurchDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }

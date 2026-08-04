@@ -4,6 +4,17 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:raraapp/constants/api_constants.dart';
 
+/// Exceção customizada da API
+class ApiException implements Exception {
+  final String message;
+  final int statusCode;
+
+  ApiException(this.message, this.statusCode);
+
+  @override
+  String toString() => message;
+}
+
 class ApiService {
   static const String _baseUrl = ApiConstants.baseUrl;
 
@@ -21,12 +32,14 @@ class ApiService {
   }
 
   // GET
-  static Future<Map<String, dynamic>> get(
+  static Future<dynamic> get(
     String endpoint, {
     String? token,
   }) async {
     try {
       final url = Uri.parse('$_baseUrl$endpoint');
+      
+      print('[API GET] URL: $url');
 
       final response = await http
           .get(
@@ -35,14 +48,16 @@ class ApiService {
           )
           .timeout(ApiConstants.receiveTimeout);
 
+      print('[API GET] Status: ${response.statusCode}');
       return _handleResponse(response);
     } catch (e) {
+      print('[API GET] Error: $e');
       throw _handleError(e);
     }
   }
 
   // POST
-  static Future<Map<String, dynamic>> post(
+  static Future<dynamic> post(
     String endpoint, {
     required Map<String, dynamic> body,
     String? token,
@@ -65,7 +80,7 @@ class ApiService {
   }
 
   // PUT
-  static Future<Map<String, dynamic>> put(
+  static Future<dynamic> put(
     String endpoint, {
     required Map<String, dynamic> body,
     String? token,
@@ -88,7 +103,7 @@ class ApiService {
   }
 
   // PATCH
-  static Future<Map<String, dynamic>> patch(
+  static Future<dynamic> patch(
     String endpoint, {
     required Map<String, dynamic> body,
     String? token,
@@ -111,7 +126,7 @@ class ApiService {
   }
 
   // DELETE
-  static Future<Map<String, dynamic>> delete(
+  static Future<dynamic> delete(
     String endpoint, {
     String? token,
   }) async {
@@ -132,32 +147,40 @@ class ApiService {
   }
 
   // Tratador de resposta
-  static Map<String, dynamic> _handleResponse(http.Response response) {
+  static dynamic _handleResponse(http.Response response) {
     try {
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+      final decoded = jsonDecode(response.body);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return decoded;
       } else {
-        throw Exception(
-          decoded['message'] ?? 'Error: ${response.statusCode}',
-        );
+        // Se for um map, tenta pegar a mensagem
+        if (decoded is Map<String, dynamic>) {
+          final message = decoded['message'] ?? 'Erro ${response.statusCode}';
+          throw ApiException(message, response.statusCode);
+        } else {
+          throw ApiException('Erro ${response.statusCode}', response.statusCode);
+        }
       }
+    } on ApiException {
+      rethrow;
     } catch (e) {
-      throw Exception('Failed to parse response: $e');
+      throw ApiException('Falha ao processar resposta: $e', 500);
     }
   }
 
   // Tratador de erros
-  static Exception _handleError(dynamic error) {
-    if (error is http.ClientException) {
-      return Exception('Network error: ${error.message}');
+  static ApiException _handleError(dynamic error) {
+    if (error is ApiException) {
+      return error;
+    } else if (error is http.ClientException) {
+      return ApiException('Erro de rede: ${error.message}', 0);
     } else if (error is SocketException) {
-      return Exception('Connection failed');
+      return ApiException('Falha na conexão', 0);
     } else if (error is TimeoutException) {
-      return Exception('Request timeout');
+      return ApiException('Requisição expirou', 0);
     } else {
-      return Exception('Unexpected error: $error');
+      return ApiException('Erro inesperado: $error', 500);
     }
   }
 }

@@ -25,7 +25,8 @@ class CuraService {
         body: body,
         token: token,
       );
-      return CuraDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return CuraDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -41,7 +42,8 @@ class CuraService {
         token: token,
       );
 
-      final List<dynamic> curas = response['data'] ?? response;
+      // Resposta padronizada: { success: true, data: [...] }
+      final List<dynamic> curas = response['data'] as List<dynamic>;
       return curas
           .map((c) => CuraDTO.fromJson(c as Map<String, dynamic>))
           .toList();
@@ -73,7 +75,8 @@ class CuraService {
 
       final response = await ApiService.get(url, token: token);
 
-      final List<dynamic> curas = response['data'] ?? response;
+      // Resposta padronizada: { success: true, data: [...] }
+      final List<dynamic> curas = response['data'] as List<dynamic>;
       return curas
           .map((c) => CuraDTO.fromJson(c as Map<String, dynamic>))
           .toList();
@@ -92,7 +95,8 @@ class CuraService {
         ApiConstants.curaGetById.replaceFirst(':id', curaId),
         token: token,
       );
-      return CuraDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return CuraDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -110,7 +114,8 @@ class CuraService {
         body: data,
         token: token,
       );
-      return CuraDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return CuraDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -128,7 +133,8 @@ class CuraService {
         body: {'status': status},
         token: token,
       );
-      return CuraDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return CuraDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -159,7 +165,8 @@ class CuraService {
         token: token,
       );
 
-      return response as Map<String, dynamic>;
+      // Resposta padronizada: { success: true, data: {...} }
+      return response['data'] as Map<String, dynamic>;
     } catch (e) {
       rethrow;
     }

@@ -10,7 +10,8 @@ class LessonService {
     try {
       final response = await ApiService.get(ApiConstants.lessonGetAll);
 
-      final List<dynamic> lessons = response['data'] ?? response;
+      // Resposta padronizada: { success: true, data: [...] }
+      final List<dynamic> lessons = response['data'] as List<dynamic>;
       return lessons
           .map((l) => LessonDTO.fromJson(l as Map<String, dynamic>))
           .toList();
@@ -25,7 +26,8 @@ class LessonService {
       final response = await ApiService.get(
         ApiConstants.lessonGetById.replaceFirst(':id', lessonId),
       );
-      return LessonDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return LessonDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -63,7 +65,8 @@ class LessonService {
         body: body,
         token: token,
       );
-      return LessonDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return LessonDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -81,7 +84,8 @@ class LessonService {
         body: data,
         token: token,
       );
-      return LessonDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return LessonDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }

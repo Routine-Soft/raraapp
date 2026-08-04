@@ -1,14 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:raraapp/constants/register_constants.dart';
 import 'package:raraapp/controllers/church_controller.dart';
 import 'package:raraapp/controllers/user_controller.dart';
 import 'package:raraapp/models/church.dart';
 import 'package:raraapp/models/user.dart';
+import 'package:raraapp/screens/login_screen.dart';
 import 'package:raraapp/utils/validators.dart';
 import 'package:raraapp/widgets/custom_checkbox.dart';
 import 'package:raraapp/widgets/custom_dropdown.dart';
 import 'package:raraapp/widgets/custom_text_field.dart';
+
+/// Formatador que remove espaços e converte para lowercase (para email)
+class LowercaseNoSpaceFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return newValue.copyWith(
+      text: newValue.text.toLowerCase().replaceAll(' ', ''),
+      selection: newValue.selection,
+    );
+  }
+}
+
+/// Formatador que remove espaços (para senha)
+class NoSpaceFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return newValue.copyWith(
+      text: newValue.text.replaceAll(' ', ''),
+      selection: newValue.selection,
+    );
+  }
+}
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -58,7 +88,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     // Carregar igrejas quando a tela abre
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ChurchController>().loadChurches();
+      context.read<ChurchController>().loadAllChurches();
     });
   }
 
@@ -125,6 +155,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     keyboardType: TextInputType.emailAddress,
                     prefixIcon: Icons.email,
                     validator: RegisterValidators.validateEmail,
+                    inputFormatters: [LowercaseNoSpaceFormatter()],
                   ),
                   const SizedBox(height: 16),
 
@@ -188,6 +219,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     obscureText: true,
                     prefixIcon: Icons.lock,
                     validator: RegisterValidators.validatePassword,
+                    inputFormatters: [NoSpaceFormatter()],
                   ),
                   const SizedBox(height: 16),
 
@@ -201,6 +233,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       value,
                       _passwordController.text,
                     ),
+                    inputFormatters: [NoSpaceFormatter()],
                   ),
                   const SizedBox(height: 24),
 
@@ -412,7 +445,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       const Text('Já tem uma conta? '),
                       GestureDetector(
                         onTap: () {
-                          // Navigator.pop(context);
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(),
+                            ),
+                          );
                         },
                         child: const Text(
                           'Faça login',

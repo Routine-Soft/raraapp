@@ -15,7 +15,8 @@ class ChristianGroupService {
         token: token,
       );
 
-      final List<dynamic> groups = response['data'] ?? response;
+      // Resposta padronizada: { success: true, data: [...] }
+      final List<dynamic> groups = response['data'] as List<dynamic>;
       return groups
           .map((g) => ChristianGroupDTO.fromJson(g as Map<String, dynamic>))
           .toList();
@@ -34,7 +35,8 @@ class ChristianGroupService {
         ApiConstants.christianGroupGetById.replaceFirst(':id', groupId),
         token: token,
       );
-      return ChristianGroupDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return ChristianGroupDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -70,7 +72,8 @@ class ChristianGroupService {
         body: body,
         token: token,
       );
-      return ChristianGroupDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return ChristianGroupDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
@@ -88,7 +91,8 @@ class ChristianGroupService {
         body: data,
         token: token,
       );
-      return ChristianGroupDTO.fromJson(response);
+      // Resposta padronizada: { success: true, data: {...} }
+      return ChristianGroupDTO.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }
