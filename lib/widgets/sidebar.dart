@@ -97,6 +97,12 @@ class Sidebar extends StatelessWidget {
         'roles': ['facilitator', 'super_admin'],
       },
       {
+        'key': 'christian-group-admin',
+        'label': 'Admin Grupos',
+        'icon': Icons.admin_panel_settings,
+        'roles': ['super_admin'],
+      },
+      {
         'key': 'cura',
         'label': 'Pedidos de Cura',
         'icon': Icons.favorite,

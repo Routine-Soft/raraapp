@@ -150,10 +150,16 @@ class ApiService {
       
       print('[API DELETE] URL: $url');
 
+      // Headers sem Content-Type para DELETE (sem body)
+      final headers = <String, String>{};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
       final response = await http
           .delete(
             url,
-            headers: _getHeaders(token: token),
+            headers: headers,
           )
           .timeout(ApiConstants.receiveTimeout);
 
