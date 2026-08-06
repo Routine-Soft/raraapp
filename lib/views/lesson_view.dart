@@ -638,7 +638,13 @@ class _LessonStudentDialogState extends State<LessonStudentDialog> {
           // score será recalculado pelo backend
         },
         token: widget.token,
-      );
+      ).then((_) {
+        // Após atualização bem-sucedida, construir resultado com dados do backend
+        setState(() {
+          _submitted = true;
+          _correctAnswers = _buildCorrectAnswersFromBackend(progressController);
+        });
+      });
     } else {
       // Criar novo progresso - deixar backend calcular score
       progressController.createProgress(
@@ -649,19 +655,14 @@ class _LessonStudentDialogState extends State<LessonStudentDialog> {
         answers: answers,
         completedAt: DateTime.now(),
         token: widget.token,
-      );
+      ).then((_) {
+        // Após criação bem-sucedida, construir resultado com dados do backend
+        setState(() {
+          _submitted = true;
+          _correctAnswers = _buildCorrectAnswersFromBackend(progressController);
+        });
+      });
     }
-
-    // Recarregar progress após submissão para pegar os dados corretos do backend
-    Future.delayed(const Duration(milliseconds: 500), () {
-      progressController.loadMyProgress(token: widget.token);
-    });
-
-    setState(() {
-      _submitted = true;
-      // Buscar o progress que foi salvo para mostrar resultado correto
-      _correctAnswers = _buildCorrectAnswersFromBackend(progressController);
-    });
   }
 
   Map<int, bool> _buildCorrectAnswersFromBackend(LessonProgressController controller) {
