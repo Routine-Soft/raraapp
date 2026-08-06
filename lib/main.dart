@@ -8,6 +8,7 @@ import 'package:raraapp/controllers/lesson_progress_controller.dart';
 import 'package:raraapp/controllers/cura_controller.dart';
 import 'package:raraapp/controllers/christian_group_controller.dart';
 import 'package:raraapp/screens/welcome_screen.dart';
+import 'package:raraapp/screens/authenticated_app.dart';
 
 void main() {
   runApp(const MyApp());
@@ -50,9 +51,81 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        // TELA DE ENTRADA: Boas-vindas
-        home: const WelcomeScreen(),
+        // TELA DE ENTRADA: Verifica auto-login
+        home: const AppInitializer(),
       ),
+    );
+  }
+}
+
+/// Widget que verifica se há dados salvos e faz auto-login
+class AppInitializer extends StatefulWidget {
+  const AppInitializer({super.key});
+
+  @override
+  State<AppInitializer> createState() => _AppInitializerState();
+}
+
+class _AppInitializerState extends State<AppInitializer> {
+  late Future<bool> _checkLoginFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginFuture = _checkSavedLogin();
+  }
+
+  Future<bool> _checkSavedLogin() async {
+    try {
+      final userController = context.read<UserController>();
+      // Tenta carregar dados salvos
+      final isLoaded = await userController.loadUserFromStorage();
+      return isLoaded;
+    } catch (e) {
+      print('Erro ao verificar login salvo: $e');
+      return false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: _checkLoginFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Mostra splash screen enquanto verifica
+          return Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.church, size: 64, color: Colors.blue),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Rara App',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 32),
+                  CircularProgressIndicator(),
+                ],
+              ),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          // Se houver erro, vai para Welcome
+          return const WelcomeScreen();
+        }
+
+        // Se tem dados salvos e carregou, vai para AuthenticatedApp
+        if (snapshot.data == true) {
+          return const AuthenticatedApp();
+        }
+
+        // Caso contrário, vai para Welcome
+        return const WelcomeScreen();
+      },
     );
   }
 }

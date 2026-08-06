@@ -19,20 +19,16 @@ class ChurchController extends ChangeNotifier {
 
   /// Carregar todas as igrejas (sem token)
   Future<bool> loadAllChurches() async {
-    print('[ChurchController] loadAllChurches() called');
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      print('[ChurchController] Calling ChurchService.getAllChurches()');
       _churches = await ChurchService.getAllChurches();
-      print('[ChurchController] Got ${_churches.length} churches');
       _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      print('[ChurchController] Error: $e');
       _error = e.toString();
       _isLoading = false;
       notifyListeners();

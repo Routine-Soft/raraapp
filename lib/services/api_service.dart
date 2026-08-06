@@ -64,6 +64,9 @@ class ApiService {
   }) async {
     try {
       final url = Uri.parse('$_baseUrl$endpoint');
+      
+      print('[API POST] URL: $url');
+      print('[API POST] Body: $body');
 
       final response = await http
           .post(
@@ -73,8 +76,10 @@ class ApiService {
           )
           .timeout(ApiConstants.connectTimeout);
 
+      print('[API POST] Status: ${response.statusCode}');
       return _handleResponse(response);
     } catch (e) {
+      print('[API POST] Error: $e');
       throw _handleError(e);
     }
   }
@@ -87,6 +92,9 @@ class ApiService {
   }) async {
     try {
       final url = Uri.parse('$_baseUrl$endpoint');
+      
+      print('[API PUT] URL: $url');
+      print('[API PUT] Body: $body');
 
       final response = await http
           .put(
@@ -96,8 +104,10 @@ class ApiService {
           )
           .timeout(ApiConstants.connectTimeout);
 
+      print('[API PUT] Status: ${response.statusCode}');
       return _handleResponse(response);
     } catch (e) {
+      print('[API PUT] Error: $e');
       throw _handleError(e);
     }
   }
@@ -110,6 +120,9 @@ class ApiService {
   }) async {
     try {
       final url = Uri.parse('$_baseUrl$endpoint');
+      
+      print('[API PATCH] URL: $url');
+      print('[API PATCH] Body: $body');
 
       final response = await http
           .patch(
@@ -119,8 +132,10 @@ class ApiService {
           )
           .timeout(ApiConstants.connectTimeout);
 
+      print('[API PATCH] Status: ${response.statusCode}');
       return _handleResponse(response);
     } catch (e) {
+      print('[API PATCH] Error: $e');
       throw _handleError(e);
     }
   }
@@ -132,6 +147,8 @@ class ApiService {
   }) async {
     try {
       final url = Uri.parse('$_baseUrl$endpoint');
+      
+      print('[API DELETE] URL: $url');
 
       final response = await http
           .delete(
@@ -140,8 +157,10 @@ class ApiService {
           )
           .timeout(ApiConstants.receiveTimeout);
 
+      print('[API DELETE] Status: ${response.statusCode}');
       return _handleResponse(response);
     } catch (e) {
+      print('[API DELETE] Error: $e');
       throw _handleError(e);
     }
   }
@@ -152,19 +171,23 @@ class ApiService {
       final decoded = jsonDecode(response.body);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        print('[API RESPONSE] Success: ${response.statusCode}');
         return decoded;
       } else {
         // Se for um map, tenta pegar a mensagem
         if (decoded is Map<String, dynamic>) {
           final message = decoded['message'] ?? 'Erro ${response.statusCode}';
+          print('[API RESPONSE] Error: $message (${response.statusCode})');
           throw ApiException(message, response.statusCode);
         } else {
+          print('[API RESPONSE] Error: ${response.statusCode}');
           throw ApiException('Erro ${response.statusCode}', response.statusCode);
         }
       }
     } on ApiException {
       rethrow;
     } catch (e) {
+      print('[API RESPONSE] Exception: $e');
       throw ApiException('Falha ao processar resposta: $e', 500);
     }
   }
@@ -172,14 +195,19 @@ class ApiService {
   // Tratador de erros
   static ApiException _handleError(dynamic error) {
     if (error is ApiException) {
+      print('[API ERROR] ApiException: ${error.message} (${error.statusCode})');
       return error;
     } else if (error is http.ClientException) {
+      print('[API ERROR] ClientException: ${error.message}');
       return ApiException('Erro de rede: ${error.message}', 0);
     } else if (error is SocketException) {
+      print('[API ERROR] SocketException: ${error.message}');
       return ApiException('Falha na conexão', 0);
     } else if (error is TimeoutException) {
+      print('[API ERROR] TimeoutException: ${error.message}');
       return ApiException('Requisição expirou', 0);
     } else {
+      print('[API ERROR] Unknown: $error');
       return ApiException('Erro inesperado: $error', 500);
     }
   }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'package:raraapp/models/user.dart';
 import 'package:raraapp/services/user_service.dart';
 
@@ -14,6 +16,48 @@ class UserController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isAuthenticated => _currentUser != null;
+
+  // ============ Storage (Persistência) ============
+
+  /// Salvar usuário no storage
+  Future<void> saveUserToStorage(UserDTO user) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userJson = jsonEncode(user.toJson());
+      await prefs.setString('user_data', userJson);
+    } catch (e) {
+      print('Erro ao salvar usuário no storage: $e');
+    }
+  }
+
+  /// Carregar usuário do storage
+  Future<bool> loadUserFromStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userJson = prefs.getString('user_data');
+      
+      if (userJson != null) {
+        final userMap = jsonDecode(userJson) as Map<String, dynamic>;
+        _currentUser = UserDTO.fromJson(userMap);
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('Erro ao carregar usuário do storage: $e');
+      return false;
+    }
+  }
+
+  /// Limpar dados de login do storage
+  Future<void> clearUserStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('user_data');
+    } catch (e) {
+      print('Erro ao limpar storage: $e');
+    }
+  }
 
   // ============ Autenticação ============
 
@@ -32,6 +76,10 @@ class UserController extends ChangeNotifier {
         password: password,
       );
       _currentUser = user;
+      
+      // Salvar dados no storage
+      await saveUserToStorage(user);
+      
       _isLoading = false;
       notifyListeners();
       return true;
@@ -130,6 +178,10 @@ class UserController extends ChangeNotifier {
       }
       _currentUser = null;
       _allUsers = [];
+      
+      // Limpar dados do storage
+      await clearUserStorage();
+      
       _isLoading = false;
       notifyListeners();
       return true;

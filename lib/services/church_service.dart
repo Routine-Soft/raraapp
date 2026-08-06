@@ -9,11 +9,7 @@ class ChurchService {
   /// Get todas as igrejas (público, sem token)
   static Future<List<ChurchDTO>> getAllChurches() async {
     try {
-      print('[ChurchService] getAllChurches() called');
-      print('[ChurchService] Endpoint: ${ApiConstants.churchGetAll}');
-      
       final response = await ApiService.get(ApiConstants.churchGetAll);
-      print('[ChurchService] Response: $response');
 
       // Resposta padronizada: { success: true, data: [...] }
       if (response is! Map<String, dynamic>) {
@@ -21,13 +17,11 @@ class ChurchService {
       }
 
       final churches = response['data'] as List<dynamic>;
-      print('[ChurchService] Churches count: ${churches.length}');
       
       return churches
           .map((c) => ChurchDTO.fromJson(c as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      print('[ChurchService] Error: $e');
       rethrow;
     }
   }
