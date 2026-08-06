@@ -110,6 +110,12 @@ class Sidebar extends StatelessWidget {
         'roles': ['user', 'super_admin', 'facilitator'],
       },
       {
+        'key': 'lesson-admin',
+        'label': 'Admin Lições',
+        'icon': Icons.book_outlined,
+        'roles': ['super_admin'],
+      },
+      {
         'key': 'christian-group',
         'label': 'Grupos Cristãos',
         'icon': Icons.group,

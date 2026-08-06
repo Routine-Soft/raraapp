@@ -6,9 +6,12 @@ class LessonService {
   // ============ Private ============
 
   /// Get todas as lições
-  static Future<List<LessonDTO>> getAllLessons() async {
+  static Future<List<LessonDTO>> getAllLessons({required String token}) async {
     try {
-      final response = await ApiService.get(ApiConstants.lessonGetAll);
+      final response = await ApiService.get(
+        ApiConstants.lessonGetAll,
+        token: token,
+      );
 
       // Resposta padronizada: { success: true, data: [...] }
       final List<dynamic> lessons = response['data'] as List<dynamic>;
@@ -21,10 +24,14 @@ class LessonService {
   }
 
   /// Get lição por ID
-  static Future<LessonDTO> getLessonById(String lessonId) async {
+  static Future<LessonDTO> getLessonById(
+    String lessonId, {
+    required String token,
+  }) async {
     try {
       final response = await ApiService.get(
         ApiConstants.lessonGetById.replaceFirst(':id', lessonId),
+        token: token,
       );
       // Resposta padronizada: { success: true, data: {...} }
       return LessonDTO.fromJson(response['data'] as Map<String, dynamic>);

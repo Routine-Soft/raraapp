@@ -4,11 +4,7 @@ class QuestionDTO {
   final List<String>? options;
   final int? correctOptionIndex;
 
-  QuestionDTO({
-    this.statement,
-    this.options,
-    this.correctOptionIndex,
-  });
+  QuestionDTO({this.statement, this.options, this.correctOptionIndex});
 
   factory QuestionDTO.fromJson(Map<String, dynamic>? json) {
     if (json == null) return QuestionDTO();
@@ -42,6 +38,7 @@ class QuestionDTO {
   }
 }
 
+/// Módulos válidos: 'reset', 'start', 'cdv' (use sempre lowercase)
 // DTO principal de lição
 class LessonDTO {
   final String? id;
@@ -80,8 +77,8 @@ class LessonDTO {
       image: json['image'],
       questions: json['questions'] != null
           ? (json['questions'] as List)
-              .map((q) => QuestionDTO.fromJson(q as Map<String, dynamic>))
-              .toList()
+                .map((q) => QuestionDTO.fromJson(q as Map<String, dynamic>))
+                .toList()
           : null,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)

@@ -17,13 +17,13 @@ class LessonController extends ChangeNotifier {
   // ============ Public ============
 
   /// Carregar todas as lições
-  Future<bool> loadAllLessons() async {
+  Future<bool> loadAllLessons({required String token}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _lessons = await LessonService.getAllLessons();
+      _lessons = await LessonService.getAllLessons(token: token);
       _isLoading = false;
       notifyListeners();
       return true;
@@ -36,13 +36,16 @@ class LessonController extends ChangeNotifier {
   }
 
   /// Carregar lição por ID
-  Future<bool> loadLessonById({required String lessonId}) async {
+  Future<bool> loadLessonById({
+    required String lessonId,
+    required String token,
+  }) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final lesson = await LessonService.getLessonById(lessonId);
+      final lesson = await LessonService.getLessonById(lessonId, token: token);
       _selectedLesson = lesson;
       _isLoading = false;
       notifyListeners();
@@ -151,10 +154,7 @@ class LessonController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await LessonService.deleteLesson(
-        lessonId,
-        token: token,
-      );
+      await LessonService.deleteLesson(lessonId, token: token);
       _lessons.removeWhere((l) => l.id == lessonId);
       if (_selectedLesson?.id == lessonId) {
         _selectedLesson = null;
