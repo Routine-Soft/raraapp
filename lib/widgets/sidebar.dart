@@ -6,10 +6,12 @@ import 'package:raraapp/screens/welcome_screen.dart';
 class Sidebar extends StatelessWidget {
   final Function(String) onMenuItemSelected;
   final String currentSelected;
+  final VoidCallback? onClosePressed;
 
   const Sidebar({
     required this.onMenuItemSelected,
     required this.currentSelected,
+    this.onClosePressed,
   });
 
   @override
@@ -25,47 +27,64 @@ class Sidebar extends StatelessWidget {
               // Header
               Padding(
                 padding: const EdgeInsets.all(20),
-                child: Column(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.church, size: 40, color: Colors.white),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Rara App',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(
+                            Icons.church,
+                            size: 40,
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
                           ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      userController.currentUser?.name ?? 'Usuário',
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 12,
+                          const SizedBox(height: 12),
+                          Text(
+                            'Rara App',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            userController.currentUser?.name ?? 'Usuário',
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 12,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
+                    // Botão de fechar
+                    if (onClosePressed != null)
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: onClosePressed,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 40,
+                          minHeight: 40,
+                        ),
+                      ),
                   ],
                 ),
               ),
               const Divider(height: 1, color: Colors.grey),
 
               // Menu items
-              Expanded(
-                child: ListView(
-                  children: _buildMenuItems(roles),
-                ),
-              ),
+              Expanded(child: ListView(children: _buildMenuItems(roles))),
 
               // Footer
               const Divider(height: 1, color: Colors.grey),
               ListTile(
                 leading: const Icon(Icons.logout, color: Colors.grey),
-                title: const Text(
-                  'Sair',
-                  style: TextStyle(color: Colors.grey),
-                ),
+                title: const Text('Sair', style: TextStyle(color: Colors.grey)),
                 onTap: () => _logout(context),
               ),
               const SizedBox(height: 12),
@@ -109,6 +128,12 @@ class Sidebar extends StatelessWidget {
         'roles': ['super_admin'],
       },
       {
+        'key': 'church-admin',
+        'label': 'Admin Igrejas',
+        'icon': Icons.church,
+        'roles': ['super_admin'],
+      },
+      {
         'key': 'cura',
         'label': 'Pedidos de Cura',
         'icon': Icons.favorite,
@@ -140,7 +165,10 @@ class Sidebar extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 4,
+            ),
           );
         })
         .toList();

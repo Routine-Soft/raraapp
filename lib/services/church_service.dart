@@ -17,7 +17,7 @@ class ChurchService {
       }
 
       final churches = response['data'] as List<dynamic>;
-      
+
       return churches
           .map((c) => ChurchDTO.fromJson(c as Map<String, dynamic>))
           .toList();
@@ -49,7 +49,6 @@ class ChurchService {
     String? pastor2,
     AddressDTO? address,
     String? cnpj,
-    String? logoUrl,
     int? totalMembers,
   }) async {
     try {
@@ -59,7 +58,6 @@ class ChurchService {
         'pastor2': pastor2,
         'address': address?.toJson(),
         'cnpj': cnpj,
-        'logoUrl': logoUrl,
         'totalMembers': totalMembers,
       };
 

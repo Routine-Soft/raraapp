@@ -5,6 +5,7 @@ import 'package:raraapp/views/lesson_view.dart';
 import 'package:raraapp/views/christian_group_view.dart';
 import 'package:raraapp/views/christian_group_admin_view.dart';
 import 'package:raraapp/views/midialocal_admin_view.dart';
+import 'package:raraapp/views/church_admin_view.dart';
 import 'package:raraapp/views/cura_view.dart';
 
 class AuthenticatedApp extends StatefulWidget {
@@ -16,50 +17,40 @@ class AuthenticatedApp extends StatefulWidget {
 
 class _AuthenticatedAppState extends State<AuthenticatedApp> {
   String _selectedMenuKey = 'home';
-  bool _isSidebarOpen = false;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Row(
-        children: [
-          // Sidebar
-          if (_isSidebarOpen)
-            SizedBox(
-              width: 280,
-              child: Sidebar(
-                onMenuItemSelected: (key) {
-                  setState(() => _selectedMenuKey = key);
-                  setState(() => _isSidebarOpen = false);
-                },
-                currentSelected: _selectedMenuKey,
-              ),
-            ),
+    final screenWidth = MediaQuery.of(context).size.width;
 
-          // Conteúdo principal (expande)
-          Expanded(
-            child: Column(
-              children: [
-                // AppBar com botão de menu
-                AppBar(
-                  title: _buildTitle(_selectedMenuKey),
-                  elevation: 2,
-                  leading: IconButton(
-                    icon: Icon(_isSidebarOpen ? Icons.close : Icons.menu),
-                    onPressed: () {
-                      setState(() => _isSidebarOpen = !_isSidebarOpen);
-                    },
-                  ),
-                ),
-                // Conteúdo
-                Expanded(
-                  child: _buildMainContent(_selectedMenuKey),
-                ),
-              ],
-            ),
+    return Scaffold(
+      key: _scaffoldKey,
+      drawer: SizedBox(
+        width: screenWidth * 0.5,
+        child: Drawer(
+          child: Sidebar(
+            onMenuItemSelected: (key) {
+              setState(() => _selectedMenuKey = key);
+              Navigator.of(context).pop(); // Fecha o drawer
+            },
+            currentSelected: _selectedMenuKey,
+            onClosePressed: () {
+              Navigator.of(context).pop(); // Fecha o drawer
+            },
           ),
-        ],
+        ),
       ),
+      appBar: AppBar(
+        title: _buildTitle(_selectedMenuKey),
+        elevation: 2,
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () {
+            _scaffoldKey.currentState?.openDrawer();
+          },
+        ),
+      ),
+      body: _buildMainContent(_selectedMenuKey),
     );
   }
 
@@ -70,6 +61,7 @@ class _AuthenticatedAppState extends State<AuthenticatedApp> {
       'christian-group' => const ChristianGroupView(),
       'christian-group-admin' => const ChristianGroupAdminView(),
       'midialocal-admin' => const MidiaLocalAdminView(),
+      'church-admin' => const ChurchAdminView(),
       'cura' => const CuraView(),
       _ => const HomeView(),
     };
@@ -82,6 +74,7 @@ class _AuthenticatedAppState extends State<AuthenticatedApp> {
       'christian-group' => 'Grupos Cristãos',
       'christian-group-admin' => 'Administração de Grupos Cristãos',
       'midialocal-admin' => 'Administração de Mídias',
+      'church-admin' => 'Administração de Igrejas',
       'cura' => 'Pedidos de Cura',
       _ => 'Home',
     };

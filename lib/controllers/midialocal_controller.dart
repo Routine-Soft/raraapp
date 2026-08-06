@@ -21,12 +21,12 @@ class MidiaLocalController extends ChangeNotifier {
 
   /// Criar nova mídia local
   Future<bool> createMidiaLocal({
-    required DateTime date,
+    DateTime? date,
     required String time,
     required String title,
     required String text,
     required String churchId,
-    required String image,
+    String? image,
     required String token,
   }) async {
     _isLoading = true;
@@ -78,7 +78,10 @@ class MidiaLocalController extends ChangeNotifier {
   }
 
   /// Carregar mídia local por ID
-  Future<bool> loadMidiaLocalById({required String midiaLocalId, required String token}) async {
+  Future<bool> loadMidiaLocalById({
+    required String midiaLocalId,
+    required String token,
+  }) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -143,10 +146,7 @@ class MidiaLocalController extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      await MidiaLocalService.deleteMidiaLocal(
-        midiaLocalId,
-        token: token,
-      );
+      await MidiaLocalService.deleteMidiaLocal(midiaLocalId, token: token);
       _midiasLocais.removeWhere((m) => m.id == midiaLocalId);
       if (_selectedMidiaLocal?.id == midiaLocalId) {
         _selectedMidiaLocal = null;

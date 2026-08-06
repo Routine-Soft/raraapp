@@ -78,7 +78,6 @@ class ChurchController extends ChangeNotifier {
     String? pastor2,
     AddressDTO? address,
     String? cnpj,
-    String? logoUrl,
     int? totalMembers,
   }) async {
     _isLoading = true;
@@ -93,7 +92,6 @@ class ChurchController extends ChangeNotifier {
         pastor2: pastor2,
         address: address,
         cnpj: cnpj,
-        logoUrl: logoUrl,
         totalMembers: totalMembers,
       );
 
@@ -149,10 +147,7 @@ class ChurchController extends ChangeNotifier {
   }
 
   /// Delete igreja (super_admin only)
-  Future<bool> deleteChurch(
-    String churchId, {
-    required String token,
-  }) async {
+  Future<bool> deleteChurch(String churchId, {required String token}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();

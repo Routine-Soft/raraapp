@@ -20,12 +20,12 @@ class _HomeViewState extends State<HomeView> {
       final userController = context.read<UserController>();
       final churchController = context.read<ChurchController>();
       final midiaController = context.read<MidiaLocalController>();
-      
+
       // Carregar igrejas se ainda não carregou
       if (churchController.churches.isEmpty) {
         churchController.loadAllChurches();
       }
-      
+
       // Carregar mídias locais
       if (userController.currentUser?.accessToken != null) {
         midiaController.loadAllMidiasLocais(
@@ -37,6 +37,9 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -59,11 +62,13 @@ class _HomeViewState extends State<HomeView> {
           Consumer2<UserController, ChurchController>(
             builder: (context, userController, churchController, _) {
               final churchId = userController.currentUser?.churchId;
-              final churchName = churchController.churches
-                  .where((church) => church.id == churchId)
-                  .firstOrNull
-                  ?.name ?? 'Igreja não encontrada';
-              
+              final churchName =
+                  churchController.churches
+                      .where((church) => church.id == churchId)
+                      .firstOrNull
+                      ?.name ??
+                  'Igreja não encontrada';
+
               return Text(
                 'Igreja: $churchName',
                 style: Theme.of(context).textTheme.titleMedium,
@@ -75,9 +80,9 @@ class _HomeViewState extends State<HomeView> {
           // Mídias Locais
           Text(
             'Mídias Locais',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
 
@@ -91,71 +96,85 @@ class _HomeViewState extends State<HomeView> {
                 return const Text('Nenhuma mídia local encontrada');
               }
 
+              final crossAxisCount = isMobile ? 2 : 3;
+
               return GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 1.2,
+                  childAspectRatio: 0.85,
                 ),
                 itemCount: midiaController.midiasLocais.length,
                 itemBuilder: (context, index) {
                   final midia = midiaController.midiasLocais[index];
-                  return Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Conteúdo
-                        Expanded(
-                          flex: 1,
-                          child: Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  midia.title ?? 'Sem título',
+                  return LimitedBox(
+                    maxHeight: 200,
+                    child: Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Título
+                            Text(
+                              midia.title ?? 'Sem título',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 6),
+
+                            // Hora
+                            if (midia.time != null && midia.time!.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Text(
+                                  'Hora: ${midia.time}',
                                   style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  midia.time?.toString() ?? '',
-                                  style: const TextStyle(
-                                    fontSize: 10,
+                                    fontSize: 11,
                                     color: Colors.grey,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  midia.text ?? '',
-                                  style: const TextStyle(fontSize: 10),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  midia.date?.toString().split(' ')[0] ?? '',
+                              ),
+
+                            // Data
+                            if (midia.date != null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Text(
+                                  'Data: ${midia.date.toString().split(' ')[0]}',
                                   style: TextStyle(
-                                    fontSize: 9,
+                                    fontSize: 10,
                                     color: Colors.grey[600],
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
+                              ),
+
+                            // Descrição
+                            if (midia.text != null && midia.text!.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  midia.text!,
+                                  style: const TextStyle(fontSize: 11),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   );
                 },

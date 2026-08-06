@@ -7,17 +7,17 @@ class MidiaLocalService {
 
   /// Create midia local
   static Future<MidiaLocalDTO> createMidiaLocal({
-    required DateTime date,
+    DateTime? date,
     required String time,
     required String title,
     required String text,
     required String churchId,
-    required String image,
+    String? image,
     required String token,
   }) async {
     try {
       final body = {
-        'date': date.toIso8601String(),
+        if (date != null) 'date': date.toIso8601String(),
         'time': time,
         'title': title,
         'text': text,
@@ -43,7 +43,10 @@ class MidiaLocalService {
   }) async {
     try {
       print('[MidiaLocalService] GET: ${ApiConstants.getAllMidiaLocals}');
-      final response = await ApiService.get(ApiConstants.getAllMidiaLocals, token: token);
+      final response = await ApiService.get(
+        ApiConstants.getAllMidiaLocals,
+        token: token,
+      );
       print('[MidiaLocalService] Response: $response');
 
       // Resposta padronizada: { success: true, data: [...] }
@@ -80,7 +83,7 @@ class MidiaLocalService {
     String midiaLocalId, {
     required Map<String, dynamic> data,
     required String token,
-  }) async { 
+  }) async {
     try {
       final response = await ApiService.patch(
         ApiConstants.updateMidiaLocal.replaceFirst(':id', midiaLocalId),
@@ -99,7 +102,7 @@ class MidiaLocalService {
     String midiaLocalId, {
     required String token,
   }) async {
-    try { 
+    try {
       await ApiService.delete(
         ApiConstants.deleteMidiaLocal.replaceFirst(':id', midiaLocalId),
         token: token,
