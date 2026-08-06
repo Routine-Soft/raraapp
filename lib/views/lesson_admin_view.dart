@@ -565,7 +565,8 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
       builder: (context) => QuestionEditorDialog(
         onSave: (question) {
           setState(() {
-            _questions.add(question);
+            // Converter explicitamente para Map<String, dynamic>
+            _questions.add(Map<String, dynamic>.from(question));
           });
           Navigator.pop(context);
         },
@@ -580,7 +581,8 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
         initialQuestion: _questions[index],
         onSave: (question) {
           setState(() {
-            _questions[index] = question;
+            // Converter explicitamente para Map<String, dynamic>
+            _questions[index] = Map<String, dynamic>.from(question);
           });
           Navigator.pop(context);
         },

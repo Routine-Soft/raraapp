@@ -29,7 +29,11 @@ class _LessonViewState extends State<LessonView> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer3<LessonController, LessonProgressController, UserController>(
+    return Consumer3<
+      LessonController,
+      LessonProgressController,
+      UserController
+    >(
       builder: (context, lessonController, progressController, userController, _) {
         if (lessonController.isLoading && lessonController.lessons.isEmpty) {
           return const Center(child: CircularProgressIndicator());
@@ -50,14 +54,14 @@ class _LessonViewState extends State<LessonView> {
         // Ordenar módulos e lições
         final sortedModules = lessonsByModule.keys.toList()..sort();
         for (var module in sortedModules) {
-          lessonsByModule[module]!.sort((a, b) => (a.number ?? 0).compareTo(b.number ?? 0));
+          lessonsByModule[module]!.sort(
+            (a, b) => (a.number ?? 0).compareTo(b.number ?? 0),
+          );
         }
 
         return Scaffold(
           body: lessonController.lessons.isEmpty
-              ? const Center(
-                  child: Text('Nenhuma lição disponível'),
-                )
+              ? const Center(child: Text('Nenhuma lição disponível'))
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: sortedModules.length,
@@ -97,21 +101,25 @@ class _LessonViewState extends State<LessonView> {
                           // Aulas (se expandido)
                           if (isExpanded)
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
                               child: Column(
                                 children: [
                                   const Divider(height: 1),
                                   ...lessons.map((lesson) {
                                     final progress = progressController
-                                        .findProgressByLessonId(lesson.id ?? '');
+                                        .findProgressByLessonId(
+                                          lesson.id ?? '',
+                                        );
                                     final hasCompleted = progress != null;
 
                                     return ListTile(
                                       contentPadding:
                                           const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 8,
-                                      ),
+                                            horizontal: 16,
+                                            vertical: 8,
+                                          ),
                                       leading: Container(
                                         width: 40,
                                         height: 40,
@@ -164,17 +172,10 @@ class _LessonViewState extends State<LessonView> {
     );
   }
 
-  void _showLessonDialog(
-    BuildContext context,
-    LessonDTO lesson,
-    String token,
-  ) {
+  void _showLessonDialog(BuildContext context, LessonDTO lesson, String token) {
     showDialog(
       context: context,
-      builder: (context) => LessonStudentDialog(
-        lesson: lesson,
-        token: token,
-      ),
+      builder: (context) => LessonStudentDialog(lesson: lesson, token: token),
     );
   }
 }
@@ -184,10 +185,7 @@ class LessonStudentDialog extends StatefulWidget {
   final LessonDTO lesson;
   final String token;
 
-  const LessonStudentDialog({
-    required this.lesson,
-    required this.token,
-  });
+  const LessonStudentDialog({required this.lesson, required this.token});
 
   @override
   State<LessonStudentDialog> createState() => _LessonStudentDialogState();
@@ -273,8 +271,10 @@ class _LessonStudentDialogState extends State<LessonStudentDialog> {
                         widget.lesson.image!,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => Center(
-                          child: Text('Erro ao carregar imagem',
-                              style: TextStyle(color: Colors.grey[600])),
+                          child: Text(
+                            'Erro ao carregar imagem',
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
                         ),
                       ),
                     ),
@@ -299,8 +299,10 @@ class _LessonStudentDialogState extends State<LessonStudentDialog> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Vídeo da aula',
-                                  style: TextStyle(fontWeight: FontWeight.w500)),
+                              const Text(
+                                'Vídeo da aula',
+                                style: TextStyle(fontWeight: FontWeight.w500),
+                              ),
                               const SizedBox(height: 4),
                               Text(
                                 widget.lesson.videoUrl!,
@@ -325,10 +327,7 @@ class _LessonStudentDialogState extends State<LessonStudentDialog> {
                     widget.lesson.content!.isNotEmpty) ...[
                   const Text(
                     'Conteúdo',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Container(
@@ -351,10 +350,7 @@ class _LessonStudentDialogState extends State<LessonStudentDialog> {
                     widget.lesson.questions!.isNotEmpty) ...[
                   const Text(
                     'Questões',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   ListView.builder(
@@ -363,14 +359,15 @@ class _LessonStudentDialogState extends State<LessonStudentDialog> {
                     itemCount: widget.lesson.questions!.length,
                     itemBuilder: (context, qIndex) {
                       final question = widget.lesson.questions![qIndex];
-                      final isCorrect = _submitted && (_correctAnswers?[qIndex] ?? false);
+                      final isCorrect =
+                          _submitted && (_correctAnswers?[qIndex] ?? false);
 
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         color: _submitted
                             ? isCorrect
-                                ? Colors.green[50]
-                                : Colors.red[50]
+                                  ? Colors.green[50]
+                                  : Colors.red[50]
                             : null,
                         child: Padding(
                           padding: const EdgeInsets.all(12),
@@ -407,18 +404,14 @@ class _LessonStudentDialogState extends State<LessonStudentDialog> {
                                   question.options!.isNotEmpty) ...[
                                 ListView.builder(
                                   shrinkWrap: true,
-                                  physics:
-                                      const NeverScrollableScrollPhysics(),
+                                  physics: const NeverScrollableScrollPhysics(),
                                   itemCount: question.options!.length,
                                   itemBuilder: (context, optIndex) {
-                                    final option =
-                                        question.options![optIndex];
+                                    final option = question.options![optIndex];
                                     final isSelected =
-                                        _selectedAnswers[qIndex] ==
-                                            optIndex;
+                                        _selectedAnswers[qIndex] == optIndex;
                                     final isCorrectOption =
-                                        optIndex ==
-                                            question.correctOptionIndex;
+                                        optIndex == question.correctOptionIndex;
 
                                     Color? bgColor;
                                     if (_submitted) {
@@ -440,8 +433,9 @@ class _LessonStudentDialogState extends State<LessonStudentDialog> {
                                               });
                                             },
                                       child: Container(
-                                        margin:
-                                            const EdgeInsets.only(bottom: 8),
+                                        margin: const EdgeInsets.only(
+                                          bottom: 8,
+                                        ),
                                         padding: const EdgeInsets.all(12),
                                         decoration: BoxDecoration(
                                           border: Border.all(
@@ -450,8 +444,9 @@ class _LessonStudentDialogState extends State<LessonStudentDialog> {
                                                 : Colors.grey[300]!,
                                             width: isSelected ? 2 : 1,
                                           ),
-                                          borderRadius:
-                                              BorderRadius.circular(4),
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
                                           color: bgColor,
                                         ),
                                         child: Row(
@@ -465,8 +460,8 @@ class _LessonStudentDialogState extends State<LessonStudentDialog> {
                                                   : (value) {
                                                       if (value != null) {
                                                         setState(() {
-                                                          _selectedAnswers[
-                                                              qIndex] = value;
+                                                          _selectedAnswers[qIndex] =
+                                                              value;
                                                         });
                                                       }
                                                     },
@@ -476,11 +471,13 @@ class _LessonStudentDialogState extends State<LessonStudentDialog> {
                                               child: Text(
                                                 '${String.fromCharCode(65 + optIndex)}) $option',
                                                 style: TextStyle(
-                                                  color: _submitted &&
+                                                  color:
+                                                      _submitted &&
                                                           isCorrectOption
                                                       ? Colors.green[900]
                                                       : null,
-                                                  fontWeight: _submitted &&
+                                                  fontWeight:
+                                                      _submitted &&
                                                           isCorrectOption
                                                       ? FontWeight.bold
                                                       : FontWeight.normal,
@@ -499,7 +496,9 @@ class _LessonStudentDialogState extends State<LessonStudentDialog> {
                               if (_submitted) ...[
                                 const SizedBox(height: 8),
                                 Text(
-                                  isCorrect ? 'Resposta correta!' : 'Resposta incorreta',
+                                  isCorrect
+                                      ? 'Resposta correta!'
+                                      : 'Resposta incorreta',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: isCorrect
@@ -570,11 +569,11 @@ class _LessonStudentDialogState extends State<LessonStudentDialog> {
                           setState(() {
                             _submitted = false;
                             _correctAnswers = null;
-                            for (int i = 0;
-                                i <
-                                    (widget.lesson.questions?.length ??
-                                        0);
-                                i++) {
+                            for (
+                              int i = 0;
+                              i < (widget.lesson.questions?.length ?? 0);
+                              i++
+                            ) {
                               _selectedAnswers[i] = null;
                             }
                           });
@@ -586,12 +585,15 @@ class _LessonStudentDialogState extends State<LessonStudentDialog> {
                       onPressed: () => Navigator.pop(context),
                       child: const Text('Fechar'),
                     ),
-                    if (!_submitted && widget.lesson.questions != null &&
+                    if (!_submitted &&
+                        widget.lesson.questions != null &&
                         widget.lesson.questions!.isNotEmpty) ...[
                       const SizedBox(width: 8),
                       ElevatedButton(
-                        onPressed: _selectedAnswers.values
-                                .any((answer) => answer == null)
+                        onPressed:
+                            _selectedAnswers.values.any(
+                              (answer) => answer == null,
+                            )
                             ? null
                             : () => _submitAnswers(context),
                         child: const Text('Submeter'),
@@ -624,51 +626,63 @@ class _LessonStudentDialogState extends State<LessonStudentDialog> {
 
     final userController = context.read<UserController>();
     final progressController = context.read<LessonProgressController>();
-    
+
     // Verificar se já existe progress anterior para essa lição
-    final existingProgress = progressController.findProgressByLessonId(widget.lesson.id ?? '');
+    final existingProgress = progressController.findProgressByLessonId(
+      widget.lesson.id ?? '',
+    );
 
     if (existingProgress != null) {
       // Atualizar progresso existente
-      progressController.updateProgress(
-        progressId: existingProgress.id ?? '',
-        data: {
-          'answers': answers,
-          'completedAt': DateTime.now().toIso8601String(),
-          // score será recalculado pelo backend
-        },
-        token: widget.token,
-      ).then((_) {
-        // Após atualização bem-sucedida, construir resultado com dados do backend
-        setState(() {
-          _submitted = true;
-          _correctAnswers = _buildCorrectAnswersFromBackend(progressController);
-        });
-      });
+      progressController
+          .updateProgress(
+            progressId: existingProgress.id ?? '',
+            data: {
+              'answers': answers,
+              'completedAt': DateTime.now().toIso8601String(),
+              // score será recalculado pelo backend
+            },
+            token: widget.token,
+          )
+          .then((_) {
+            // Após atualização bem-sucedida, construir resultado com dados do backend
+            setState(() {
+              _submitted = true;
+              _correctAnswers = _buildCorrectAnswersFromBackend(
+                progressController,
+              );
+            });
+          });
     } else {
       // Criar novo progresso - deixar backend calcular score
-      progressController.createProgress(
-        userId: userController.currentUser?.id ?? '',
-        lessonId: widget.lesson.id ?? '',
-        score: 0, // será recalculado pelo backend
-        totalQuestions: widget.lesson.questions?.length ?? 0,
-        answers: answers,
-        completedAt: DateTime.now(),
-        token: widget.token,
-      ).then((_) {
-        // Após criação bem-sucedida, construir resultado com dados do backend
-        setState(() {
-          _submitted = true;
-          _correctAnswers = _buildCorrectAnswersFromBackend(progressController);
-        });
-      });
+      progressController
+          .createProgress(
+            userId: userController.currentUser?.id ?? '',
+            lessonId: widget.lesson.id ?? '',
+            score: 0, // será recalculado pelo backend
+            totalQuestions: widget.lesson.questions?.length ?? 0,
+            answers: answers,
+            completedAt: DateTime.now(),
+            token: widget.token,
+          )
+          .then((_) {
+            // Após criação bem-sucedida, construir resultado com dados do backend
+            setState(() {
+              _submitted = true;
+              _correctAnswers = _buildCorrectAnswersFromBackend(
+                progressController,
+              );
+            });
+          });
     }
   }
 
-  Map<int, bool> _buildCorrectAnswersFromBackend(LessonProgressController controller) {
+  Map<int, bool> _buildCorrectAnswersFromBackend(
+    LessonProgressController controller,
+  ) {
     final result = <int, bool>{};
     final progress = controller.findProgressByLessonId(widget.lesson.id ?? '');
-    
+
     if (progress != null && progress.answers != null) {
       for (var answer in progress.answers!) {
         if (answer.questionIndex != null && answer.isCorrect != null) {
@@ -676,8 +690,7 @@ class _LessonStudentDialogState extends State<LessonStudentDialog> {
         }
       }
     }
-    
+
     return result;
   }
 }
-
