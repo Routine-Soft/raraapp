@@ -98,7 +98,7 @@ class _HomeViewState extends State<HomeView> {
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 0.75,
+                  childAspectRatio: 1.2,
                 ),
                 itemCount: midiaController.midiasLocais.length,
                 itemBuilder: (context, index) {
@@ -111,27 +111,9 @@ class _HomeViewState extends State<HomeView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Imagem
-                        if (midia.image != null && midia.image!.isNotEmpty)
-                          Expanded(
-                            flex: 2,
-                            child: Container(
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(8),
-                                  topRight: Radius.circular(8),
-                                ),
-                                image: DecorationImage(
-                                  image: NetworkImage(midia.image!),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                          ),
                         // Conteúdo
                         Expanded(
-                          flex: 2,
+                          flex: 1,
                           child: Padding(
                             padding: const EdgeInsets.all(8),
                             child: Column(
@@ -145,6 +127,14 @@ class _HomeViewState extends State<HomeView> {
                                   ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  midia.time?.toString() ?? '',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(

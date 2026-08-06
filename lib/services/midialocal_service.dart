@@ -25,9 +25,6 @@ class MidiaLocalService {
         'image': image,
       };
 
-      // Remove valores null
-      body.removeWhere((key, value) => value == null);
-
       final response = await ApiService.post(
         ApiConstants.createMidiaLocal,
         body: body,
@@ -45,14 +42,18 @@ class MidiaLocalService {
     required String token,
   }) async {
     try {
+      print('[MidiaLocalService] GET: ${ApiConstants.getAllMidiaLocals}');
       final response = await ApiService.get(ApiConstants.getAllMidiaLocals, token: token);
+      print('[MidiaLocalService] Response: $response');
 
       // Resposta padronizada: { success: true, data: [...] }
       final List<dynamic> midiasLocais = response['data'] as List<dynamic>;
+      print('[MidiaLocalService] Mídias parseadas: ${midiasLocais.length}');
       return midiasLocais
           .map((m) => MidiaLocalDTO.fromJson(m as Map<String, dynamic>))
           .toList();
     } catch (e) {
+      print('[MidiaLocalService] Erro: $e');
       rethrow;
     }
   }

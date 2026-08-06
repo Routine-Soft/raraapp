@@ -19,13 +19,23 @@ class MidiaLocalDTO {
 
   factory MidiaLocalDTO.fromJson(Map<String, dynamic>? json) {
     if (json == null) return MidiaLocalDTO();
+    
+    // churchId pode vir como String ou como Map (objeto)
+    String? churchId;
+    final churchIdValue = json['churchId'];
+    if (churchIdValue is Map) {
+      churchId = churchIdValue['_id'] as String?;
+    } else if (churchIdValue is String) {
+      churchId = churchIdValue;
+    }
+    
     return MidiaLocalDTO(
       id: json['_id'] ?? json['id'],
       date: json['date'] != null ? DateTime.parse(json['date'] as String) : null,
       time: json['time'] ?? '',
       title: json['title'] ?? '',
       text: json['text'] ?? '',
-      churchId: json['churchId'] ?? '',
+      churchId: churchId,
       image: json['image'] ?? '',
     );
   }

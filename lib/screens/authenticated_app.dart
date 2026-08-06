@@ -4,6 +4,7 @@ import 'package:raraapp/views/home_view.dart';
 import 'package:raraapp/views/lesson_view.dart';
 import 'package:raraapp/views/christian_group_view.dart';
 import 'package:raraapp/views/christian_group_admin_view.dart';
+import 'package:raraapp/views/midialocal_admin_view.dart';
 import 'package:raraapp/views/cura_view.dart';
 
 class AuthenticatedApp extends StatefulWidget {
@@ -68,6 +69,7 @@ class _AuthenticatedAppState extends State<AuthenticatedApp> {
       'lesson' => const LessonView(),
       'christian-group' => const ChristianGroupView(),
       'christian-group-admin' => const ChristianGroupAdminView(),
+      'midialocal-admin' => const MidiaLocalAdminView(),
       'cura' => const CuraView(),
       _ => const HomeView(),
     };
@@ -79,6 +81,7 @@ class _AuthenticatedAppState extends State<AuthenticatedApp> {
       'lesson' => 'Lições',
       'christian-group' => 'Grupos Cristãos',
       'christian-group-admin' => 'Administração de Grupos Cristãos',
+      'midialocal-admin' => 'Administração de Mídias',
       'cura' => 'Pedidos de Cura',
       _ => 'Home',
     };

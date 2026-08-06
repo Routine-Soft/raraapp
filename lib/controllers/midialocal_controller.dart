@@ -62,11 +62,14 @@ class MidiaLocalController extends ChangeNotifier {
     notifyListeners();
 
     try {
+      print('[MidiaLocalController] Carregando todas as mídias...');
       _midiasLocais = await MidiaLocalService.getAllMidiasLocais(token: token);
+      print('[MidiaLocalController] Carregadas ${_midiasLocais.length} mídias');
       _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
+      print('[MidiaLocalController] Erro ao carregar: $e');
       _error = e.toString();
       _isLoading = false;
       notifyListeners();

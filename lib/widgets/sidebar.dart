@@ -103,6 +103,12 @@ class Sidebar extends StatelessWidget {
         'roles': ['super_admin'],
       },
       {
+        'key': 'midialocal-admin',
+        'label': 'Admin Mídias',
+        'icon': Icons.image,
+        'roles': ['super_admin'],
+      },
+      {
         'key': 'cura',
         'label': 'Pedidos de Cura',
         'icon': Icons.favorite,
