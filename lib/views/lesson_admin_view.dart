@@ -187,7 +187,7 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
     _questions =
         widget.lesson?.questions
             ?.map(
-              (q) => {
+              (q) => <String, dynamic>{
                 'statement': q.statement ?? '',
                 'options': List<String>.from(q.options ?? []),
                 'correctOptionIndex': q.correctOptionIndex ?? 0,
@@ -565,8 +565,11 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
       builder: (context) => QuestionEditorDialog(
         onSave: (question) {
           setState(() {
-            // Converter explicitamente para Map<String, dynamic>
-            _questions.add(Map<String, dynamic>.from(question));
+            _questions.add(<String, dynamic>{
+              'statement': question['statement'],
+              'options': List<String>.from(question['options'] as List),
+              'correctOptionIndex': question['correctOptionIndex'],
+            });
           });
           Navigator.pop(context);
         },
@@ -581,8 +584,11 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
         initialQuestion: _questions[index],
         onSave: (question) {
           setState(() {
-            // Converter explicitamente para Map<String, dynamic>
-            _questions[index] = Map<String, dynamic>.from(question);
+            _questions[index] = <String, dynamic>{
+              'statement': question['statement'],
+              'options': List<String>.from(question['options'] as List),
+              'correctOptionIndex': question['correctOptionIndex'],
+            };
           });
           Navigator.pop(context);
         },
@@ -817,7 +823,7 @@ class _QuestionEditorDialogState extends State<QuestionEditorDialog> {
                           return;
                         }
 
-                        widget.onSave({
+                        widget.onSave(<String, dynamic>{
                           'statement': _statementController.text,
                           'options': _options,
                           'correctOptionIndex': _correctOptionIndex,
