@@ -36,10 +36,10 @@ class Sidebar extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(
-                            Icons.church,
-                            size: 40,
-                            color: Colors.white,
+                          Image.asset(
+                            'assets/images/logorara.png',
+                            width: 40,
+                            height: 40,
                           ),
                           const SizedBox(height: 12),
                           Text(

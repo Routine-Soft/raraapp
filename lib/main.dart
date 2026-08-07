@@ -23,10 +23,10 @@ class MyApp extends StatelessWidget {
       providers: [
         // User Controller - Gerencia autenticação e dados do usuário
         ChangeNotifierProvider(create: (_) => UserController()),
-        
+
         // Church Controller - Gerencia dados de igrejas
         ChangeNotifierProvider(create: (_) => ChurchController()),
-        
+
         // Midia Local Controller - Gerencia Midias das igrejas
         ChangeNotifierProvider(create: (_) => MidiaLocalController()),
 
@@ -47,6 +47,7 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'Rara App',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,

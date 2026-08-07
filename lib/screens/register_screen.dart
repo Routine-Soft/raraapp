@@ -128,7 +128,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Cadastro'), centerTitle: true),
+      appBar: AppBar(
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset('assets/images/logorara.png', width: 32, height: 32),
+            const SizedBox(width: 8),
+            const Text('Cadastro'),
+          ],
+        ),
+        centerTitle: true,
+      ),
       body: Consumer<UserController>(
         builder: (context, userController, child) {
           return SingleChildScrollView(
@@ -137,6 +147,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
               key: _formKey,
               child: Column(
                 children: [
+                  // Logo
+                  Image.asset(
+                    'assets/images/logorara.png',
+                    width: 60,
+                    height: 60,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Cadastro',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 24),
+
                   // Nome
                   CustomTextField(
                     label: RegisterConstants.labelName,

@@ -19,11 +19,7 @@ class WelcomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Logo/Icon
-              const Icon(
-                Icons.church,
-                size: 80,
-                color: Colors.white,
-              ),
+              Image.asset('assets/images/logorara.png', width: 80, height: 80),
               const SizedBox(height: 32),
 
               // Título
@@ -176,10 +172,7 @@ class WelcomeScreen extends StatelessWidget {
                         ),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white,
-                          side: const BorderSide(
-                            color: Colors.white,
-                            width: 2,
-                          ),
+                          side: const BorderSide(color: Colors.white, width: 2),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),

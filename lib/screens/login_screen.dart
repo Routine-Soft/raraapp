@@ -103,7 +103,14 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Rara - Login'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset('assets/images/logorara.png', width: 32, height: 32),
+            const SizedBox(width: 8),
+            const Text('Rara - Login'),
+          ],
+        ),
         centerTitle: true,
         elevation: 0,
       ),
@@ -117,7 +124,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const SizedBox(height: 40),
-                  const Icon(Icons.church, size: 64, color: Colors.blue),
+                  Image.asset(
+                    'assets/images/logorara.png',
+                    width: 64,
+                    height: 64,
+                  ),
                   const SizedBox(height: 16),
                   const Text(
                     'Rara App',
