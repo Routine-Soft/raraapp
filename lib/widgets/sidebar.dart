@@ -110,7 +110,13 @@ class Sidebar extends StatelessWidget {
         'roles': ['user', 'super_admin', 'facilitator'],
       },
       {
-        'key': 'lesson-admin',
+        'key': 'lesson-professor',
+        'label': 'Painel Professor',
+        'icon': Icons.dashboard,
+        'roles': ['super_admin', 'avancai_lider'],
+      },
+      {
+        'key': 'lesson-supremo',
         'label': 'Admin Lições',
         'icon': Icons.book_outlined,
         'roles': ['super_admin'],

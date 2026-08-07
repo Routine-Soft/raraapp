@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:raraapp/widgets/sidebar.dart';
 import 'package:raraapp/views/home_view.dart';
 import 'package:raraapp/views/lesson_view.dart';
+import 'package:raraapp/views/lesson_supremo_view.dart';
 import 'package:raraapp/views/lesson_admin_view.dart';
 import 'package:raraapp/views/christian_group_view.dart';
 import 'package:raraapp/views/christian_group_admin_view.dart';
@@ -59,7 +60,8 @@ class _AuthenticatedAppState extends State<AuthenticatedApp> {
     return switch (menuKey) {
       'home' => const HomeView(),
       'lesson' => const LessonView(),
-      'lesson-admin' => const LessonAdminView(),
+      'lesson-professor' => const LessonAdminView(),
+      'lesson-supremo' => const LessonSupremoView(),
       'christian-group' => const ChristianGroupView(),
       'christian-group-admin' => const ChristianGroupAdminView(),
       'midialocal-admin' => const MidiaLocalAdminView(),
@@ -73,7 +75,8 @@ class _AuthenticatedAppState extends State<AuthenticatedApp> {
     return switch (menuKey) {
       'home' => 'Home',
       'lesson' => 'Lições',
-      'lesson-admin' => 'Administração de Lições',
+      'lesson-professor' => 'Painel do Professor',
+      'lesson-supremo' => 'Administração de Lições',
       'christian-group' => 'Grupos Cristãos',
       'christian-group-admin' => 'Administração de Grupos Cristãos',
       'midialocal-admin' => 'Administração de Mídias',

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:raraapp/controllers/lesson_progress_controller.dart';
 import 'package:raraapp/controllers/lesson_controller.dart';
 import 'package:raraapp/controllers/user_controller.dart';
+import 'package:raraapp/models/lesson_progress.dart';
 import 'package:raraapp/models/lesson.dart';
+import 'package:raraapp/models/user.dart';
 
 class LessonAdminView extends StatefulWidget {
   const LessonAdminView({super.key});
@@ -11,842 +14,240 @@ class LessonAdminView extends StatefulWidget {
   State<LessonAdminView> createState() => _LessonAdminViewState();
 }
 
-class _LessonAdminViewState extends State<LessonAdminView> {
+class _LessonAdminViewState extends State<LessonAdminView>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+
+    // Carregar dados ao abrir
     Future.microtask(() {
       final userController = context.read<UserController>();
+      final progressController = context.read<LessonProgressController>();
+      final lessonController = context.read<LessonController>();
       final token = userController.currentUser?.accessToken ?? '';
-      context.read<LessonController>().loadAllLessons(token: token);
+
+      userController.loadAllUsers(token: token);
+      progressController.loadAllProgress(token: token);
+      lessonController.loadAllLessons(token: token);
     });
   }
 
   @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Consumer2<LessonController, UserController>(
-      builder: (context, lessonController, userController, _) {
-        if (lessonController.isLoading && lessonController.lessons.isEmpty) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Painel do Professor'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(icon: Icon(Icons.person), text: 'Alunos'),
+            Tab(icon: Icon(Icons.verified_user), text: 'Membros'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [_buildStudentsList(context), _buildMembersList(context)],
+      ),
+    );
+  }
+
+  Widget _buildStudentsList(BuildContext context) {
+    return Consumer2<UserController, LessonProgressController>(
+      builder: (context, userController, progressController, _) {
+        final students = userController.allUsers
+            .where((u) => u.member != true)
+            .toList();
+
+        if (userController.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final token = userController.currentUser?.accessToken ?? '';
+        if (students.isEmpty) {
+          return const Center(child: Text('Nenhum aluno encontrado'));
+        }
 
-        return Scaffold(
-          body: Padding(
-            padding: const EdgeInsets.all(16),
-            child: lessonController.lessons.isEmpty
-                ? const Center(child: Text('Nenhuma lição encontrada'))
-                : ListView.builder(
-                    itemCount: lessonController.lessons.length,
-                    itemBuilder: (context, index) {
-                      final lesson = lessonController.lessons[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        elevation: 2,
-                        child: ListTile(
-                          title: Text(
-                            lesson.title ?? 'Sem título',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            '${lesson.module ?? 'Módulo?'} - Aula ${lesson.number ?? '?'}',
-                          ),
-                          trailing: PopupMenuButton(
-                            itemBuilder: (context) => [
-                              PopupMenuItem(
-                                child: const Text('Editar'),
-                                onTap: () {
-                                  Future.delayed(
-                                    const Duration(milliseconds: 300),
-                                    () {
-                                      if (mounted) {
-                                        _showFormDialog(context, token, lesson);
-                                      }
-                                    },
-                                  );
-                                },
-                              ),
-                              PopupMenuItem(
-                                child: const Text('Deletar'),
-                                onTap: () {
-                                  Future.delayed(
-                                    const Duration(milliseconds: 300),
-                                    () {
-                                      if (mounted) {
-                                        _deleteLesson(
-                                          context,
-                                          lesson.id ?? '',
-                                          token,
-                                        );
-                                      }
-                                    },
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                          onTap: () {
-                            lessonController.selectLesson(lesson);
-                            _showDetailDialog(context, lesson);
-                          },
+        return ListView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: students.length,
+          itemBuilder: (context, index) {
+            final student = students[index];
+            final studentProgresses = progressController.progresses
+                .where((p) => p.userId == student.id)
+                .toList();
+
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: CircleAvatar(
+                  child: Text(student.name[0].toUpperCase()),
+                ),
+                title: Text(student.name),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 6),
+                    Chip(
+                      label: Text(
+                        student.baptized ? 'Batizado' : 'Não Batizado',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
                         ),
-                      );
-                    },
-                  ),
-          ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => _showFormDialog(context, token, null),
-            child: const Icon(Icons.add),
-          ),
+                      ),
+                      backgroundColor: student.baptized
+                          ? Colors.green
+                          : Colors.orange,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 0,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${studentProgresses.length} aula${studentProgresses.length == 1 ? '' : 's'}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  _showStudentDetail(context, student, studentProgresses);
+                },
+              ),
+            );
+          },
         );
       },
     );
   }
 
-  void _showFormDialog(BuildContext context, String token, LessonDTO? lesson) {
-    showDialog(
-      context: context,
-      builder: (context) => LessonFormDialog(token: token, lesson: lesson),
-    );
-  }
+  Widget _buildMembersList(BuildContext context) {
+    return Consumer2<UserController, LessonProgressController>(
+      builder: (context, userController, progressController, _) {
+        final members = userController.allUsers
+            .where((u) => u.member == true)
+            .toList();
 
-  void _deleteLesson(BuildContext context, String lessonId, String token) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Deletar Lição?'),
-        content: const Text('Esta ação não pode ser desfeita.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              context.read<LessonController>().deleteLesson(
-                lessonId: lessonId,
-                token: token,
-              );
-              Navigator.pop(context);
-            },
-            child: const Text('Deletar', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
+        if (userController.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-  void _showDetailDialog(BuildContext context, LessonDTO lesson) {
-    showDialog(
-      context: context,
-      builder: (context) => LessonDetailDialog(lesson: lesson),
-    );
-  }
-}
+        if (members.isEmpty) {
+          return const Center(child: Text('Nenhum membro encontrado'));
+        }
 
-// Dialog para criar/editar lição
-class LessonFormDialog extends StatefulWidget {
-  final String token;
-  final LessonDTO? lesson;
+        return ListView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: members.length,
+          itemBuilder: (context, index) {
+            final member = members[index];
+            final memberProgresses = progressController.progresses
+                .where((p) => p.userId == member.id)
+                .toList();
 
-  const LessonFormDialog({required this.token, this.lesson});
-
-  @override
-  State<LessonFormDialog> createState() => _LessonFormDialogState();
-}
-
-class _LessonFormDialogState extends State<LessonFormDialog> {
-  late TextEditingController _numberController;
-  late TextEditingController _titleController;
-  late TextEditingController _videoUrlController;
-  late TextEditingController _contentController;
-  late TextEditingController _imageController;
-  late String _selectedModule;
-  late List<Map<String, dynamic>> _questions;
-
-  static const List<String> _validModules = ['reset', 'start', 'cdv'];
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedModule = widget.lesson?.module ?? 'reset';
-    _numberController = TextEditingController(
-      text: widget.lesson?.number?.toString() ?? '',
-    );
-    _titleController = TextEditingController(text: widget.lesson?.title ?? '');
-    _videoUrlController = TextEditingController(
-      text: widget.lesson?.videoUrl ?? '',
-    );
-    _contentController = TextEditingController(
-      text: widget.lesson?.content ?? '',
-    );
-    _imageController = TextEditingController(text: widget.lesson?.image ?? '');
-
-    // Inicializar questions
-    _questions =
-        widget.lesson?.questions
-            ?.map(
-              (q) => <String, dynamic>{
-                'statement': q.statement ?? '',
-                'options': List<String>.from(q.options ?? []),
-                'correctOptionIndex': q.correctOptionIndex ?? 0,
-              },
-            )
-            .toList() ??
-        [];
-  }
-
-  @override
-  void dispose() {
-    _numberController.dispose();
-    _titleController.dispose();
-    _videoUrlController.dispose();
-    _contentController.dispose();
-    _imageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
-    return Dialog(
-      child: SingleChildScrollView(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: isMobile ? screenWidth - 32 : 500,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      widget.lesson == null ? 'Criar Lição' : 'Editar Lição',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.green[100],
+                  child: Text(
+                    member.name[0].toUpperCase(),
+                    style: const TextStyle(color: Colors.green),
+                  ),
                 ),
-                const SizedBox(height: 20),
-
-                // Formulário
-                // Dropdown para Módulo
-                Column(
+                title: Text(member.name),
+                subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Módulo *',
-                      style: TextStyle(fontWeight: FontWeight.w500),
+                    const SizedBox(height: 6),
+                    Chip(
+                      label: Text(
+                        member.baptized ? 'Batizado' : 'Não Batizado',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
+                        ),
+                      ),
+                      backgroundColor: member.baptized
+                          ? Colors.green
+                          : Colors.orange,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 0,
+                      ),
                     ),
                     const SizedBox(height: 6),
-                    DropdownButtonFormField<String>(
-                      value: _selectedModule,
-                      items: _validModules
-                          .map(
-                            (module) => DropdownMenuItem(
-                              value: module,
-                              child: Text(module),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() => _selectedModule = value);
-                        }
-                      },
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
-                      ),
+                    Text(
+                      '${memberProgresses.length} aula${memberProgresses.length == 1 ? '' : 's'}',
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-
-                _buildFormField(
-                  controller: _numberController,
-                  label: 'Número da Aula',
-                  hint: '1, 2, 3...',
-                  keyboardType: TextInputType.number,
-                  required: true,
-                ),
-                const SizedBox(height: 12),
-
-                _buildFormField(
-                  controller: _titleController,
-                  label: 'Título',
-                  hint: 'Título da lição',
-                  required: true,
-                ),
-                const SizedBox(height: 12),
-
-                _buildFormField(
-                  controller: _videoUrlController,
-                  label: 'URL do Vídeo',
-                  hint: 'https://youtube.com/...',
-                  required: true,
-                ),
-                const SizedBox(height: 12),
-
-                _buildFormField(
-                  controller: _contentController,
-                  label: 'Conteúdo',
-                  hint: 'Texto da lição',
-                  maxLines: 4,
-                  required: true,
-                ),
-                const SizedBox(height: 12),
-
-                _buildFormField(
-                  controller: _imageController,
-                  label: 'URL da Imagem',
-                  hint: 'https://...',
-                ),
-                const SizedBox(height: 24),
-
-                // Seção de Perguntas
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Perguntas',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () => _showAddQuestionDialog(),
-                      icon: const Icon(Icons.add, size: 18),
-                      label: const Text('Adicionar'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Lista de perguntas
-                if (_questions.isEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      'Nenhuma pergunta adicionada',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    ),
-                  )
-                else
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _questions.length,
-                    itemBuilder: (context, index) {
-                      final question = _questions[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      '${index + 1}. ${question['statement'] ?? ""}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 12,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  PopupMenuButton(
-                                    itemBuilder: (context) => [
-                                      PopupMenuItem(
-                                        child: const Text('Editar'),
-                                        onTap: () {
-                                          Future.delayed(
-                                            const Duration(milliseconds: 300),
-                                            () {
-                                              if (mounted) {
-                                                _showEditQuestionDialog(index);
-                                              }
-                                            },
-                                          );
-                                        },
-                                      ),
-                                      PopupMenuItem(
-                                        child: const Text('Remover'),
-                                        onTap: () {
-                                          setState(() {
-                                            _questions.removeAt(index);
-                                          });
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              if ((question['options'] as List?)?.isNotEmpty ??
-                                  false) ...[
-                                const SizedBox(height: 8),
-                                Wrap(
-                                  spacing: 4,
-                                  children:
-                                      (question['options'] as List<String>)
-                                          .asMap()
-                                          .entries
-                                          .map((entry) {
-                                            final optIndex = entry.key;
-                                            final option = entry.value;
-                                            final isCorrect =
-                                                optIndex ==
-                                                question['correctOptionIndex'];
-                                            return Chip(
-                                              label: Text(option),
-                                              backgroundColor: isCorrect
-                                                  ? Colors.green[200]
-                                                  : Colors.grey[200],
-                                              labelStyle: TextStyle(
-                                                fontSize: 11,
-                                                color: isCorrect
-                                                    ? Colors.green[900]
-                                                    : Colors.black,
-                                              ),
-                                            );
-                                          })
-                                          .toList(),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                const SizedBox(height: 24),
-
-                // Botões
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancelar'),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: () => _submitForm(context),
-                      child: Text(
-                        widget.lesson == null ? 'Criar' : 'Atualizar',
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  _showStudentDetail(context, member, memberProgresses);
+                },
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
-  Widget _buildFormField({
-    required TextEditingController controller,
-    required String label,
-    String? hint,
-    TextInputType keyboardType = TextInputType.text,
-    int maxLines = 1,
-    bool required = false,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          required ? '$label *' : label,
-          style: const TextStyle(fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 6),
-        TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          maxLines: maxLines,
-          minLines: maxLines == 1 ? 1 : maxLines,
-          decoration: InputDecoration(
-            hintText: hint,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 12,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _submitForm(BuildContext context) {
-    if (_numberController.text.isEmpty ||
-        _titleController.text.isEmpty ||
-        _videoUrlController.text.isEmpty ||
-        _contentController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preencha todos os campos obrigatórios')),
-      );
-      return;
-    }
-
-    if (widget.lesson == null) {
-      // Criar
-      context.read<LessonController>().createLesson(
-        module: _selectedModule,
-        number: int.parse(_numberController.text),
-        title: _titleController.text,
-        videoUrl: _videoUrlController.text,
-        content: _contentController.text,
-        image: _imageController.text.isEmpty ? null : _imageController.text,
-        questions: _questions.isNotEmpty ? _questions : null,
-        token: widget.token,
-      );
-    } else {
-      // Atualizar
-      context.read<LessonController>().updateLesson(
-        lessonId: widget.lesson!.id ?? '',
-        data: {
-          'module': _selectedModule,
-          'number': int.parse(_numberController.text),
-          'title': _titleController.text,
-          'videoUrl': _videoUrlController.text,
-          'content': _contentController.text,
-          if (_imageController.text.isNotEmpty) 'image': _imageController.text,
-          if (_questions.isNotEmpty) 'questions': _questions,
-        },
-        token: widget.token,
-      );
-    }
-
-    Navigator.pop(context);
-  }
-
-  void _showAddQuestionDialog() {
+  void _showStudentDetail(
+    BuildContext context,
+    UserDTO student,
+    List<LessonProgressDTO> progresses,
+  ) {
+    final lessonController = context.read<LessonController>();
     showDialog(
       context: context,
-      builder: (context) => QuestionEditorDialog(
-        onSave: (question) {
-          setState(() {
-            _questions.add(<String, dynamic>{
-              'statement': question['statement'],
-              'options': List<String>.from(question['options'] as List),
-              'correctOptionIndex': question['correctOptionIndex'],
-            });
-          });
-          Navigator.pop(context);
-        },
-      ),
-    );
-  }
-
-  void _showEditQuestionDialog(int index) {
-    showDialog(
-      context: context,
-      builder: (context) => QuestionEditorDialog(
-        initialQuestion: _questions[index],
-        onSave: (question) {
-          setState(() {
-            _questions[index] = <String, dynamic>{
-              'statement': question['statement'],
-              'options': List<String>.from(question['options'] as List),
-              'correctOptionIndex': question['correctOptionIndex'],
-            };
-          });
-          Navigator.pop(context);
-        },
+      builder: (context) => UserDetailDialog(
+        student: student,
+        progresses: progresses,
+        lessons: lessonController.lessons,
       ),
     );
   }
 }
 
-// Dialog para editar pergunta
-class QuestionEditorDialog extends StatefulWidget {
-  final Map<String, dynamic>? initialQuestion;
-  final Function(Map<String, dynamic>) onSave;
+// Dialog para detalhe do aluno
+class UserDetailDialog extends StatefulWidget {
+  final UserDTO student;
+  final List<LessonProgressDTO> progresses;
+  final List<LessonDTO> lessons;
 
-  const QuestionEditorDialog({this.initialQuestion, required this.onSave});
+  const UserDetailDialog({
+    required this.student,
+    required this.progresses,
+    required this.lessons,
+  });
 
   @override
-  State<QuestionEditorDialog> createState() => _QuestionEditorDialogState();
+  State<UserDetailDialog> createState() => _UserDetailDialogState();
 }
 
-class _QuestionEditorDialogState extends State<QuestionEditorDialog> {
-  late TextEditingController _statementController;
-  late List<String> _options;
-  late int _correctOptionIndex;
+class _UserDetailDialogState extends State<UserDetailDialog> {
+  late bool _isMember;
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    _statementController = TextEditingController(
-      text: widget.initialQuestion?['statement'] ?? '',
-    );
-    _options = List<String>.from(widget.initialQuestion?['options'] ?? []);
-    _correctOptionIndex = widget.initialQuestion?['correctOptionIndex'] ?? 0;
+    _isMember = widget.student.member == true;
   }
-
-  @override
-  void dispose() {
-    _statementController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
-    return Dialog(
-      child: SingleChildScrollView(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: isMobile ? screenWidth - 32 : 450,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Editar Pergunta',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                // Enunciado
-                const Text(
-                  'Enunciado *',
-                  style: TextStyle(fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: _statementController,
-                  maxLines: 2,
-                  decoration: InputDecoration(
-                    hintText: 'Qual é a pergunta?',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 12,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Opções
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Opções *',
-                      style: TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          _options.add('');
-                        });
-                      },
-                      icon: const Icon(Icons.add, size: 16),
-                      label: const Text('Adicionar'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-
-                // Lista de opções
-                if (_options.isEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      'Nenhuma opção adicionada',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    ),
-                  )
-                else
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _options.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: TextEditingController(
-                                  text: _options[index],
-                                ),
-                                onChanged: (value) {
-                                  _options[index] = value;
-                                },
-                                decoration: InputDecoration(
-                                  hintText:
-                                      '${String.fromCharCode(65 + index)}) Opção',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 8,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // Radio para resposta correta
-                            Tooltip(
-                              message: 'Marcar como correta',
-                              child: Radio<int>(
-                                value: index,
-                                groupValue: _correctOptionIndex,
-                                onChanged: (value) {
-                                  if (value != null) {
-                                    setState(() {
-                                      _correctOptionIndex = value;
-                                    });
-                                  }
-                                },
-                              ),
-                            ),
-                            // Botão remover
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline, size: 20),
-                              onPressed: () {
-                                setState(() {
-                                  _options.removeAt(index);
-                                  if (_correctOptionIndex >= _options.length) {
-                                    _correctOptionIndex = _options.length - 1;
-                                  }
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                const SizedBox(height: 24),
-
-                // Botões
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancelar'),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (_statementController.text.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Preencha o enunciado da pergunta'),
-                            ),
-                          );
-                          return;
-                        }
-
-                        if (_options.isEmpty ||
-                            _options.any((opt) => opt.isEmpty)) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Preencha todas as opções'),
-                            ),
-                          );
-                          return;
-                        }
-
-                        widget.onSave(<String, dynamic>{
-                          'statement': _statementController.text,
-                          'options': _options,
-                          'correctOptionIndex': _correctOptionIndex,
-                        });
-                      },
-                      child: const Text('Salvar'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Dialog para visualizar detalhes da lição
-class LessonDetailDialog extends StatelessWidget {
-  final LessonDTO lesson;
-
-  const LessonDetailDialog({required this.lesson});
 
   @override
   Widget build(BuildContext context) {
@@ -861,22 +262,35 @@ class LessonDetailDialog extends StatelessWidget {
             maxWidth: isMobile ? screenWidth - 32 : 700,
           ),
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header com botão de fechar
+                // Header
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: Text(
-                        lesson.title ?? 'Sem título',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.student.name,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.student.email,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     IconButton(
@@ -885,178 +299,262 @@ class LessonDetailDialog extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 20),
+                const Divider(),
+                const SizedBox(height: 20),
 
-                // Módulo e número
-                Text(
-                  'Módulo: ${lesson.module ?? '?'} • Aula ${lesson.number ?? '?'}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
+                // Dados pessoais
+                const Text(
+                  'Dados Pessoais',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
+                const SizedBox(height: 12),
+                _buildDataRow('Telefone', widget.student.phone ?? '—'),
+                _buildDataRow('Gênero', widget.student.gender ?? '—'),
+                if (widget.student.birthdate != null) ...[
+                  _buildDataRow(
+                    'Nascimento',
+                    '${widget.student.birthdate!.day}/${widget.student.birthdate!.month}/${widget.student.birthdate!.year}',
+                  ),
+                ],
+                const SizedBox(height: 20),
+
+                // Status
+                const Text(
+                  'Status',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                _buildDataRow(
+                  'Batizado',
+                  widget.student.baptized ? 'Sim' : 'Não',
+                ),
+                _buildDataRow('Status', widget.student.status ?? '—'),
                 const SizedBox(height: 16),
 
-                // Imagem (se tiver)
-                if (lesson.image != null && lesson.image!.isNotEmpty) ...[
-                  Container(
-                    width: double.infinity,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      color: Colors.grey[300],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        lesson.image!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Center(
-                          child: Text(
-                            'Erro ao carregar imagem',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                        ),
+                // Toggle Member
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Membro',
+                        style: TextStyle(fontWeight: FontWeight.w500),
                       ),
-                    ),
+                      Switch(
+                        value: _isMember,
+                        onChanged: (value) {
+                          setState(() {
+                            _isMember = value;
+                          });
+                        },
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                ],
+                ),
+                const SizedBox(height: 20),
 
-                // Vídeo
-                if (lesson.videoUrl != null && lesson.videoUrl!.isNotEmpty) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[400]!),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.play_circle_outline, size: 24),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Vídeo da lição',
-                                style: TextStyle(fontWeight: FontWeight.w500),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                lesson.videoUrl!,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.blue[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-
-                // Conteúdo
-                if (lesson.content != null && lesson.content!.isNotEmpty) ...[
+                // Progresso por módulo
+                if (widget.progresses.isNotEmpty) ...[
                   const Text(
-                    'Conteúdo',
+                    'Progresso por Módulo',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      lesson.content!,
-                      style: const TextStyle(fontSize: 13, height: 1.6),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+                  ..._buildModuleProgress(),
+                  const SizedBox(height: 20),
                 ],
 
-                // Perguntas
-                if (lesson.questions != null &&
-                    lesson.questions!.isNotEmpty) ...[
-                  const Text(
-                    'Perguntas',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: lesson.questions!.length,
-                    itemBuilder: (context, index) {
-                      final question = lesson.questions![index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey[300]!),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${index + 1}. ${question.statement ?? "Pergunta sem texto"}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              if (question.options != null &&
-                                  question.options!.isNotEmpty) ...[
-                                const SizedBox(height: 8),
-                                ...question.options!.asMap().entries.map((
-                                  entry,
-                                ) {
-                                  final optionIndex = entry.key;
-                                  final option = entry.value;
-                                  final isCorrect =
-                                      optionIndex ==
-                                      question.correctOptionIndex;
-                                  return Padding(
-                                    padding: const EdgeInsets.only(top: 4),
-                                    child: Text(
-                                      '${String.fromCharCode(65 + optionIndex)}) $option${isCorrect ? " ✓" : ""}',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: isCorrect
-                                            ? Colors.green
-                                            : Colors.grey[700],
-                                        fontWeight: isCorrect
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                      ),
-                                    ),
-                                  );
-                                }),
-                              ],
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                // Botões
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: _isSaving
+                          ? null
+                          : () => Navigator.pop(context),
+                      child: const Text('Cancelar'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: _isSaving ? null : () => _saveMemberStatus(),
+                      child: _isSaving
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Salvar'),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildDataRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildModuleProgress() {
+    // Mapear módulos com total de aulas
+    final moduleStats = <String, Map<String, int>>{};
+
+    // Inicializar sempre os 3 módulos
+    moduleStats['reset'] = {'completed': 0, 'total': 0};
+    moduleStats['start'] = {'completed': 0, 'total': 0};
+    moduleStats['cdv'] = {'completed': 0, 'total': 0};
+
+    // Contar total de aulas por módulo
+    for (final lesson in widget.lessons) {
+      final module = lesson.module ?? 'reset';
+      if (moduleStats.containsKey(module)) {
+        moduleStats[module]!['total'] = moduleStats[module]!['total']! + 1;
+      }
+    }
+
+    // Contar aulas concluídas
+    for (final progress in widget.progresses) {
+      final lesson = widget.lessons.firstWhere(
+        (l) => l.id == progress.lessonId,
+        orElse: () => LessonDTO(module: 'reset'),
+      );
+      final module = lesson.module ?? 'reset';
+      if (moduleStats.containsKey(module)) {
+        moduleStats[module]!['completed'] =
+            moduleStats[module]!['completed']! + 1;
+      }
+    }
+
+    // Ordenar módulos
+    final modules = ['reset', 'start', 'cdv'];
+    final sortedModules = modules.where((m) => moduleStats.containsKey(m));
+
+    // Renderizar cards por módulo
+    return sortedModules.map((module) {
+      final stats = moduleStats[module]!;
+      final completed = stats['completed']!;
+      final total = stats['total']!;
+      final percentage = total > 0
+          ? (completed / total * 100).toStringAsFixed(1)
+          : '0.0';
+
+      return Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[300]!),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    module.toUpperCase(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                Text(
+                  '$completed de $total',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: total > 0 ? completed / total : 0,
+                minHeight: 8,
+                backgroundColor: Colors.grey[300],
+                valueColor: AlwaysStoppedAnimation(
+                  completed == total && total > 0
+                      ? Colors.green
+                      : completed > 0
+                      ? Colors.blue
+                      : Colors.grey[400],
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '$percentage%',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+              ),
+            ),
+          ],
+        ),
+      );
+    }).toList();
+  }
+
+  void _saveMemberStatus() async {
+    if (_isMember == (widget.student.member == true)) {
+      // Sem mudanças
+      Navigator.pop(context);
+      return;
+    }
+
+    final userController = context.read<UserController>();
+    final token = userController.currentUser?.accessToken ?? '';
+
+    setState(() => _isSaving = true);
+
+    final success = await userController.updateUser(
+      userId: widget.student.id ?? '',
+      data: {'member': _isMember},
+      token: token,
+    );
+
+    setState(() => _isSaving = false);
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Status do membro atualizado')),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro: ${userController.error}')));
+    }
   }
 }

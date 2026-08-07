@@ -35,7 +35,7 @@ class UserController extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userJson = prefs.getString('user_data');
-      
+
       if (userJson != null) {
         final userMap = jsonDecode(userJson) as Map<String, dynamic>;
         _currentUser = UserDTO.fromJson(userMap);
@@ -62,24 +62,18 @@ class UserController extends ChangeNotifier {
   // ============ Autenticação ============
 
   /// Login com email e senha
-  Future<bool> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<bool> login({required String email, required String password}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final user = await UserService.login(
-        email: email,
-        password: password,
-      );
+      final user = await UserService.login(email: email, password: password);
       _currentUser = user;
-      
+
       // Salvar dados no storage
       await saveUserToStorage(user);
-      
+
       _isLoading = false;
       notifyListeners();
       return true;
@@ -150,9 +144,7 @@ class UserController extends ChangeNotifier {
     try {
       final newAccessToken = await UserService.refreshToken(refreshToken);
       if (_currentUser != null) {
-        _currentUser = _currentUser!.copyWith(
-          accessToken: newAccessToken,
-        );
+        _currentUser = _currentUser!.copyWith(accessToken: newAccessToken);
         notifyListeners();
       }
       return true;
@@ -171,17 +163,14 @@ class UserController extends ChangeNotifier {
 
     try {
       if (_currentUser?.id != null && token != null) {
-        await UserService.logout(
-          userId: _currentUser!.id!,
-          token: token,
-        );
+        await UserService.logout(userId: _currentUser!.id!, token: token);
       }
       _currentUser = null;
       _allUsers = [];
-      
+
       // Limpar dados do storage
       await clearUserStorage();
-      
+
       _isLoading = false;
       notifyListeners();
       return true;
@@ -253,9 +242,8 @@ class UserController extends ChangeNotifier {
         data: data,
         token: token,
       );
-      _currentUser = user;
 
-      // Atualiza na lista de usuários também
+      // Apenas atualiza na lista de usuários
       final index = _allUsers.indexWhere((u) => u.id == userId);
       if (index != -1) {
         _allUsers[index] = user;
@@ -283,10 +271,10 @@ class UserController extends ChangeNotifier {
 
     try {
       await UserService.deleteUser(userId, token: token);
-      
+
       // Remove da lista
       _allUsers.removeWhere((u) => u.id == userId);
-      
+
       // Se é o usuário atual, limpa
       if (_currentUser?.id == userId) {
         _currentUser = null;
@@ -370,10 +358,10 @@ class UserController extends ChangeNotifier {
         member: member,
         token: token,
       );
-      
+
       // Adiciona à lista
       _allUsers.add(user);
-      
+
       _isLoading = false;
       notifyListeners();
       return true;
@@ -401,11 +389,11 @@ class UserController extends ChangeNotifier {
         facilitator: facilitator,
         token: token,
       );
-      
+
       if (_currentUser?.id == userId) {
         _currentUser = user;
       }
-      
+
       final index = _allUsers.indexWhere((u) => u.id == userId);
       if (index != -1) {
         _allUsers[index] = user;
@@ -440,11 +428,11 @@ class UserController extends ChangeNotifier {
         roles: roles,
         token: token,
       );
-      
+
       if (_currentUser?.id == userId) {
         _currentUser = user;
       }
-      
+
       final index = _allUsers.indexWhere((u) => u.id == userId);
       if (index != -1) {
         _allUsers[index] = user;
