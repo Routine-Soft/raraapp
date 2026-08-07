@@ -2,6 +2,8 @@
 class CuraDTO {
   final String? id;
   final String? userId;
+  final Map<String, dynamic>?
+  userDetails; // Dados completos do usuário quando populado
   final String? type; // 'cura_alma', 'reciclagem', 'gabinete_pastoral'
   final String? status; // 'fila_espera', 'andamento', 'concluido'
   final String? assignedTo; // ID do pastor/atendente responsável
@@ -14,6 +16,7 @@ class CuraDTO {
   CuraDTO({
     this.id,
     this.userId,
+    this.userDetails,
     this.type,
     this.status,
     this.assignedTo,
@@ -26,15 +29,27 @@ class CuraDTO {
 
   factory CuraDTO.fromJson(Map<String, dynamic>? json) {
     if (json == null) return CuraDTO();
+
+    // Verifica se userId é um objeto (populado) ou string (ID)
+    String? userId;
+    Map<String, dynamic>? userDetails;
+
+    if (json['userId'] is Map) {
+      userDetails = json['userId'] as Map<String, dynamic>;
+      userId = userDetails['_id'] ?? userDetails['id'];
+    } else {
+      userId = json['userId'] as String?;
+    }
+
     return CuraDTO(
       id: json['_id'] ?? json['id'],
-      userId: json['userId'] is Map
-          ? (json['userId'] as Map)['_id'] ?? (json['userId'] as Map)['id']
-          : json['userId'],
+      userId: userId,
+      userDetails: userDetails,
       type: json['type'],
       status: json['status'],
       assignedTo: json['assignedTo'] is Map
-          ? (json['assignedTo'] as Map)['_id'] ?? (json['assignedTo'] as Map)['id']
+          ? (json['assignedTo'] as Map)['_id'] ??
+                (json['assignedTo'] as Map)['id']
           : json['assignedTo'],
       notes: json['notes'],
       churchId: json['churchId'] is Map
@@ -70,6 +85,7 @@ class CuraDTO {
   CuraDTO copyWith({
     String? id,
     String? userId,
+    Map<String, dynamic>? userDetails,
     String? type,
     String? status,
     String? assignedTo,
@@ -82,6 +98,7 @@ class CuraDTO {
     return CuraDTO(
       id: id ?? this.id,
       userId: userId ?? this.userId,
+      userDetails: userDetails ?? this.userDetails,
       type: type ?? this.type,
       status: status ?? this.status,
       assignedTo: assignedTo ?? this.assignedTo,

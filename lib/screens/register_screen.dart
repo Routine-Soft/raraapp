@@ -64,8 +64,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
 
   String? _selectedGender;
-  String? _selectedStatus;
-  String? _selectedInvitation;
+  String? _selectedCountry;
+  String? _selectedDDI;
   ChurchDTO? _selectedChurch;
   bool _baptized = false;
   bool _member = false;
@@ -119,7 +119,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (picked != null) {
       setState(() {
-        _birthdateController.text = '${picked.day}/${picked.month}/${picked.year}';
+        _birthdateController.text =
+            '${picked.day}/${picked.month}/${picked.year}';
       });
     }
   }
@@ -127,10 +128,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cadastro'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Cadastro'), centerTitle: true),
       body: Consumer<UserController>(
         builder: (context, userController, child) {
           return SingleChildScrollView(
@@ -159,6 +157,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 16),
 
+                  // País (DDI)
+                  CustomDropdown<String>(
+                    label: 'País',
+                    value: _selectedCountry,
+                    items: RegisterConstants.countriesWithDDI.keys.toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCountry = value;
+                        _selectedDDI =
+                            RegisterConstants.countriesWithDDI[value];
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
                   // Telefone
                   CustomTextField(
                     label: RegisterConstants.labelPhone,
@@ -166,6 +179,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     keyboardType: TextInputType.phone,
                     prefixIcon: Icons.phone,
                     validator: RegisterValidators.validatePhone,
+                    hintText: 'DDD + número',
                   ),
                   const SizedBox(height: 16),
 
@@ -173,9 +187,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Consumer<ChurchController>(
                     builder: (context, churchController, child) {
                       if (churchController.isLoading) {
-                        return const Center(
-                          child: CircularProgressIndicator(),
-                        );
+                        return const Center(child: CircularProgressIndicator());
                       }
 
                       return CustomDropdown<ChurchDTO>(
@@ -203,11 +215,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // Data de Nascimento
                   GestureDetector(
                     onTap: () => _selectDate(context),
-                    child: CustomTextField(
-                      label: RegisterConstants.labelBirthdate,
+                    child: TextField(
                       controller: _birthdateController,
-                      prefixIcon: Icons.calendar_today,
-                      keyboardType: TextInputType.none,
+                      enabled: false,
+                      decoration: InputDecoration(
+                        labelText: RegisterConstants.labelBirthdate,
+                        hintText: 'Dia/Mês/Ano',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        prefixIcon: const Icon(Icons.calendar_today),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -229,10 +247,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _passwordConfirmController,
                     obscureText: true,
                     prefixIcon: Icons.lock,
-                    validator: (value) => RegisterValidators.validatePasswordConfirm(
-                      value,
-                      _passwordController.text,
-                    ),
+                    validator: (value) =>
+                        RegisterValidators.validatePasswordConfirm(
+                          value,
+                          _passwordController.text,
+                        ),
                     inputFormatters: [NoSpaceFormatter()],
                   ),
                   const SizedBox(height: 24),
@@ -300,41 +319,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Seção Adicional
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Informações Adicionais',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Status
-                  CustomDropdown<String>(
-                    label: RegisterConstants.labelStatus,
-                    value: _selectedStatus,
-                    items: RegisterConstants.statusOptions,
-                    onChanged: (value) {
-                      setState(() => _selectedStatus = value);
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Convite da Graça
-                  CustomDropdown<String>(
-                    label: RegisterConstants.labelInvitation,
-                    value: _selectedInvitation,
-                    items: RegisterConstants.invitationOptions,
-                    onChanged: (value) {
-                      setState(() => _selectedInvitation = value);
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
                   // Batizado
                   CustomCheckbox(
                     label: RegisterConstants.labelBaptized,
@@ -363,8 +347,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       : _cepController.text,
                                   neighborhood:
                                       _neighborhoodController.text.isEmpty
-                                          ? null
-                                          : _neighborhoodController.text,
+                                      ? null
+                                      : _neighborhoodController.text,
                                   city: _cityController.text.isEmpty
                                       ? null
                                       : _cityController.text,
@@ -376,43 +360,57 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       : _countryController.text,
                                 );
 
+                                // Concatenar DDI + DDD + Telefone
+                                String? fullPhone;
+                                if (_phoneController.text.isNotEmpty &&
+                                    _selectedDDI != null) {
+                                  fullPhone =
+                                      _selectedDDI! +
+                                      _phoneController.text.replaceAll(
+                                        RegExp(r'[^0-9]'),
+                                        '',
+                                      );
+                                }
+
                                 final success = await userController.register(
                                   name: _nameController.text,
                                   email: _emailController.text,
                                   password: _passwordController.text,
-                                  phone: _phoneController.text.isEmpty
-                                      ? null
-                                      : _phoneController.text,
+                                  phone: fullPhone,
                                   gender: _selectedGender,
                                   birthdate: _birthdateController.text.isEmpty
                                       ? null
                                       : _parseBirthdate(
-                                          _birthdateController.text),
+                                          _birthdateController.text,
+                                        ),
                                   churchId: _selectedChurch?.id,
                                   address: address,
-                                  status: _selectedStatus,
-                                  invitationofgrace: _selectedInvitation,
                                   baptized: _baptized,
                                   member: _member,
+                                  facilitador: '',
                                 );
 
                                 if (success) {
                                   if (context.mounted) {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(
+                                    ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text(
                                           'Cadastro realizado com sucesso!',
                                         ),
+                                        backgroundColor: Colors.green,
                                       ),
                                     );
-                                    // Navegar para tela de login ou home
-                                    // Navigator.of(context).pushReplacementNamed('/login');
+                                    // Navegar para página de login
+                                    Navigator.of(context).pushReplacement(
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const LoginScreen(),
+                                      ),
+                                    );
                                   }
                                 } else {
                                   if (context.mounted) {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(
+                                    ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(
                                           userController.error ??
@@ -428,9 +426,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Text('Cadastrar'),
                     ),
@@ -475,8 +471,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   DateTime? _parseBirthdate(String dateString) {
     try {
       final parts = dateString.split('/');
-      return DateTime(int.parse(parts[2]), int.parse(parts[1]),
-          int.parse(parts[0]));
+      return DateTime(
+        int.parse(parts[2]),
+        int.parse(parts[1]),
+        int.parse(parts[0]),
+      );
     } catch (e) {
       return null;
     }

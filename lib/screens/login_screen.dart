@@ -1,9 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:raraapp/controllers/user_controller.dart';
 import 'package:raraapp/screens/authenticated_app.dart';
 import 'package:raraapp/screens/register_screen.dart';
 import 'package:raraapp/utils/validators.dart';
+
+/// Formatador que remove espaços e converte para lowercase (para email)
+class LowercaseNoSpaceFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return newValue.copyWith(
+      text: newValue.text.toLowerCase().replaceAll(' ', ''),
+      selection: newValue.selection,
+    );
+  }
+}
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -46,7 +61,10 @@ class _LoginScreenState extends State<LoginScreen> {
           SnackBar(
             content: Text(
               'Bem-vindo, ${userController.currentUser?.name}!',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 2),
@@ -66,7 +84,10 @@ class _LoginScreenState extends State<LoginScreen> {
           SnackBar(
             content: Text(
               userController.error ?? 'Falha ao fazer login',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
@@ -96,25 +117,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const SizedBox(height: 40),
-                  const Icon(
-                    Icons.church,
-                    size: 64,
-                    color: Colors.blue,
-                  ),
+                  const Icon(Icons.church, size: 64, color: Colors.blue),
                   const SizedBox(height: 16),
                   const Text(
                     'Rara App',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   const Text(
                     'Plataforma de aprendizado cristão',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                   const SizedBox(height: 40),
                   TextFormField(
@@ -133,6 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     validator: RegisterValidators.validateEmail,
                     keyboardType: TextInputType.emailAddress,
+                    inputFormatters: [LowercaseNoSpaceFormatter()],
                     enabled: !userController.isLoading,
                   ),
                   const SizedBox(height: 16),
@@ -218,8 +230,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      const RegisterScreen(),
+                                  builder: (context) => const RegisterScreen(),
                                 ),
                               );
                             },

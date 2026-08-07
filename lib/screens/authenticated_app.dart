@@ -9,6 +9,9 @@ import 'package:raraapp/views/christian_group_admin_view.dart';
 import 'package:raraapp/views/midialocal_admin_view.dart';
 import 'package:raraapp/views/church_admin_view.dart';
 import 'package:raraapp/views/cura_view.dart';
+import 'package:raraapp/views/cura_admin_view.dart';
+import 'package:raraapp/views/integration_view.dart';
+import 'package:raraapp/views/myaccount_view.dart';
 
 class AuthenticatedApp extends StatefulWidget {
   const AuthenticatedApp({super.key});
@@ -66,7 +69,10 @@ class _AuthenticatedAppState extends State<AuthenticatedApp> {
       'christian-group-admin' => const ChristianGroupAdminView(),
       'midialocal-admin' => const MidiaLocalAdminView(),
       'church-admin' => const ChurchAdminView(),
+      'integration' => const IntegrationView(),
       'cura' => const CuraView(),
+      'cura-admin' => const CuraAdminView(),
+      'my-account' => const MyAccountView(),
       _ => const HomeView(),
     };
   }
@@ -81,7 +87,10 @@ class _AuthenticatedAppState extends State<AuthenticatedApp> {
       'christian-group-admin' => 'Administração de Grupos Cristãos',
       'midialocal-admin' => 'Administração de Mídias',
       'church-admin' => 'Administração de Igrejas',
+      'integration' => 'Integração',
       'cura' => 'Pedidos de Cura',
+      'cura-admin' => 'Gerenciamento de Cura',
+      'my-account' => 'Minha Conta',
       _ => 'Home',
     };
   }

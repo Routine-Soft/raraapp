@@ -14,10 +14,7 @@ class UserService {
     try {
       final response = await ApiService.post(
         ApiConstants.userLogin,
-        body: {
-          'email': email,
-          'password': password,
-        },
+        body: {'email': email, 'password': password},
       );
 
       // Resposta padronizada: { success: true, data: { user, accessToken, refreshToken, ... } }
@@ -30,7 +27,7 @@ class UserService {
       }
 
       final data = response['data'];
-      
+
       if (data is! Map<String, dynamic>) {
         throw Exception('Campo "data" não é um Map');
       }
@@ -53,7 +50,7 @@ class UserService {
       }
 
       final user = UserDTO.fromJson(userData);
-      
+
       return user.copyWith(
         accessToken: data['accessToken'] as String?,
         refreshToken: data['refreshToken'] as String?,
@@ -77,6 +74,7 @@ class UserService {
     String? status,
     bool? baptized,
     bool? member,
+    String? facilitador,
   }) async {
     try {
       final body = {
@@ -92,6 +90,7 @@ class UserService {
         'status': status,
         'baptized': baptized,
         'member': member,
+        'facilitador': facilitador ?? '',
       };
 
       // Remove valores null
@@ -115,9 +114,7 @@ class UserService {
     try {
       final response = await ApiService.post(
         ApiConstants.userRefresh,
-        body: {
-          'refreshToken': refreshToken,
-        },
+        body: {'refreshToken': refreshToken},
       );
 
       // Resposta padronizada: { success: true, data: { accessToken: "..." } }
@@ -134,11 +131,7 @@ class UserService {
     required String token,
   }) async {
     try {
-      await ApiService.post(
-        ApiConstants.userLogout,
-        body: {},
-        token: token,
-      );
+      await ApiService.post(ApiConstants.userLogout, body: {}, token: token);
     } catch (e) {
       rethrow;
     }
@@ -147,9 +140,7 @@ class UserService {
   // ============ Usuários (GET/UPDATE) ============
 
   /// Get todos os usuários (requer autenticação e permissões)
-  static Future<List<UserDTO>> getAllUsers({
-    required String token,
-  }) async {
+  static Future<List<UserDTO>> getAllUsers({required String token}) async {
     try {
       final response = await ApiService.get(
         ApiConstants.userGetAll,
@@ -205,10 +196,7 @@ class UserService {
   }
 
   /// Delete usuário
-  static Future<void> deleteUser(
-    String userId, {
-    required String token,
-  }) async {
+  static Future<void> deleteUser(String userId, {required String token}) async {
     try {
       await ApiService.delete(
         ApiConstants.userDelete.replaceFirst(':id', userId),
@@ -231,10 +219,7 @@ class UserService {
     try {
       await ApiService.post(
         ApiConstants.userUpdatePassword.replaceFirst(':id', userId),
-        body: {
-          'currentPassword': currentPassword,
-          'newPassword': newPassword,
-        },
+        body: {'currentPassword': currentPassword, 'newPassword': newPassword},
         token: token,
       );
     } catch (e) {
@@ -255,6 +240,7 @@ class UserService {
     AddressDTO? address,
     String? invitationofgrace,
     String? status,
+    String? facilitador,
     bool? baptized,
     bool? member,
     required String token,
@@ -270,6 +256,7 @@ class UserService {
         'address': address?.toJson(),
         'invitationofgrace': invitationofgrace,
         'status': status,
+        'facilitador': facilitador,
         'baptized': baptized,
         'member': member,
       };
@@ -299,9 +286,7 @@ class UserService {
     try {
       final response = await ApiService.patch(
         ApiConstants.userUpdateFacilitator.replaceFirst(':id', userId),
-        body: {
-          'facilitator': facilitator,
-        },
+        body: {'facilitator': facilitator},
         token: token,
       );
 
@@ -323,9 +308,7 @@ class UserService {
     try {
       final response = await ApiService.patch(
         ApiConstants.userUpdateRoles.replaceFirst(':id', userId),
-        body: {
-          'roles': roles,
-        },
+        body: {'roles': roles},
         token: token,
       );
 

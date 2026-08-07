@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:raraapp/controllers/user_controller.dart';
 import 'package:raraapp/screens/welcome_screen.dart';
+import 'package:raraapp/views/myaccount_view.dart';
 
 class Sidebar extends StatelessWidget {
   final Function(String) onMenuItemSelected;
@@ -146,10 +147,28 @@ class Sidebar extends StatelessWidget {
         'roles': ['super_admin'],
       },
       {
+        'key': 'integration',
+        'label': 'Integração',
+        'icon': Icons.merge_type,
+        'roles': ['super_admin'],
+      },
+      {
         'key': 'cura',
         'label': 'Pedidos de Cura',
         'icon': Icons.favorite,
         'roles': ['user', 'super_admin'],
+      },
+      {
+        'key': 'cura-admin',
+        'label': 'Admin Cura',
+        'icon': Icons.healing,
+        'roles': ['super_admin'],
+      },
+      {
+        'key': 'my-account',
+        'label': 'Minha Conta',
+        'icon': Icons.person,
+        'roles': ['user', 'super_admin', 'facilitator'],
       },
     ];
 

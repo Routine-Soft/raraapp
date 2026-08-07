@@ -103,6 +103,7 @@ class UserController extends ChangeNotifier {
     String? status,
     bool? baptized,
     bool? member,
+    String? facilitador,
   }) async {
     _isLoading = true;
     _error = null;
@@ -122,6 +123,7 @@ class UserController extends ChangeNotifier {
         status: status,
         baptized: baptized,
         member: member,
+        facilitador: facilitador,
       );
       _currentUser = user;
       _isLoading = false;
@@ -335,6 +337,7 @@ class UserController extends ChangeNotifier {
     AddressDTO? address,
     String? invitationofgrace,
     String? status,
+    String? facilitador,
     bool? baptized,
     bool? member,
     required String token,
@@ -354,6 +357,7 @@ class UserController extends ChangeNotifier {
         address: address,
         invitationofgrace: invitationofgrace,
         status: status,
+        facilitador: facilitador,
         baptized: baptized,
         member: member,
         token: token,
