@@ -521,7 +521,7 @@ class _IntegrationViewState extends State<IntegrationView>
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  hintText: 'Nome do facilitador ou CPF',
+                  hintText: 'Nome do facilitador',
                 ),
               ),
               const SizedBox(height: 20),
