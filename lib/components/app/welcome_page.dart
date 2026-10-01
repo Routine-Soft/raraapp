@@ -1,193 +1,87 @@
 import 'package:flutter/material.dart';
 import 'package:raraapp/components/auth/login_page.dart';
+import 'package:raraapp/components/auth/google_sign_in_button.dart';
 import 'package:raraapp/components/auth/register_page.dart';
+import 'package:raraapp/components/shared/effects/fade_route.dart';
+import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
+import 'package:raraapp/components/shared/effects/floating.dart';
+import 'package:raraapp/components/shared/effects/glow_button.dart';
+import 'package:raraapp/components/shared/effects/gradient_text.dart';
+import 'package:raraapp/components/shared/or_divider.dart';
+import 'package:raraapp/components/shared/rara_logo.dart';
+import 'package:raraapp/components/shared/showcase_page.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SingleChildScrollView(
-        child: Container(
-          color: Colors.black,
-          constraints: BoxConstraints(
-            minHeight: MediaQuery.of(context).size.height,
+    final text = Theme.of(context).textTheme;
+    final muted = Theme.of(
+      context,
+    ).colorScheme.onSurface.withValues(alpha: 0.75);
+
+    Widget reveal(int order, Widget child) =>
+        FadeSlideIn(delay: stagger(order), child: child);
+
+    return ShowcasePage(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          reveal(1, Floating(child: const RaraLogo(height: 96))),
+          const SizedBox(height: 24),
+          reveal(
+            2,
+            Text(
+              'Seja bem-vindo ao',
+              textAlign: TextAlign.center,
+              style: text.titleMedium?.copyWith(color: muted),
+            ),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Logo/Icon
-              Image.asset('assets/images/logorara.png', width: 80, height: 80),
-              const SizedBox(height: 32),
-
-              // Título
-              const Text(
-                'Seja bem vindo ao',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w300,
-                  color: Colors.white,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // Subtítulo principal
-              const Text(
-                'Rara App',
-                style: TextStyle(
-                  fontSize: 42,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 2,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Descrição
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 32),
-                child: Text(
-                  'o Aplicativo da Comunhão Rara',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                    fontStyle: FontStyle.italic,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 80),
-
-              // Seção Login
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  children: [
-                    const Text(
-                      'Já possui conta?',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const LoginPage(),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.login),
-                        label: const Text(
-                          'Entrar',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 48),
-
-              // Divider
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Divider(
-                        color: Colors.grey.withValues(alpha: 0.3),
-                        thickness: 1,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'ou',
-                        style: TextStyle(
-                          color: Colors.grey.withValues(alpha: 0.6),
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Divider(
-                        color: Colors.grey.withValues(alpha: 0.3),
-                        thickness: 1,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 48),
-
-              // Seção Register
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  children: [
-                    const Text(
-                      'Ainda não possui conta?',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const RegisterPage(),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.person_add),
-                        label: const Text(
-                          'Criar Conta',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.white, width: 2),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 60),
-            ],
+          reveal(
+            3,
+            GradientText(
+              'Rara App',
+              style: text.displaySmall?.copyWith(fontWeight: FontWeight.w800),
+            ),
           ),
-        ),
+          const SizedBox(height: 4),
+          reveal(
+            4,
+            Text(
+              'o Aplicativo da Comunhão Rara',
+              textAlign: TextAlign.center,
+              style: text.bodyLarge?.copyWith(color: muted),
+            ),
+          ),
+          const SizedBox(height: 40),
+          reveal(
+            5,
+            GlowButton(
+              label: 'Entrar',
+              icon: Icons.login,
+              onPressed: () =>
+                  Navigator.of(context).push(fadeRoute(const LoginPage())),
+            ),
+          ),
+          const SizedBox(height: 24),
+          reveal(6, const OrDivider()),
+          const SizedBox(height: 16),
+          reveal(7, const GoogleSignInButton()),
+          const SizedBox(height: 12),
+          reveal(
+            8,
+            SizedBox(
+              height: 54,
+              child: OutlinedButton.icon(
+                onPressed: () =>
+                    Navigator.of(context).push(fadeRoute(const RegisterPage())),
+                icon: const Icon(Icons.person_add_alt),
+                label: const Text('Criar conta'),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

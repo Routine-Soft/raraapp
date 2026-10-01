@@ -18,66 +18,75 @@ class ModuleProgress extends StatelessWidget {
     final doneIds = {for (final p in progresses) p.lessonId};
 
     return Column(
+      spacing: 16,
       children: [
         for (final module in lessonModules)
-          _bar(
-            module,
-            (lessonsByModule[module] ?? const [])
+          ProgressBar(
+            label: moduleLabel(module),
+            completed: (lessonsByModule[module] ?? const [])
                 .where((l) => doneIds.contains(l.id))
                 .length,
-            (lessonsByModule[module] ?? const []).length,
+            total: (lessonsByModule[module] ?? const []).length,
           ),
       ],
     );
   }
+}
 
-  Widget _bar(String module, int completed, int total) {
+/// Barra de progresso arredondada que "enche" ao aparecer
+/// (CSS: transition de width).
+class ProgressBar extends StatelessWidget {
+  final String label;
+  final int completed;
+  final int total;
+
+  const ProgressBar({
+    super.key,
+    required this.label,
+    required this.completed,
+    required this.total,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final ratio = total == 0 ? 0.0 : completed / total;
-    final color = total > 0 && completed == total
-        ? Colors.green
-        : (completed > 0 ? Colors.blue : Colors.grey[400]!);
+    final text = Theme.of(context).textTheme;
+    final muted = Theme.of(
+      context,
+    ).colorScheme.onSurface.withValues(alpha: 0.7);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
-      ),
+    return Semantics(
+      label: '$label: $completed de $total aulas',
+      excludeSemantics: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 6,
         children: [
           Row(
             children: [
               Expanded(
                 child: Text(
-                  module.toUpperCase(),
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  label,
+                  style: text.labelLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
               Text(
                 '$completed de $total',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                ),
+                style: text.bodySmall?.copyWith(color: muted),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: ratio,
-              minHeight: 8,
-              backgroundColor: Colors.grey[300],
-              valueColor: AlwaysStoppedAnimation(color),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: ratio),
+            duration: MediaQuery.of(context).disableAnimations
+                ? Duration.zero
+                : const Duration(milliseconds: 900),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, _) => LinearProgressIndicator(
+              value: value,
+              minHeight: 10,
+              borderRadius: BorderRadius.circular(999),
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            '${(ratio * 100).toStringAsFixed(1)}%',
-            style: TextStyle(fontSize: 12, color: Colors.grey[700]),
           ),
         ],
       ),

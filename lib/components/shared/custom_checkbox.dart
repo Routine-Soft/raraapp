@@ -18,7 +18,6 @@ class CustomCheckbox extends StatelessWidget {
       title: Text(label),
       value: value,
       onChanged: onChanged,
-      contentPadding: EdgeInsets.zero,
     );
   }
 }

@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:raraapp/components/app/authenticated_app.dart';
+import 'package:raraapp/components/auth/forgot_password_page.dart';
+import 'package:raraapp/components/auth/google_sign_in_button.dart';
 import 'package:raraapp/components/auth/register_page.dart';
 import 'package:raraapp/components/shared/custom_text_field.dart';
+import 'package:raraapp/components/shared/effects/fade_route.dart';
+import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
+import 'package:raraapp/components/shared/effects/floating.dart';
+import 'package:raraapp/components/shared/effects/glow_button.dart';
+import 'package:raraapp/components/shared/effects/gradient_text.dart';
 import 'package:raraapp/components/shared/feedback.dart';
 import 'package:raraapp/components/shared/input_formatters.dart';
+import 'package:raraapp/components/shared/or_divider.dart';
+import 'package:raraapp/components/shared/rara_logo.dart';
+import 'package:raraapp/components/shared/showcase_page.dart';
 import 'package:raraapp/hooks/use_auth.dart';
 import 'package:raraapp/utils/validators.dart';
 
@@ -40,10 +49,9 @@ class _LoginPageState extends State<LoginPage> {
       error: auth.error ?? 'Falha ao fazer login',
     );
     if (ok) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const AuthenticatedApp()),
-        (_) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushAndRemoveUntil(fadeRoute(homeAfterLogin(auth)), (_) => false);
     }
   }
 
@@ -51,102 +59,103 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     final isLoading = useAuth(context).isLoading;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
+    final text = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+
+    // Cada item entra com um pequeno atraso em relação ao anterior (cascata).
+    Widget reveal(int order, Widget child) =>
+        FadeSlideIn(delay: stagger(order), child: child);
+
+    return ShowcasePage(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Image.asset('assets/images/logorara.png', width: 32, height: 32),
-            const SizedBox(width: 8),
-            const Text('Rara - Login'),
-          ],
-        ),
-        centerTitle: true,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              const SizedBox(height: 40),
-              Image.asset('assets/images/logorara.png', width: 64, height: 64),
-              const SizedBox(height: 16),
-              const Text(
+            reveal(1, Floating(child: const RaraLogo(height: 80))),
+            const SizedBox(height: 16),
+            reveal(
+              2,
+              GradientText(
                 'Rara App',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                style: text.headlineLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-              const Text(
+            ),
+            reveal(
+              3,
+              Text(
                 'Plataforma de aprendizado cristão',
-                style: TextStyle(fontSize: 14, color: Colors.grey),
+                textAlign: TextAlign.center,
+                style: text.bodyMedium?.copyWith(
+                  color: scheme.onSurface.withValues(alpha: 0.75),
+                ),
               ),
-              const SizedBox(height: 40),
+            ),
+            const SizedBox(height: 32),
+            reveal(
+              4,
               CustomTextField(
                 label: 'Email',
                 hintText: 'seu@email.com',
                 controller: _email,
-                prefixIcon: Icons.email,
+                prefixIcon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
                 validator: RegisterValidators.validateEmail,
                 inputFormatters: [LowercaseNoSpaceFormatter()],
               ),
-              const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 16),
+            reveal(
+              5,
               CustomTextField(
                 label: 'Senha',
                 controller: _password,
-                prefixIcon: Icons.lock,
+                prefixIcon: Icons.lock_outline,
                 obscureText: true,
-                validator: RegisterValidators.validatePassword,
+                // Sem mínimo aqui: a senha provisória do facilitador é "123"
+                validator: (v) => (v ?? '').isEmpty ? 'Informe a senha' : null,
               ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: isLoading ? null : _login,
-                  icon: isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.login),
-                  label: Text(
-                    isLoading ? 'Entrando...' : 'Entrar',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Funcionalidade em desenvolvimento'),
-                  ),
-                ),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => Navigator.of(
+                  context,
+                ).push(fadeRoute(const ForgotPasswordPage())),
                 child: const Text('Esqueceu a senha?'),
               ),
-              const Divider(height: 32),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('Não tem conta? '),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const RegisterPage()),
-                    ),
-                    child: const Text(
-                      'Criar conta',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
+            ),
+            const SizedBox(height: 8),
+            reveal(
+              6,
+              GlowButton(
+                label: 'Entrar',
+                icon: Icons.login,
+                loading: isLoading,
+                onPressed: _login,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 24),
+            reveal(7, const OrDivider()),
+            const SizedBox(height: 16),
+            reveal(8, const GoogleSignInButton()),
+            const SizedBox(height: 12),
+            reveal(
+              9,
+              SizedBox(
+                height: 54,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.of(
+                    context,
+                  ).push(fadeRoute(const RegisterPage())),
+                  icon: const Icon(Icons.person_add_alt),
+                  label: const Text('Criar conta'),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

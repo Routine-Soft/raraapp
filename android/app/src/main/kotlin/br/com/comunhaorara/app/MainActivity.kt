@@ -1,4 +1,4 @@
-package com.example.raraapp
+package br.com.comunhaorara.app
 
 import io.flutter.embedding.android.FlutterActivity
 

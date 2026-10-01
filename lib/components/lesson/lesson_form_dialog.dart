@@ -3,9 +3,11 @@ import 'package:raraapp/api/lesson_api.dart';
 import 'package:raraapp/components/lesson/lesson_content.dart';
 import 'package:raraapp/components/lesson/question_editor_dialog.dart';
 import 'package:raraapp/components/shared/custom_dropdown.dart';
+import 'package:raraapp/components/shared/content_dialog.dart';
 import 'package:raraapp/components/shared/custom_text_field.dart';
 import 'package:raraapp/components/shared/feedback.dart';
 import 'package:raraapp/components/shared/form_dialog.dart';
+import 'package:raraapp/components/shared/formatted/formatted_text_field.dart';
 import 'package:raraapp/hooks/use_lessons.dart';
 
 /// Dialog para criar ([lesson] nula) ou editar uma aula.
@@ -103,8 +105,6 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    const gap = SizedBox(height: 12);
-
     return FormDialog(
       title: _isEditing ? 'Editar Lição' : 'Criar Lição',
       formKey: _formKey,
@@ -116,10 +116,9 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
           label: 'Módulo',
           value: _module,
           items: lessonModules,
-          itemLabel: (m) => m.toUpperCase(),
+          itemLabel: moduleLabel,
           onChanged: (m) => setState(() => _module = m ?? _module),
         ),
-        gap,
         CustomTextField(
           label: 'Número da Aula',
           controller: _number,
@@ -128,57 +127,53 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
           validator: (v) =>
               int.tryParse(v ?? '') == null ? 'Informe um número' : null,
         ),
-        gap,
         CustomTextField(
           label: 'Título',
+          prefixIcon: Icons.title,
           controller: _title,
           validator: _required,
         ),
-        gap,
         CustomTextField(
-          label: 'URL do Vídeo',
+          label: 'URL do Vídeo (opcional)',
+          prefixIcon: Icons.play_circle_outline,
           controller: _videoUrl,
           hintText: 'https://youtube.com/...',
-          validator: _required,
         ),
-        gap,
-        CustomTextField(
+        FormattedTextField(
           label: 'Conteúdo',
           controller: _content,
-          maxLines: 4,
           validator: _required,
         ),
-        gap,
         CustomTextField(
           label: 'URL da Imagem',
+          prefixIcon: Icons.image_outlined,
           controller: _image,
           hintText: 'https://...',
         ),
-        const SizedBox(height: 24),
-        Row(
-          children: [
-            const Expanded(
-              child: Text(
-                'Perguntas',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            TextButton.icon(
-              onPressed: _editQuestion,
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Adicionar'),
-            ),
-          ],
+        const SizedBox(height: 8),
+        SectionTitle(
+          'Perguntas',
+          icon: Icons.quiz_outlined,
+          trailing: IconButton.filled(
+            tooltip: 'Adicionar pergunta',
+            onPressed: _editQuestion,
+            icon: const Icon(Icons.add),
+          ),
         ),
         if (_questions.isEmpty)
           Text(
             'Nenhuma pergunta adicionada',
-            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
           ),
         for (var i = 0; i < _questions.length; i++)
           Card(
+            color: Theme.of(context).colorScheme.surfaceContainerHigh,
             child: ListTile(
-              dense: true,
               title: Text('${i + 1}. ${_questions[i].statement}', maxLines: 2),
               subtitle: Text(
                 _questions[i].correctOptionIndex == null
@@ -188,7 +183,8 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
               ),
               onTap: () => _editQuestion(i),
               trailing: IconButton(
-                icon: const Icon(Icons.delete_outline, size: 20),
+                tooltip: 'Remover pergunta',
+                icon: const Icon(Icons.delete_outline),
                 onPressed: () => setState(() => _questions.removeAt(i)),
               ),
             ),

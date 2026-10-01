@@ -5,7 +5,15 @@ import 'package:raraapp/components/shared/address_fields.dart';
 import 'package:raraapp/components/shared/custom_dropdown.dart';
 import 'package:raraapp/components/shared/custom_text_field.dart';
 import 'package:raraapp/components/shared/date_field.dart';
+import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
+import 'package:raraapp/components/shared/effects/glow_button.dart';
+import 'package:raraapp/components/shared/effects/gradient_text.dart';
 import 'package:raraapp/components/shared/feedback.dart';
+import 'package:raraapp/components/shared/initials_avatar.dart';
+import 'package:raraapp/components/shared/section.dart';
+import 'package:raraapp/components/shared/tabbed_page.dart';
+import 'package:raraapp/components/theme/app_effects.dart';
+import 'package:raraapp/components/user/password_form.dart';
 import 'package:raraapp/hooks/use_auth.dart';
 
 class MyAccountPage extends StatelessWidget {
@@ -13,20 +21,11 @@ class MyAccountPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Minha Conta'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(icon: Icon(Icons.person), text: 'Perfil'),
-              Tab(icon: Icon(Icons.lock), text: 'Senha'),
-            ],
-          ),
-        ),
-        body: const TabBarView(children: [_ProfileTab(), _PasswordTab()]),
-      ),
+    return const TabbedPage(
+      tabs: [
+        (icon: Icons.person_outline, label: 'Perfil', child: _ProfileTab()),
+        (icon: Icons.lock_outline, label: 'Senha', child: _PasswordTab()),
+      ],
     );
   }
 }
@@ -112,190 +111,183 @@ class _ProfileTabState extends State<_ProfileTab> {
   @override
   Widget build(BuildContext context) {
     final auth = useAuth(context);
-    const gap = SizedBox(height: 12);
+    final user = auth.user;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 24,
         children: [
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.email),
-            title: const Text(
-              'Email',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            subtitle: Text(
-              auth.user?.email ?? '',
-              style: const TextStyle(fontSize: 16),
+          FadeSlideIn(
+            child: _ProfileHeader(
+              name: user?.name ?? 'Usuário',
+              email: user?.email ?? '',
             ),
           ),
-          gap,
           // IgnorePointer deixa os campos "somente leitura" fora do modo edição
           IgnorePointer(
             ignoring: !_editing,
-            child: Opacity(
-              opacity: _editing ? 1 : 0.7,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 250),
+              opacity: _editing ? 1 : 0.75,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: 28,
                 children: [
-                  CustomTextField(
-                    label: 'Nome',
-                    controller: _name,
-                    prefixIcon: Icons.person,
+                  FormSection(
+                    title: 'Dados pessoais',
+                    icon: Icons.person_outline,
+                    children: [
+                      CustomTextField(
+                        label: 'Nome',
+                        controller: _name,
+                        prefixIcon: Icons.person,
+                      ),
+                      CustomTextField(
+                        label: 'Telefone',
+                        controller: _phone,
+                        prefixIcon: Icons.phone,
+                        keyboardType: TextInputType.phone,
+                      ),
+                      CustomDropdown<String>(
+                        label: 'Gênero',
+                        value: _gender,
+                        items: userGenders,
+                        onChanged: (v) => setState(() => _gender = v),
+                      ),
+                      DateField(
+                        label: 'Data de Nascimento',
+                        value: _birthdate,
+                        onChanged: (d) => setState(() => _birthdate = d),
+                      ),
+                      CheckboxListTile(
+                        title: const Text('Batizado'),
+                        value: _baptized,
+                        onChanged: (v) =>
+                            setState(() => _baptized = v ?? false),
+                      ),
+                    ],
                   ),
-                  gap,
-                  CustomTextField(
-                    label: 'Telefone',
-                    controller: _phone,
-                    prefixIcon: Icons.phone,
-                    keyboardType: TextInputType.phone,
+                  FormSection(
+                    title: 'Igreja',
+                    icon: Icons.church_outlined,
+                    children: [
+                      ChurchDropdown(
+                        value: _churchId,
+                        onChanged: (id) => setState(() => _churchId = id),
+                      ),
+                    ],
                   ),
-                  gap,
-                  CustomDropdown<String>(
-                    label: 'Gênero',
-                    value: _gender,
-                    items: userGenders,
-                    onChanged: (v) => setState(() => _gender = v),
-                  ),
-                  gap,
-                  DateField(
-                    label: 'Data de Nascimento',
-                    value: _birthdate,
-                    onChanged: (d) => setState(() => _birthdate = d),
-                  ),
-                  gap,
-                  ChurchDropdown(
-                    value: _churchId,
-                    onChanged: (id) => setState(() => _churchId = id),
-                  ),
-                  const SizedBox(height: 20),
-                  AddressFields(form: _address),
-                  CheckboxListTile(
-                    title: const Text('Batizado'),
-                    value: _baptized,
-                    onChanged: (v) => setState(() => _baptized = v ?? false),
+                  FormSection(
+                    title: 'Endereço',
+                    icon: Icons.place_outlined,
+                    children: [AddressFields(form: _address, showTitle: false)],
                   ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 24),
-          if (!_editing)
-            ElevatedButton.icon(
-              icon: const Icon(Icons.edit),
-              label: const Text('Editar Perfil'),
-              onPressed: () => setState(() => _editing = true),
-            )
-          else
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.close),
-                    label: const Text('Cancelar'),
-                    onPressed: _cancel,
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            child: !_editing
+                ? GlowButton(
+                    key: const ValueKey('edit'),
+                    label: 'Editar Perfil',
+                    icon: Icons.edit,
+                    onPressed: () => setState(() => _editing = true),
+                  )
+                : Row(
+                    key: const ValueKey('save'),
+                    spacing: 12,
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 54,
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.close),
+                            label: const Text('Cancelar'),
+                            onPressed: _cancel,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: GlowButton(
+                          label: 'Salvar',
+                          icon: Icons.save,
+                          loading: auth.isLoading,
+                          onPressed: _save,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.save),
-                    label: const Text('Salvar'),
-                    onPressed: auth.isLoading ? null : _save,
-                  ),
-                ),
-              ],
-            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _PasswordTab extends StatefulWidget {
-  const _PasswordTab();
+/// Topo do perfil: avatar + nome + email no degradê do modo.
+class _ProfileHeader extends StatelessWidget {
+  final String name;
+  final String email;
 
-  @override
-  State<_PasswordTab> createState() => _PasswordTabState();
-}
-
-class _PasswordTabState extends State<_PasswordTab> {
-  final _formKey = GlobalKey<FormState>();
-  final _current = TextEditingController();
-  final _new = TextEditingController();
-  final _confirm = TextEditingController();
-
-  @override
-  void dispose() {
-    _current.dispose();
-    _new.dispose();
-    _confirm.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    final auth = useAuth(context, listen: false);
-    final ok = await auth.changePassword(_current.text, _new.text);
-    if (!mounted) return;
-    showResult(
-      context,
-      ok: ok,
-      success: 'Senha alterada com sucesso!',
-      error: auth.error,
-    );
-    if (ok) {
-      _current.clear();
-      _new.clear();
-      _confirm.clear();
-    }
-  }
-
-  String? _required(String? v) => (v ?? '').isEmpty ? 'Obrigatório' : null;
+  const _ProfileHeader({required this.name, required this.email});
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            CustomTextField(
-              label: 'Senha Atual',
-              controller: _current,
-              obscureText: true,
-              prefixIcon: Icons.lock,
-              validator: _required,
-            ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              label: 'Nova Senha',
-              controller: _new,
-              obscureText: true,
-              prefixIcon: Icons.lock,
-              validator: _required,
-            ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              label: 'Confirmar Nova Senha',
-              controller: _confirm,
-              obscureText: true,
-              prefixIcon: Icons.lock,
-              validator: (v) => v != _new.text ? 'Senhas não conferem' : null,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.save),
-              label: const Text('Alterar Senha'),
-              onPressed: useAuth(context).isLoading ? null : _submit,
-            ),
-          ],
+    final effects = AppEffects.of(context);
+    final text = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: effects.glassBorder),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: effects.backgroundGradient,
         ),
+      ),
+      child: Row(
+        children: [
+          InitialsAvatar(name, size: 64),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GradientText(
+                  name,
+                  textAlign: TextAlign.start,
+                  style: text.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                Row(
+                  children: [
+                    const Icon(Icons.email_outlined, size: 16),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(email, overflow: TextOverflow.ellipsis),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
+}
+
+class _PasswordTab extends StatelessWidget {
+  const _PasswordTab();
+
+  @override
+  Widget build(BuildContext context) => const SingleChildScrollView(
+    padding: EdgeInsets.fromLTRB(16, 20, 16, 32),
+    child: PasswordForm(),
+  );
 }

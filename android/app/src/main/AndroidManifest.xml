@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Acesso ao backend e aos vídeos das aulas (sem isso o app de release fica offline) -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:label="raraapp"
+        android:label="Rara App"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

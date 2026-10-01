@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:raraapp/components/app/authenticated_app.dart';
 import 'package:raraapp/components/app/welcome_page.dart';
+import 'package:raraapp/components/auth/forgot_password_page.dart';
+import 'package:raraapp/components/shared/effects/animated_background.dart';
+import 'package:raraapp/components/shared/effects/floating.dart';
+import 'package:raraapp/components/shared/effects/gradient_text.dart';
+import 'package:raraapp/components/shared/rara_logo.dart';
 import 'package:raraapp/hooks/use_auth.dart';
 
 /// Splash: recupera a sessão salva e decide a primeira tela.
@@ -20,26 +24,32 @@ class _AppInitializerState extends State<AppInitializer> {
       future: _restore,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return const Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.church, size: 64, color: Colors.blue),
-                  SizedBox(height: 16),
-                  Text(
-                    'Rara App',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 32),
-                  CircularProgressIndicator(),
-                ],
+          return Scaffold(
+            body: AnimatedBackground(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Floating(child: const RaraLogo(height: 88)),
+                    const SizedBox(height: 20),
+                    GradientText(
+                      'Rara App',
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 24),
+                    const SizedBox.square(
+                      dimension: 28,
+                      child: CircularProgressIndicator(strokeWidth: 2.5),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
         }
         return snapshot.data == true
-            ? const AuthenticatedApp()
+            ? homeAfterLogin(useAuth(context, listen: false))
             : const WelcomePage();
       },
     );

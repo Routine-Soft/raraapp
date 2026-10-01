@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:raraapp/api/church_api.dart';
 import 'package:raraapp/components/church/church_card.dart';
 import 'package:raraapp/components/church/church_form_dialog.dart';
-import 'package:raraapp/components/shared/empty_state.dart';
 import 'package:raraapp/components/shared/feedback.dart';
+import 'package:raraapp/components/shared/list_page.dart';
 import 'package:raraapp/hooks/use_churches.dart';
 
 /// Tela de administração de igrejas (super_admin).
@@ -45,51 +45,25 @@ class _ChurchAdminPageState extends State<ChurchAdminPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => ChurchFormDialog.show(context),
-        child: const Icon(Icons.add),
-      ),
-      body: _buildBody(useChurches(context)),
-    );
-  }
+    final churches = useChurches(context);
 
-  Widget _buildBody(ChurchesHook churches) {
-    final list = churches.churches;
-
-    if (churches.isLoading && list.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (list.isEmpty) {
-      return EmptyState(
-        icon: Icons.church,
-        message: churches.error ?? 'Nenhuma igreja encontrada',
-        actionLabel: 'Criar Igreja',
-        onAction: () => ChurchFormDialog.show(context),
-      );
-    }
-
-    return RefreshIndicator(
+    return ListPage(
+      icon: Icons.church_outlined,
+      title: 'Igreja Super Intendente Geral',
+      loading: churches.isLoading,
       onRefresh: churches.load,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text(
-            'Igrejas (${list.length})',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+      emptyIcon: Icons.church_outlined,
+      emptyMessage: churches.error ?? 'Nenhuma igreja encontrada',
+      onAdd: () => ChurchFormDialog.show(context),
+      addLabel: 'Nova igreja',
+      children: [
+        for (final church in churches.churches)
+          ChurchCard(
+            church: church,
+            onEdit: () => ChurchFormDialog.show(context, church: church),
+            onDelete: () => _delete(church),
           ),
-          const SizedBox(height: 16),
-          for (final church in list)
-            ChurchCard(
-              church: church,
-              onEdit: () => ChurchFormDialog.show(context, church: church),
-              onDelete: () => _delete(church),
-            ),
-        ],
-      ),
+      ],
     );
   }
 }

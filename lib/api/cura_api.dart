@@ -4,7 +4,11 @@ import 'package:raraapp/api/user_api.dart';
 
 /// Valores aceitos pelo backend (enums em `models/cura.model.js`).
 const curaTypes = ['cura_alma', 'reciclagem', 'gabinete_pastoral'];
-const curaStatuses = ['fila_espera', 'andamento', 'concluido'];
+const curaStatuses = ['fila_espera', 'andamento', 'concluido', 'interrompido'];
+
+/// Status de quando o próprio membro cancela. Fica fora de [curaStatuses]
+/// porque o gestor não move pedidos para cá.
+const curaCancelled = 'cancelado';
 
 /// Pedido de cura/aconselhamento — espelha `models/cura.model.js`.
 class Cura {
@@ -19,6 +23,7 @@ class Cura {
   final String? notes;
   final String? churchId;
   final DateTime? completedAt;
+  final DateTime? cancelledAt;
   final DateTime? createdAt;
 
   const Cura({
@@ -31,8 +36,12 @@ class Cura {
     this.notes,
     this.churchId,
     this.completedAt,
+    this.cancelledAt,
     this.createdAt,
   });
+
+  /// Ainda pode ser cancelado pelo membro (não terminou).
+  bool get isOpen => status == 'fila_espera' || status == 'andamento';
 
   factory Cura.fromJson(Map<String, dynamic> json) => Cura(
     id: json['_id'] ?? '',
@@ -44,6 +53,7 @@ class Cura {
     notes: json['notes'],
     churchId: refId(json['churchId']),
     completedAt: parseDate(json['completedAt']),
+    cancelledAt: parseDate(json['cancelledAt']),
     createdAt: parseDate(json['createdAt']),
   );
 
@@ -58,6 +68,7 @@ class Cura {
     notes: notes,
     churchId: churchId,
     completedAt: completedAt,
+    cancelledAt: cancelledAt,
     createdAt: createdAt,
   );
 }
@@ -72,6 +83,10 @@ class CuraApi {
     final data = await ApiClient.get('/cura/me') as List;
     return data.map((json) => Cura.fromJson(json)).toList();
   }
+
+  /// O membro cancela o próprio pedido (fica salvo como "cancelado").
+  static Future<Cura> cancel(String id) async =>
+      Cura.fromJson(await ApiClient.patch('/cura/$id/cancel', {}));
 
   // ---- lado do gestor ----
   static Future<List<Cura>> getAll({String? status, String? type}) async {

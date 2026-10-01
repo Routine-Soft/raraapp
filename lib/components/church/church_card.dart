@@ -20,13 +20,18 @@ class ChurchCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return EntityCard(
       title: church.name,
+      icon: Icons.church_outlined,
       onEdit: onEdit,
       onDelete: onDelete,
       children: [
-        InfoLine('Pastor 1', church.pastor1),
-        InfoLine('Pastor 2', church.pastor2),
-        InfoLine('CNPJ', church.cnpj),
-        InfoLine('Total de Membros', '${church.totalMembers}'),
+        InfoLine('Pastor', church.pastor1, icon: Icons.person_outline),
+        InfoLine('Pastor', church.pastor2, icon: Icons.person_outline),
+        InfoLine('CNPJ', church.cnpj, icon: Icons.badge_outlined),
+        InfoLine(
+          'Membros',
+          '${church.totalMembers}',
+          icon: Icons.groups_outlined,
+        ),
         if (church.address != null) AddressText(church.address!),
       ],
     );

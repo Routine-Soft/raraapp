@@ -8,7 +8,11 @@ void main() {
     SharedPreferences.setMockInitialValues({});
 
     await tester.pumpWidget(const MyApp());
-    await tester.pumpAndSettle();
+    // O fundo animado roda sem parar, então não dá para usar pumpAndSettle:
+    // avança o tempo o suficiente para a sessão ser lida e as entradas terminarem.
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 500));
+    }
 
     expect(find.byType(WelcomePage), findsOneWidget);
   });

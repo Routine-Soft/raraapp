@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:raraapp/components/christian_group/christian_group_card.dart';
+import 'package:raraapp/components/shared/list_page.dart';
 import 'package:raraapp/hooks/use_christian_groups.dart';
 
 /// Lista de grupos para o membro (somente leitura).
@@ -23,32 +24,17 @@ class _ChristianGroupPageState extends State<ChristianGroupPage> {
   Widget build(BuildContext context) {
     final groups = useChristianGroups(context);
 
-    if (groups.isLoading && groups.groups.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return RefreshIndicator(
+    return ListPage(
+      icon: Icons.groups_outlined,
+      title: 'Christian Group',
+      subtitle: 'Encontre um grupo perto de você',
+      loading: groups.isLoading,
       onRefresh: groups.load,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text(
-            'Seus Grupos',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          if (groups.groups.isEmpty)
-            Center(
-              child: Text(
-                groups.error ?? 'Nenhum grupo encontrado',
-                style: const TextStyle(color: Colors.grey),
-              ),
-            ),
-          for (final group in groups.groups) ChristianGroupCard(group: group),
-        ],
-      ),
+      emptyIcon: Icons.groups_outlined,
+      emptyMessage: groups.error ?? 'Nenhum grupo encontrado',
+      children: [
+        for (final group in groups.groups) ChristianGroupCard(group: group),
+      ],
     );
   }
 }

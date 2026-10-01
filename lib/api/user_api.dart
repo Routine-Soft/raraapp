@@ -1,10 +1,11 @@
 import 'package:raraapp/api/address.dart';
 import 'package:raraapp/api/api_client.dart';
+import 'package:raraapp/api/gift_test_api.dart';
 import 'package:raraapp/api/json.dart';
 
 /// Valores aceitos pelo backend (enums em `models/user.model.js`).
 const userGenders = ['Masculino', 'Feminino'];
-const userStatuses = ['Presente', 'Ausente', 'Foi embora'];
+const userStatuses = ['Presente', 'Ausente', 'Se desligou do ministério'];
 const userInvitations = [
   'Aceitou Jesus',
   'Reconciliou',
@@ -20,8 +21,25 @@ const userRoles = [
   'avancai_lider',
   'midia_lider',
   'pastor_local',
+  'tesouraria',
   'super_admin',
+  'programador',
 ];
+
+/// Nome do cargo na tela.
+String roleLabel(String role) => switch (role) {
+  'facilitador' => 'Facilitador',
+  'christian_group_lider' => 'Líder de Christian Group',
+  'departamento_lider' => 'Líder de Departamento',
+  'secretaria_cura' => 'Secretaria da Cura',
+  'avancai_lider' => 'Líder do Avançai',
+  'midia_lider' => 'Líder de Mídia',
+  'pastor_local' => 'Pastor Local',
+  'tesouraria' => 'Tesouraria',
+  'super_admin' => 'Super Intendente Geral',
+  'programador' => 'Programador',
+  _ => role,
+};
 
 /// Usuário — espelha `models/user.model.js` (sem senha/tokens).
 class User {
@@ -37,8 +55,20 @@ class User {
   final String? status;
   final bool baptized;
   final bool member;
+
+  /// Quando virou membro (o backend preenche ao marcar "membro").
+  final DateTime? memberSince;
   final List<String> roles;
   final String? facilitator;
+
+  /// `false` = conta criada pelo Google, ainda sem senha.
+  final bool hasPassword;
+
+  /// Senha provisória ("123", cadastro pelo facilitador): precisa trocar.
+  final bool mustChangePassword;
+
+  /// Último resultado de cada Teste dos Dons.
+  final List<GiftTestResult> giftTests;
 
   const User({
     this.id = '',
@@ -53,11 +83,20 @@ class User {
     this.status,
     this.baptized = false,
     this.member = false,
+    this.memberSince,
     this.roles = const [],
     this.facilitator,
+    this.hasPassword = true,
+    this.mustChangePassword = false,
+    this.giftTests = const [],
   });
 
-  bool hasAnyRole(List<String> allowed) => roles.any(allowed.contains);
+  /// super_admin (Super Intendente Geral) acessa tudo.
+  GiftTestResult? giftTest(String key) =>
+      giftTests.where((r) => r.test == key).firstOrNull;
+
+  bool hasAnyRole(List<String> allowed) =>
+      roles.contains('super_admin') || roles.any(allowed.contains);
 
   factory User.fromJson(Map<String, dynamic> json) => User(
     id: json['_id'] ?? '',
@@ -72,8 +111,14 @@ class User {
     status: json['status'],
     baptized: json['baptized'] ?? false,
     member: json['member'] ?? false,
+    memberSince: parseDate(json['memberSince']),
     roles: List<String>.from(json['roles'] ?? const []),
     facilitator: json['facilitator'],
+    hasPassword: json['hasPassword'] ?? true,
+    mustChangePassword: json['mustChangePassword'] ?? false,
+    giftTests: [
+      for (final r in json['giftTests'] ?? const []) GiftTestResult.fromJson(r),
+    ],
   );
 
   /// Também usado para salvar o usuário logado no storage.
@@ -90,8 +135,12 @@ class User {
     'status': status,
     'baptized': baptized,
     'member': member,
+    'memberSince': memberSince?.toUtc().toIso8601String(),
     'roles': roles,
     'facilitator': facilitator,
+    'hasPassword': hasPassword,
+    'mustChangePassword': mustChangePassword,
+    'giftTests': [for (final r in giftTests) r.toJson()],
   };
 
   /// Campos que o `PATCH /users/:id` aceita.
@@ -116,22 +165,28 @@ class Session {
   final String accessToken;
   final String refreshToken;
 
+  /// Entrou pelo Google: pode redefinir a senha sem informar a atual.
+  final bool viaGoogle;
+
   const Session({
     required this.user,
     required this.accessToken,
     required this.refreshToken,
+    this.viaGoogle = false,
   });
 
   factory Session.fromJson(Map<String, dynamic> json) => Session(
     user: User.fromJson(json['user']),
     accessToken: json['accessToken'],
     refreshToken: json['refreshToken'],
+    viaGoogle: json['viaGoogle'] ?? false,
   );
 
   Map<String, dynamic> toJson() => {
     'user': user.toJson(),
     'accessToken': accessToken,
     'refreshToken': refreshToken,
+    'viaGoogle': viaGoogle,
   };
 }
 
@@ -144,6 +199,12 @@ class UserApi {
           'email': email,
           'password': password,
         }),
+      );
+
+  /// Troca o idToken do Google pela sessão do app (cria a conta se for nova).
+  static Future<Session> loginWithGoogle(String idToken) async =>
+      Session.fromJson(
+        await ApiClient.post('/users/google', {'idToken': idToken}),
       );
 
   /// Cadastro público (a própria pessoa).

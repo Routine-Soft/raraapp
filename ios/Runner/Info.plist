@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Raraapp</string>
+	<string>Rara App</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -65,6 +65,21 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>GIDClientID</key>
+	<string>600964662831-m98j0hmubsm6spijuedrhfbg09uq5bko.apps.googleusercontent.com</string>
+	<key>GIDServerClientID</key>
+	<string>600964662831-1fi1jdhva1bvofg714iv0a2kntn4b2b9.apps.googleusercontent.com</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.600964662831-m98j0hmubsm6spijuedrhfbg09uq5bko</string>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>

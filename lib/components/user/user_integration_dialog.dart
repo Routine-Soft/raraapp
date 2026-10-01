@@ -62,21 +62,19 @@ class _UserIntegrationDialogState extends State<UserIntegrationDialog> {
       submitLabel: 'Salvar',
       isSaving: useUsers(context).isLoading,
       onSubmit: _submit,
-      maxWidth: 420,
       children: [
         CustomTextField(
           label: 'Facilitador',
+          prefixIcon: Icons.support_agent,
           controller: _facilitator,
           hintText: 'Nome do facilitador',
         ),
-        const SizedBox(height: 16),
         CustomDropdown<String>(
           label: 'Convite da Graça',
           value: userInvitations.contains(_invitation) ? _invitation : null,
           items: userInvitations,
           onChanged: (v) => setState(() => _invitation = v),
         ),
-        const SizedBox(height: 16),
         CustomDropdown<String>(
           label: 'Status',
           value: userStatuses.contains(_status) ? _status : null,

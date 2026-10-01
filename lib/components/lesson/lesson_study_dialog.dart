@@ -3,7 +3,10 @@ import 'package:raraapp/api/lesson_api.dart';
 import 'package:raraapp/api/lesson_progress_api.dart';
 import 'package:raraapp/components/lesson/lesson_content.dart';
 import 'package:raraapp/components/shared/content_dialog.dart';
+import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
+import 'package:raraapp/components/shared/effects/glow_button.dart';
 import 'package:raraapp/components/shared/feedback.dart';
+import 'package:raraapp/components/theme/app_effects.dart';
 import 'package:raraapp/hooks/use_lesson_progress.dart';
 
 /// Aluno estuda a aula e responde as perguntas.
@@ -62,26 +65,50 @@ class _LessonStudyDialogState extends State<LessonStudyDialog> {
       subtitle: lessonSubtitle(widget.lesson),
       actions: [
         if (result != null)
-          TextButton(onPressed: _retry, child: const Text('Tentar Novamente')),
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Fechar'),
-        ),
+          OutlinedButton.icon(
+            onPressed: _retry,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Refazer'),
+          )
+        else
+          OutlinedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fechar'),
+          ),
         if (result == null && _questions.isNotEmpty)
-          ElevatedButton(
-            onPressed: _allAnswered && !isSending ? _submit : null,
-            child: const Text('Enviar respostas'),
+          GlowButton(
+            label: 'Enviar',
+            icon: Icons.send,
+            loading: isSending,
+            onPressed: _allAnswered ? _submit : null,
+          )
+        else if (result != null)
+          GlowButton(
+            label: 'Concluir',
+            icon: Icons.check,
+            onPressed: () => Navigator.pop(context),
           ),
       ],
       children: [
+        if (result != null)
+          FadeSlideIn(
+            child: _ResultBox(
+              score: result.score,
+              total: result.totalQuestions,
+            ),
+          ),
         LessonContent(lesson: widget.lesson),
         if (_questions.isNotEmpty) ...[
-          const SectionTitle('Questões'),
+          const SizedBox(height: 4),
+          SectionTitle(
+            'Questões',
+            icon: Icons.quiz_outlined,
+            trailing: result == null
+                ? Text('${_selected.length}/${_questions.length}')
+                : null,
+          ),
           for (var i = 0; i < _questions.length; i++) _buildQuestion(i),
         ],
-        if (result != null)
-          _ResultBox(score: result.score, total: result.totalQuestions),
-        const SizedBox(height: 16),
       ],
     );
   }
@@ -89,76 +116,44 @@ class _LessonStudyDialogState extends State<LessonStudyDialog> {
   Widget _buildQuestion(int qIndex) {
     final question = _questions[qIndex];
     final isCorrect = _isCorrect(qIndex);
-    final answered = isCorrect != null;
+    final scheme = Theme.of(context).colorScheme;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      color: !answered ? null : (isCorrect ? Colors.green[50] : Colors.red[50]),
+      color: scheme.surfaceContainerHigh,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: 8,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Text(
                     '${qIndex + 1}. ${question.statement}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 13,
-                    ),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
-                if (answered)
-                  Icon(
-                    isCorrect ? Icons.check_circle : Icons.cancel,
-                    color: isCorrect ? Colors.green : Colors.red,
+                if (isCorrect != null)
+                  Tooltip(
+                    message: isCorrect ? 'Acertou' : 'Errou',
+                    child: Icon(
+                      isCorrect ? Icons.check_circle : Icons.cancel,
+                      color: isCorrect ? scheme.primary : scheme.error,
+                    ),
                   ),
               ],
             ),
-            const SizedBox(height: 12),
             for (var o = 0; o < question.options.length; o++)
-              _buildOption(qIndex, o, question.options[o], isCorrect),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOption(int qIndex, int oIndex, String option, bool? isCorrect) {
-    final isSelected = _selected[qIndex] == oIndex;
-    final locked = _result != null;
-
-    Color? background;
-    if (locked && isSelected) {
-      background = isCorrect! ? Colors.green[200] : Colors.red[200];
-    }
-
-    return InkWell(
-      onTap: locked ? null : () => setState(() => _selected[qIndex] = oIndex),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: isSelected ? Colors.blue : Colors.grey[300]!,
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              isSelected
-                  ? Icons.radio_button_checked
-                  : Icons.radio_button_unchecked,
-              color: isSelected ? Colors.blue : Colors.grey,
-              size: 20,
-            ),
-            const SizedBox(width: 8),
-            Expanded(child: Text('${optionLetter(oIndex)}) $option')),
+              _Option(
+                letter: optionLetter(o),
+                text: question.options[o],
+                selected: _selected[qIndex] == o,
+                onTap: _result != null
+                    ? null
+                    : () => setState(() => _selected[qIndex] = o),
+              ),
           ],
         ),
       ),
@@ -166,6 +161,80 @@ class _LessonStudyDialogState extends State<LessonStudyDialog> {
   }
 }
 
+/// Alternativa: a escolhida ganha borda e fundo na cor principal.
+class _Option extends StatelessWidget {
+  final String letter;
+  final String text;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  const _Option({
+    required this.letter,
+    required this.text,
+    required this.selected,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final radius = BorderRadius.circular(14);
+
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: radius,
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              color: selected
+                  ? scheme.primary.withValues(alpha: 0.14)
+                  : Colors.transparent,
+              border: Border.all(
+                color: selected ? scheme.primary : scheme.outlineVariant,
+                width: selected ? 2 : 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 30,
+                  height: 30,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: selected ? scheme.primary : Colors.transparent,
+                    border: Border.all(
+                      color: selected ? scheme.primary : scheme.outline,
+                    ),
+                  ),
+                  child: Text(
+                    letter,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: selected ? scheme.onPrimary : scheme.onSurface,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(child: Text(text)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Resultado: anel de progresso que enche até a porcentagem de acertos.
 class _ResultBox extends StatelessWidget {
   final int score;
   final int total;
@@ -174,33 +243,63 @@ class _ResultBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final percent = total == 0 ? 0 : score / total * 100;
+    final ratio = total == 0 ? 0.0 : score / total;
+    final effects = AppEffects.of(context);
+    final text = Theme.of(context).textTheme;
+
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.blue[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.blue[200]!),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: effects.glassBorder),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: effects.backgroundGradient,
+        ),
       ),
-      child: Column(
+      child: Row(
         children: [
-          const Text(
-            'Resultado Final',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '$score/$total acertos',
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue,
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: ratio),
+            duration: MediaQuery.of(context).disableAnimations
+                ? Duration.zero
+                : const Duration(milliseconds: 1000),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, _) => SizedBox.square(
+              dimension: 72,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CircularProgressIndicator(
+                    value: value,
+                    strokeWidth: 8,
+                    strokeCap: StrokeCap.round,
+                  ),
+                  Center(
+                    child: Text(
+                      '${(value * 100).round()}%',
+                      style: text.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          Text(
-            '${percent.toStringAsFixed(1)}%',
-            style: TextStyle(color: Colors.blue[700]),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Resultado', style: text.labelLarge),
+                Text(
+                  '$score de $total acertos',
+                  style: text.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                ),
+              ],
+            ),
           ),
         ],
       ),

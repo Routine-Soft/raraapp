@@ -10,8 +10,12 @@ import 'package:raraapp/components/midia_local/midia_local_admin_page.dart';
 import 'package:raraapp/components/church/church_admin_page.dart';
 import 'package:raraapp/components/cura/cura_page.dart';
 import 'package:raraapp/components/cura/cura_board_page.dart';
+import 'package:raraapp/components/dizimo_oferta/contribution_page.dart';
+import 'package:raraapp/components/dizimo_oferta/payment_settings_page.dart';
+import 'package:raraapp/components/dizimo_oferta/treasury_page.dart';
 import 'package:raraapp/components/user/integration_page.dart';
 import 'package:raraapp/components/user/my_account_page.dart';
+import 'package:raraapp/components/user/powers_page.dart';
 
 class AuthenticatedApp extends StatefulWidget {
   const AuthenticatedApp({super.key});
@@ -26,28 +30,23 @@ class _AuthenticatedAppState extends State<AuthenticatedApp> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
       key: _scaffoldKey,
-      drawer: SizedBox(
-        width: screenWidth * 0.5,
-        child: Drawer(
-          child: Sidebar(
-            onMenuItemSelected: (key) {
-              setState(() => _selectedMenuKey = key);
-              Navigator.of(context).pop(); // Fecha o drawer
-            },
-            currentSelected: _selectedMenuKey,
-            onClosePressed: () {
-              Navigator.of(context).pop(); // Fecha o drawer
-            },
-          ),
+      drawer: Drawer(
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.horizontal(right: Radius.circular(28)),
+        ),
+        child: Sidebar(
+          onMenuItemSelected: (key) {
+            setState(() => _selectedMenuKey = key);
+            Navigator.of(context).pop(); // Fecha o drawer
+          },
+          currentSelected: _selectedMenuKey,
+          onClosePressed: () => Navigator.of(context).pop(),
         ),
       ),
       appBar: AppBar(
         title: _buildTitle(_selectedMenuKey),
-        elevation: 2,
         leading: IconButton(
           icon: const Icon(Icons.menu),
           onPressed: () {
@@ -55,7 +54,27 @@ class _AuthenticatedAppState extends State<AuthenticatedApp> {
           },
         ),
       ),
-      body: _buildMainContent(_selectedMenuKey),
+      // Troca de página com fade + leve subida
+      body: AnimatedSwitcher(
+        duration: MediaQuery.of(context).disableAnimations
+            ? Duration.zero
+            : const Duration(milliseconds: 350),
+        switchInCurve: Curves.easeOutCubic,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween(
+              begin: const Offset(0, 0.02),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        ),
+        child: KeyedSubtree(
+          key: ValueKey(_selectedMenuKey),
+          child: _buildMainContent(_selectedMenuKey),
+        ),
+      ),
     );
   }
 
@@ -69,33 +88,29 @@ class _AuthenticatedAppState extends State<AuthenticatedApp> {
       'christian-group-admin' => const ChristianGroupAdminPage(),
       'midialocal-admin' => const MidiaLocalAdminPage(),
       'church-admin' => const ChurchAdminPage(),
-      'integration' => const IntegrationPage(),
+      'integration' => const MembersLeadershipPage(),
+      'facilitadores' => const FacilitatorsPage(),
       'cura' => const CuraPage(),
       'cura-admin' => const CuraBoardPage(),
+      'dizimo' => const ContributionPage(),
+      'financeiro' => const TreasuryPage(),
+      'financeiro-geral' => const TreasuryPage(allChurches: true),
+      'membros-geral' => const MembersGeneralPage(),
+      'poderes' => const PowersPage(),
+      'poderes-geral' => const PowersPage(general: true),
+      'mercado-pago' => const PaymentSettingsPage(),
       'my-account' => const MyAccountPage(),
       _ => const HomePage(),
     };
   }
 
-  String _getMenuTitle(String menuKey) {
-    return switch (menuKey) {
-      'home' => 'Home',
-      'lesson' => 'Lições',
-      'lesson-professor' => 'Painel do Professor',
-      'lesson-supremo' => 'Administração de Lições',
-      'christian-group' => 'Grupos Cristãos',
-      'christian-group-admin' => 'Administração de Grupos Cristãos',
-      'midialocal-admin' => 'Administração de Mídias',
-      'church-admin' => 'Administração de Igrejas',
-      'integration' => 'Integração',
-      'cura' => 'Pedidos de Cura',
-      'cura-admin' => 'Gerenciamento de Cura',
-      'my-account' => 'Minha Conta',
-      _ => 'Home',
-    };
-  }
+  /// O título da página é o mesmo nome do item no menu.
+  String _getMenuTitle(String menuKey) => Sidebar.labelOf(menuKey);
 
   Widget _buildTitle(String menuKey) {
-    return Text(_getMenuTitle(menuKey));
+    return Text(
+      _getMenuTitle(menuKey),
+      style: const TextStyle(fontWeight: FontWeight.w700),
+    );
   }
 }

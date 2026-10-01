@@ -21,21 +21,21 @@ class ChristianGroupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return EntityCard(
       title: group.name.isEmpty ? 'Sem nome' : group.name,
+      icon: Icons.groups_outlined,
       onEdit: onEdit,
       onDelete: onDelete,
       children: [
-        InfoLine('Líder', group.leader),
-        InfoLine('Co-líder', group.coleader),
-        InfoLine('Anfitrião', group.host),
+        InfoLine('Líder', group.leader, icon: Icons.star_outline),
+        InfoLine('Co-líder', group.coleader, icon: Icons.person_outline),
+        InfoLine('Anfitrião', group.host, icon: Icons.home_outlined),
         if (group.address != null) AddressText(group.address!),
         if (group.contact.isNotEmpty) ...[
-          Text(
-            'Contatos:',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [for (final phone in group.contact) WhatsAppLink(phone)],
           ),
-          for (final phone in group.contact) WhatsAppLink(phone),
         ],
       ],
     );

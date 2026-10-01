@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:raraapp/api/lesson_api.dart';
 import 'package:raraapp/components/lesson/lesson_content.dart';
+import 'package:raraapp/components/shared/content_dialog.dart';
 import 'package:raraapp/components/shared/custom_text_field.dart';
 import 'package:raraapp/components/shared/form_dialog.dart';
 
@@ -79,7 +80,6 @@ class _QuestionEditorDialogState extends State<QuestionEditorDialog> {
       formKey: _formKey,
       submitLabel: 'Salvar',
       onSubmit: _submit,
-      maxWidth: 450,
       children: [
         CustomTextField(
           label: 'Enunciado',
@@ -87,52 +87,52 @@ class _QuestionEditorDialogState extends State<QuestionEditorDialog> {
           maxLines: 2,
           validator: _required,
         ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            const Expanded(
-              child: Text(
-                'Opções (marque a correta)',
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-            ),
-            TextButton.icon(
-              onPressed: () =>
-                  setState(() => _options.add(TextEditingController())),
-              icon: const Icon(Icons.add, size: 16),
-              label: const Text('Opção'),
-            ),
-          ],
+        SectionTitle(
+          'Opções',
+          icon: Icons.checklist,
+          trailing: IconButton.filled(
+            tooltip: 'Adicionar opção',
+            onPressed: () =>
+                setState(() => _options.add(TextEditingController())),
+            icon: const Icon(Icons.add),
+          ),
         ),
-        const SizedBox(height: 8),
+        Text(
+          'Toque no círculo para marcar a resposta correta',
+          style: TextStyle(
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.7),
+          ),
+        ),
         for (var i = 0; i < _options.length; i++)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                IconButton(
-                  tooltip: 'Marcar como correta',
-                  onPressed: () => setState(() => _correct = i),
-                  icon: Icon(
-                    _correct == i
-                        ? Icons.check_circle
-                        : Icons.radio_button_unchecked,
-                    color: _correct == i ? Colors.green : Colors.grey,
-                  ),
+          Row(
+            children: [
+              IconButton(
+                tooltip: 'Marcar como correta',
+                onPressed: () => setState(() => _correct = i),
+                icon: Icon(
+                  _correct == i
+                      ? Icons.check_circle
+                      : Icons.radio_button_unchecked,
+                  color: _correct == i
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
                 ),
-                Expanded(
-                  child: CustomTextField(
-                    label: '${optionLetter(i)})',
-                    controller: _options[i],
-                    validator: _required,
-                  ),
+              ),
+              Expanded(
+                child: CustomTextField(
+                  label: '${optionLetter(i)})',
+                  controller: _options[i],
+                  validator: _required,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, size: 20),
-                  onPressed: () => _removeOption(i),
-                ),
-              ],
-            ),
+              ),
+              IconButton(
+                tooltip: 'Remover opção',
+                icon: const Icon(Icons.delete_outline),
+                onPressed: () => _removeOption(i),
+              ),
+            ],
           ),
       ],
     );

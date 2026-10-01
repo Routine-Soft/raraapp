@@ -1,7 +1,11 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
+import 'package:raraapp/api/cura_board_storage.dart';
 import 'package:raraapp/api/cura_api.dart';
 import 'package:raraapp/hooks/hook.dart';
+
+/// Como o gestor vê os pedidos: quadro (arrastar) ou lista simples.
+enum CuraView { board, simple }
 
 CurasHook useCuras(BuildContext context, {bool listen = true}) =>
     Provider.of<CurasHook>(context, listen: listen);
@@ -9,12 +13,28 @@ CurasHook useCuras(BuildContext context, {bool listen = true}) =>
 class CurasHook extends Hook {
   List<Cura> _mine = [];
   List<Cura> _all = [];
+  CuraView _view = CuraView.board;
 
   /// Pedidos do usuário logado.
   List<Cura> get mine => _mine;
 
   /// Todos os pedidos (kanban do gestor).
   List<Cura> get all => _all;
+
+  /// Visão escolhida pelo gestor (salva no aparelho).
+  CuraView get view => _view;
+
+  Future<void> loadView() async {
+    final saved = await CuraBoardStorage.load();
+    _view = CuraView.values.asNameMap()[saved] ?? CuraView.board;
+    notifyListeners();
+  }
+
+  void setView(CuraView view) {
+    _view = view;
+    notifyListeners();
+    CuraBoardStorage.save(view.name);
+  }
 
   List<Cura> byStatus(String status) =>
       _all.where((c) => c.status == status).toList();
@@ -47,6 +67,10 @@ class CurasHook extends Hook {
     }
     return ok;
   }
+
+  /// O membro cancela o próprio pedido.
+  Future<bool> cancel(Cura cura) =>
+      run(() async => _replace(await CuraApi.cancel(cura.id)));
 
   Future<bool> remove(String id) => run(() async {
     await CuraApi.delete(id);

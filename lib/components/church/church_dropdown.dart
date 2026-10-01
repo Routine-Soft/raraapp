@@ -45,10 +45,7 @@ class _ChurchDropdownState extends State<ChurchDropdown> {
       key: ValueKey(value),
       initialValue: value,
       isExpanded: true,
-      decoration: InputDecoration(
-        labelText: widget.label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      ),
+      decoration: InputDecoration(labelText: widget.label),
       items: [
         for (final church in churches.churches)
           DropdownMenuItem(value: church.id, child: Text(church.name)),

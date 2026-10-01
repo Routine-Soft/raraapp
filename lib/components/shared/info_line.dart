@@ -4,18 +4,43 @@ import 'package:flutter/material.dart';
 class InfoLine extends StatelessWidget {
   final String? label;
   final String? value;
+  final IconData? icon;
 
-  const InfoLine(this.label, this.value, {super.key});
+  const InfoLine(this.label, this.value, {super.key, this.icon});
 
   @override
   Widget build(BuildContext context) {
     if (value == null || value!.trim().isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        label == null ? value! : '$label: $value',
-        style: Theme.of(context).textTheme.bodySmall,
-      ),
+    final muted = Theme.of(
+      context,
+    ).colorScheme.onSurface.withValues(alpha: 0.7);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (icon != null) ...[
+          Icon(icon, size: 16, color: muted),
+          const SizedBox(width: 8),
+        ],
+        Expanded(
+          child: Text.rich(
+            TextSpan(
+              children: [
+                if (label != null)
+                  TextSpan(
+                    text: '$label: ',
+                    style: TextStyle(color: muted),
+                  ),
+                TextSpan(
+                  text: value,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+      ],
     );
   }
 }

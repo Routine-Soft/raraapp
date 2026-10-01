@@ -5,8 +5,12 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:raraapp/api/session_storage.dart';
 
-/// Endereço do backend.
-const baseUrl = 'http://localhost:8080/api';
+/// Endereço do backend. Para testar com o backend local:
+/// `flutter run --dart-define=API_URL=http://localhost:8080/api`
+const baseUrl = String.fromEnvironment(
+  'API_URL',
+  defaultValue: 'https://rara.cestsegtrabalho.com.br/api',
+);
 const _timeout = Duration(seconds: 10);
 
 /// Erro retornado pela API (ou de rede, com statusCode 0).
@@ -32,6 +36,9 @@ class ApiClient {
 
   static Future<dynamic> patch(String path, Map<String, dynamic> body) =>
       _send('PATCH', path, body);
+
+  static Future<dynamic> put(String path, Map<String, dynamic> body) =>
+      _send('PUT', path, body);
 
   static Future<dynamic> delete(String path) => _send('DELETE', path);
 

@@ -1,7 +1,19 @@
 import 'package:raraapp/api/api_client.dart';
 
-/// Módulos aceitos pelo backend (enum em `models/lesson.model.js`).
-const lessonModules = ['reset', 'start', 'cdv'];
+/// Módulos aceitos pelo backend (enum em `models/lesson.model.js`), na ordem
+/// em que aparecem no app.
+const lessonModules = ['historia', 'reset', 'start', 'cdv'];
+
+const _moduleLabels = {
+  'historia': 'HISTÓRIA DA IGREJA',
+  'reset': 'RESET',
+  'start': 'START',
+  'cdv': 'CDV',
+};
+
+/// Nome do módulo para mostrar na tela.
+String moduleLabel(String module) =>
+    _moduleLabels[module] ?? module.toUpperCase();
 
 class Question {
   final String statement;

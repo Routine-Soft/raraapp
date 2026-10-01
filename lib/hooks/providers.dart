@@ -4,10 +4,14 @@ import 'package:provider/single_child_widget.dart';
 import 'package:raraapp/hooks/use_auth.dart';
 import 'package:raraapp/hooks/use_christian_groups.dart';
 import 'package:raraapp/hooks/use_churches.dart';
+import 'package:raraapp/hooks/use_contributions.dart';
 import 'package:raraapp/hooks/use_curas.dart';
+import 'package:raraapp/hooks/use_gift_tests.dart';
 import 'package:raraapp/hooks/use_lesson_progress.dart';
 import 'package:raraapp/hooks/use_lessons.dart';
 import 'package:raraapp/hooks/use_midia_locals.dart';
+import 'package:raraapp/hooks/use_payment_settings.dart';
+import 'package:raraapp/hooks/use_treasury.dart';
 import 'package:raraapp/hooks/use_users.dart';
 
 /// Todos os hooks do app, registrados uma vez no `main.dart`.
@@ -20,6 +24,10 @@ List<SingleChildWidget> hookProviders() => [
   ChangeNotifierProvider(create: (_) => LessonsHook()),
   ChangeNotifierProvider(create: (_) => LessonProgressHook()),
   ChangeNotifierProvider(create: (_) => CurasHook()),
+  ChangeNotifierProvider(create: (_) => ContributionsHook()),
+  ChangeNotifierProvider(create: (_) => TreasuryHook()),
+  ChangeNotifierProvider(create: (_) => PaymentSettingsHook()),
+  ChangeNotifierProvider(create: (_) => GiftTestsHook()),
 ];
 
 /// Faz logout e limpa os dados em memória do usuário anterior.
@@ -30,5 +38,9 @@ Future<void> logoutAndClear(BuildContext context) async {
   useLessons(context, listen: false).reset();
   useLessonProgress(context, listen: false).reset();
   useCuras(context, listen: false).reset();
+  useContributions(context, listen: false).reset();
+  useTreasury(context, listen: false).reset();
+  usePaymentSettings(context, listen: false).reset();
+  useGiftTests(context, listen: false).reset();
   await useAuth(context, listen: false).logout();
 }

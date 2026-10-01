@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:raraapp/components/shared/tag.dart';
 
 const curaTypeLabels = {
   'cura_alma': 'Cura da Alma',
@@ -6,19 +7,33 @@ const curaTypeLabels = {
   'gabinete_pastoral': 'Gabinete Pastoral',
 };
 
+const curaTypeIcons = {
+  'cura_alma': Icons.favorite_outline,
+  'reciclagem': Icons.autorenew,
+  'gabinete_pastoral': Icons.forum_outlined,
+};
+
 const curaStatusLabels = {
   'fila_espera': 'Fila de Espera',
   'andamento': 'Em Andamento',
   'concluido': 'Concluído',
+  'interrompido': 'Interrompido',
+  'cancelado': 'Cancelado',
 };
 
-const curaStatusColors = {
-  'fila_espera': Colors.orange,
-  'andamento': Colors.blue,
-  'concluido': Colors.green,
-};
+/// Cor do status (usada só na bolinha, para não perder contraste no texto).
+Color curaStatusColor(BuildContext context, String status) {
+  final scheme = Theme.of(context).colorScheme;
+  return switch (status) {
+    'andamento' => scheme.primary,
+    'concluido' => scheme.secondary,
+    'interrompido' => scheme.onSurface,
+    'cancelado' => scheme.error,
+    _ => Colors.transparent,
+  };
+}
 
-/// Etiqueta colorida com o status do pedido.
+/// Etiqueta com o status do pedido.
 class CuraStatusBadge extends StatelessWidget {
   final String status;
 
@@ -26,25 +41,14 @@ class CuraStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: curaStatusColors[status] ?? Colors.grey,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        curaStatusLabels[status] ?? status,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+    return Tag(
+      curaStatusLabels[status] ?? status,
+      dot: curaStatusColor(context, status),
     );
   }
 }
 
-/// Caixa cinza com as anotações do pastor.
+/// Anotações do pastor, num bloco destacado.
 class CuraNotes extends StatelessWidget {
   final String notes;
   final int? maxLines;
@@ -53,18 +57,32 @@ class CuraNotes extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(4),
+        color: scheme.onSurface.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border(left: BorderSide(color: scheme.primary, width: 3)),
       ),
-      child: Text(
-        notes,
-        style: const TextStyle(fontSize: 12),
-        maxLines: maxLines,
-        overflow: maxLines == null ? null : TextOverflow.ellipsis,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.sticky_note_2_outlined,
+            size: 18,
+            color: scheme.onSurface.withValues(alpha: 0.7),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              notes,
+              maxLines: maxLines,
+              overflow: maxLines == null ? null : TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }

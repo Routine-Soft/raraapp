@@ -37,7 +37,6 @@ class DateField extends StatelessWidget {
           hintText: 'Dia/Mês/Ano',
           enabled: enabled,
           prefixIcon: const Icon(Icons.calendar_today),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: Text(formatDate(value)),
       ),

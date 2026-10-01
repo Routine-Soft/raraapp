@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:raraapp/components/shared/form_dialog.dart';
+
+export 'package:raraapp/components/shared/section.dart';
 
 /// Dialog de leitura: título, subtítulo opcional, botão fechar e conteúdo rolável.
 class ContentDialog extends StatelessWidget {
   final String title;
   final String? subtitle;
   final List<Widget> children;
+
+  /// Botões do rodapé. Ficam lado a lado, ocupando a largura toda.
   final List<Widget> actions;
-  final double maxWidth;
 
   const ContentDialog({
     super.key,
@@ -14,92 +18,38 @@ class ContentDialog extends StatelessWidget {
     required this.children,
     this.subtitle,
     this.actions = const [],
-    this.maxWidth = 700,
   });
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
     return Dialog(
-      insetPadding: EdgeInsets.all(isMobile ? 16 : 32),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: isMobile ? screenWidth - 32 : maxWidth,
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          DialogHeader(title: title, subtitle: subtitle),
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: 12,
+                children: children,
+              ),
+            ),
+          ),
+          if (actions.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: Row(
+                spacing: 12,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        if (subtitle != null) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            subtitle!,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
+                  for (final action in actions)
+                    Expanded(child: SizedBox(height: 54, child: action)),
                 ],
               ),
-              const SizedBox(height: 16),
-              ...children,
-              if (actions.isNotEmpty)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    for (final action in actions) ...[
-                      const SizedBox(width: 8),
-                      action,
-                    ],
-                  ],
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Título de seção dentro de dialogs/telas.
-class SectionTitle extends StatelessWidget {
-  final String text;
-
-  const SectionTitle(this.text, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        text,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+        ],
       ),
     );
   }

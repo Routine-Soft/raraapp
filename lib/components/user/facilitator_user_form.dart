@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:raraapp/api/user_api.dart';
-import 'package:raraapp/components/church/church_dropdown.dart';
 import 'package:raraapp/components/shared/address_fields.dart';
-import 'package:raraapp/components/shared/content_dialog.dart';
 import 'package:raraapp/components/shared/custom_checkbox.dart';
 import 'package:raraapp/components/shared/custom_dropdown.dart';
 import 'package:raraapp/components/shared/custom_text_field.dart';
 import 'package:raraapp/components/shared/date_field.dart';
+import 'package:raraapp/components/shared/effects/glow_button.dart';
 import 'package:raraapp/components/shared/feedback.dart';
 import 'package:raraapp/components/shared/input_formatters.dart';
+import 'package:raraapp/components/shared/section.dart';
+import 'package:raraapp/hooks/use_auth.dart';
+import 'package:raraapp/hooks/use_churches.dart';
 import 'package:raraapp/hooks/use_users.dart';
 import 'package:raraapp/utils/validators.dart';
 
-/// Formulário em que o facilitador cadastra um visitante.
+/// Formulário em que o facilitador cadastra um visitante. A pessoa entra
+/// sempre na igreja do facilitador (o backend também garante isso).
 class FacilitatorUserForm extends StatefulWidget {
   const FacilitatorUserForm({super.key});
 
@@ -28,12 +31,10 @@ class _FacilitatorUserFormState extends State<FacilitatorUserForm> {
   final _facilitator = TextEditingController();
   final _address = AddressForm();
   String? _gender;
-  String? _churchId;
   String? _invitation;
   String? _status;
   DateTime? _birthdate;
   bool _baptized = false;
-  bool _member = false;
 
   @override
   void dispose() {
@@ -50,9 +51,9 @@ class _FacilitatorUserFormState extends State<FacilitatorUserForm> {
     }
     _address.clear();
     setState(() {
-      _gender = _churchId = _invitation = _status = null;
+      _gender = _invitation = _status = null;
       _birthdate = null;
-      _baptized = _member = false;
+      _baptized = false;
     });
   }
 
@@ -68,20 +69,18 @@ class _FacilitatorUserFormState extends State<FacilitatorUserForm> {
         phone: _phone.text.trim(),
         gender: _gender,
         birthdate: _birthdate,
-        churchId: _churchId,
         address: _address.toAddress(),
         invitationofgrace: _invitation,
         status: _status,
         facilitator: facilitator.isEmpty ? null : facilitator,
         baptized: _baptized,
-        member: _member,
       ),
     );
     if (!mounted) return;
     showResult(
       context,
       ok: ok,
-      success: 'Usuário cadastrado com sucesso!',
+      success: 'Usuário cadastrado! Senha provisória: 123',
       error: users.error,
     );
     if (ok) _reset();
@@ -89,99 +88,139 @@ class _FacilitatorUserFormState extends State<FacilitatorUserForm> {
 
   @override
   Widget build(BuildContext context) {
-    const gap = SizedBox(height: 12);
-
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: 28,
           children: [
-            const SectionTitle('Informações Básicas'),
-            CustomTextField(
-              label: 'Nome *',
-              controller: _name,
-              validator: RegisterValidators.validateName,
+            FormSection(
+              title: 'Informações Básicas',
+              icon: Icons.person_outline,
+              children: [
+                CustomTextField(
+                  label: 'Nome *',
+                  controller: _name,
+                  prefixIcon: Icons.person,
+                  validator: RegisterValidators.validateName,
+                ),
+                CustomTextField(
+                  label: 'Email *',
+                  controller: _email,
+                  prefixIcon: Icons.email,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: RegisterValidators.validateEmail,
+                  inputFormatters: [LowercaseNoSpaceFormatter()],
+                ),
+                CustomTextField(
+                  label: 'Telefone *',
+                  controller: _phone,
+                  prefixIcon: Icons.phone,
+                  keyboardType: TextInputType.phone,
+                  validator: (v) => (v ?? '').trim().isEmpty
+                      ? 'Telefone é obrigatório'
+                      : null,
+                ),
+                CustomDropdown<String>(
+                  label: 'Gênero',
+                  value: _gender,
+                  items: userGenders,
+                  onChanged: (v) => setState(() => _gender = v),
+                ),
+                DateField(
+                  label: 'Data de Nascimento',
+                  value: _birthdate,
+                  onChanged: (d) => setState(() => _birthdate = d),
+                ),
+              ],
             ),
-            gap,
-            CustomTextField(
-              label: 'Email *',
-              controller: _email,
-              keyboardType: TextInputType.emailAddress,
-              validator: RegisterValidators.validateEmail,
-              inputFormatters: [LowercaseNoSpaceFormatter()],
+            FormSection(
+              title: 'Igreja',
+              icon: Icons.church_outlined,
+              children: [
+                const _OwnChurch(),
+                AddressFields(
+                  form: _address,
+                  showCountry: false,
+                  showTitle: false,
+                ),
+              ],
             ),
-            gap,
-            CustomTextField(
-              label: 'Telefone *',
-              controller: _phone,
-              keyboardType: TextInputType.phone,
-              validator: (v) =>
-                  (v ?? '').trim().isEmpty ? 'Telefone é obrigatório' : null,
+            FormSection(
+              title: 'Outros Dados',
+              icon: Icons.tune,
+              children: [
+                CustomDropdown<String>(
+                  label: 'Convite da Graça',
+                  value: _invitation,
+                  items: userInvitations,
+                  onChanged: (v) => setState(() => _invitation = v),
+                ),
+                CustomDropdown<String>(
+                  label: 'Status',
+                  value: _status,
+                  items: userStatuses,
+                  onChanged: (v) => setState(() => _status = v),
+                ),
+                CustomTextField(
+                  label: 'Facilitador',
+                  controller: _facilitator,
+                  prefixIcon: Icons.support_agent,
+                  hintText: 'Nome do facilitador',
+                ),
+                CustomCheckbox(
+                  label: 'Batizado',
+                  value: _baptized,
+                  onChanged: (v) => setState(() => _baptized = v ?? false),
+                ),
+              ],
             ),
-            gap,
-            CustomDropdown<String>(
-              label: 'Gênero',
-              value: _gender,
-              items: userGenders,
-              onChanged: (v) => setState(() => _gender = v),
-            ),
-            gap,
-            DateField(
-              label: 'Data de Nascimento',
-              value: _birthdate,
-              onChanged: (d) => setState(() => _birthdate = d),
-            ),
-            const SizedBox(height: 20),
-            const SectionTitle('Igreja'),
-            ChurchDropdown(
-              value: _churchId,
-              onChanged: (id) => setState(() => _churchId = id),
-            ),
-            const SizedBox(height: 20),
-            AddressFields(form: _address, showCountry: false),
-            const SizedBox(height: 20),
-            const SectionTitle('Outros Dados'),
-            CustomDropdown<String>(
-              label: 'Convite da Graça',
-              value: _invitation,
-              items: userInvitations,
-              onChanged: (v) => setState(() => _invitation = v),
-            ),
-            gap,
-            CustomDropdown<String>(
-              label: 'Status',
-              value: _status,
-              items: userStatuses,
-              onChanged: (v) => setState(() => _status = v),
-            ),
-            gap,
-            CustomTextField(
-              label: 'Facilitador',
-              controller: _facilitator,
-              hintText: 'Nome do facilitador',
-            ),
-            gap,
-            CustomCheckbox(
-              label: 'Batizado',
-              value: _baptized,
-              onChanged: (v) => setState(() => _baptized = v ?? false),
-            ),
-            CustomCheckbox(
-              label: 'Membro',
-              value: _member,
-              onChanged: (v) => setState(() => _member = v ?? false),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.person_add),
-              label: const Text('Cadastrar'),
-              onPressed: useUsers(context).isLoading ? null : _submit,
+            GlowButton(
+              label: 'Cadastrar',
+              icon: Icons.person_add,
+              loading: useUsers(context).isLoading,
+              onPressed: _submit,
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Igreja do cadastro: a do facilitador, só para mostrar (não dá para trocar).
+class _OwnChurch extends StatefulWidget {
+  const _OwnChurch();
+
+  @override
+  State<_OwnChurch> createState() => _OwnChurchState();
+}
+
+class _OwnChurchState extends State<_OwnChurch> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => useChurches(context, listen: false).ensureLoaded(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final churchId = useAuth(context).user?.churchId;
+    final name = useChurches(context).findById(churchId)?.name;
+
+    return InputDecorator(
+      decoration: const InputDecoration(
+        labelText: 'Igreja',
+        prefixIcon: Icon(Icons.church_outlined),
+        suffixIcon: Icon(Icons.lock_outline),
+        helperText: 'A pessoa será cadastrada na sua igreja',
+        enabled: false,
+      ),
+      child: Text(name ?? '…'),
     );
   }
 }

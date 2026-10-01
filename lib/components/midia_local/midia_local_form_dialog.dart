@@ -4,6 +4,7 @@ import 'package:raraapp/components/shared/custom_text_field.dart';
 import 'package:raraapp/components/shared/feedback.dart';
 import 'package:raraapp/components/shared/form_dialog.dart';
 import 'package:raraapp/components/shared/format.dart';
+import 'package:raraapp/components/shared/formatted/formatted_text_field.dart';
 import 'package:raraapp/hooks/use_auth.dart';
 import 'package:raraapp/hooks/use_midia_locals.dart';
 
@@ -90,9 +91,9 @@ class _MidiaLocalFormDialogState extends State<MidiaLocalFormDialog> {
       onSubmit: _submit,
       children: [
         InputDecorator(
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             labelText: 'Data (opcional)',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            prefixIcon: Icon(Icons.event),
           ),
           child: Row(
             children: [
@@ -106,23 +107,27 @@ class _MidiaLocalFormDialogState extends State<MidiaLocalFormDialog> {
                   onPressed: () => setState(() => _date = null),
                 ),
               IconButton(
-                icon: const Icon(Icons.calendar_today),
+                tooltip: 'Escolher data',
+                icon: const Icon(Icons.calendar_month),
                 onPressed: _pickDate,
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
-        CustomTextField(label: 'Hora', controller: _time, hintText: '14:30'),
-        const SizedBox(height: 16),
+        CustomTextField(
+          label: 'Hora',
+          controller: _time,
+          hintText: '14:30',
+          prefixIcon: Icons.schedule,
+        ),
         CustomTextField(
           label: 'Título',
+          prefixIcon: Icons.title,
           controller: _title,
           validator: (v) =>
               (v ?? '').trim().isEmpty ? 'Título é obrigatório' : null,
         ),
-        const SizedBox(height: 16),
-        CustomTextField(label: 'Descrição', controller: _text, maxLines: 4),
+        FormattedTextField(label: 'Descrição', controller: _text),
       ],
     );
   }

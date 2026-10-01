@@ -59,7 +59,6 @@ class _CuraEditDialogState extends State<CuraEditDialog> {
       submitLabel: 'Salvar',
       isSaving: useCuras(context).isLoading,
       onSubmit: _submit,
-      maxWidth: 420,
       children: [
         CustomDropdown<String>(
           label: 'Tipo',
@@ -68,7 +67,6 @@ class _CuraEditDialogState extends State<CuraEditDialog> {
           itemLabel: (t) => curaTypeLabels[t] ?? t,
           onChanged: (t) => setState(() => _type = t ?? _type),
         ),
-        const SizedBox(height: 16),
         CustomTextField(
           label: 'Anotações',
           controller: _notes,

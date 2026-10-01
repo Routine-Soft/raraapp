@@ -4,6 +4,7 @@ import 'package:raraapp/components/shared/address_fields.dart';
 import 'package:raraapp/components/shared/custom_text_field.dart';
 import 'package:raraapp/components/shared/feedback.dart';
 import 'package:raraapp/components/shared/form_dialog.dart';
+import 'package:raraapp/components/shared/section.dart';
 import 'package:raraapp/hooks/use_churches.dart';
 
 /// Dialog para criar ([church] nulo) ou editar uma igreja.
@@ -79,8 +80,6 @@ class _ChurchFormDialogState extends State<ChurchFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    const gap = SizedBox(height: 12, width: 12);
-
     return FormDialog(
       title: _isEditing ? 'Editar Igreja' : 'Nova Igreja',
       formKey: _formKey,
@@ -88,30 +87,36 @@ class _ChurchFormDialogState extends State<ChurchFormDialog> {
       isSaving: useChurches(context).isLoading,
       onSubmit: _submit,
       children: [
-        CustomTextField(
-          label: 'Nome da Igreja',
-          controller: _name,
-          validator: (v) =>
-              (v ?? '').trim().isEmpty ? 'Nome é obrigatório' : null,
+        FormSection(
+          title: 'Dados',
+          icon: Icons.church_outlined,
+          children: [
+            CustomTextField(
+              label: 'Nome da Igreja',
+              controller: _name,
+              validator: (v) =>
+                  (v ?? '').trim().isEmpty ? 'Nome é obrigatório' : null,
+            ),
+            CustomTextField(label: 'Pastor 1', controller: _pastor1),
+            CustomTextField(label: 'Pastor 2', controller: _pastor2),
+            CustomTextField(
+              label: 'CNPJ',
+              controller: _cnpj,
+              hintText: '00.000.000/0000-00',
+            ),
+            CustomTextField(
+              label: 'Total de Membros',
+              controller: _totalMembers,
+              keyboardType: TextInputType.number,
+            ),
+          ],
         ),
-        gap,
-        CustomTextField(label: 'Pastor 1', controller: _pastor1),
-        gap,
-        CustomTextField(label: 'Pastor 2', controller: _pastor2),
-        gap,
-        CustomTextField(
-          label: 'CNPJ',
-          controller: _cnpj,
-          hintText: '00.000.000/0000-00',
+        const SizedBox(height: 8),
+        FormSection(
+          title: 'Endereço',
+          icon: Icons.place_outlined,
+          children: [AddressFields(form: _address, showTitle: false)],
         ),
-        gap,
-        CustomTextField(
-          label: 'Total de Membros',
-          controller: _totalMembers,
-          keyboardType: TextInputType.number,
-        ),
-        const SizedBox(height: 24),
-        AddressFields(form: _address),
       ],
     );
   }

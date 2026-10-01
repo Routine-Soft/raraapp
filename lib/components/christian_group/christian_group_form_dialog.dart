@@ -4,6 +4,7 @@ import 'package:raraapp/components/shared/address_fields.dart';
 import 'package:raraapp/components/shared/custom_text_field.dart';
 import 'package:raraapp/components/shared/feedback.dart';
 import 'package:raraapp/components/shared/form_dialog.dart';
+import 'package:raraapp/components/shared/section.dart';
 import 'package:raraapp/hooks/use_auth.dart';
 import 'package:raraapp/hooks/use_christian_groups.dart';
 
@@ -90,8 +91,6 @@ class _ChristianGroupFormDialogState extends State<ChristianGroupFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    const gap = SizedBox(height: 12, width: 12);
-
     return FormDialog(
       title: _isEditing ? 'Editar Grupo Cristão' : 'Novo Grupo Cristão',
       formKey: _formKey,
@@ -99,55 +98,63 @@ class _ChristianGroupFormDialogState extends State<ChristianGroupFormDialog> {
       isSaving: useChristianGroups(context).isLoading,
       onSubmit: _submit,
       children: [
-        CustomTextField(
-          label: 'Nome do Grupo',
-          controller: _name,
-          validator: (v) =>
-              (v ?? '').trim().isEmpty ? 'Nome é obrigatório' : null,
-        ),
-        gap,
-        CustomTextField(label: 'Líder', controller: _leader),
-        gap,
-        CustomTextField(label: 'Co-líder', controller: _coleader),
-        gap,
-        CustomTextField(label: 'Anfitrião', controller: _host),
-        const SizedBox(height: 24),
-        AddressFields(form: _address),
-        const SizedBox(height: 24),
-        Text(
-          'Contatos',
-          style: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        gap,
-        Row(
+        FormSection(
+          title: 'Grupo',
+          icon: Icons.groups_outlined,
           children: [
-            Expanded(
-              child: CustomTextField(
-                label: 'Telefone',
-                controller: _newContact,
-                hintText: '+5521987654321',
-                keyboardType: TextInputType.phone,
-              ),
+            CustomTextField(
+              label: 'Nome do Grupo',
+              controller: _name,
+              validator: (v) =>
+                  (v ?? '').trim().isEmpty ? 'Nome é obrigatório' : null,
             ),
-            gap,
-            ElevatedButton(
-              onPressed: _addContact,
-              child: const Text('Adicionar'),
-            ),
+            CustomTextField(label: 'Líder', controller: _leader),
+            CustomTextField(label: 'Co-líder', controller: _coleader),
+            CustomTextField(label: 'Anfitrião', controller: _host),
           ],
         ),
-        for (final phone in _contacts)
-          ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            title: Text(phone),
-            trailing: IconButton(
-              icon: const Icon(Icons.close, size: 20),
-              onPressed: () => setState(() => _contacts.remove(phone)),
+        const SizedBox(height: 8),
+        FormSection(
+          title: 'Endereço',
+          icon: Icons.place_outlined,
+          children: [AddressFields(form: _address, showTitle: false)],
+        ),
+        const SizedBox(height: 8),
+        FormSection(
+          title: 'Contatos',
+          icon: Icons.chat_outlined,
+          children: [
+            TextField(
+              controller: _newContact,
+              keyboardType: TextInputType.phone,
+              onSubmitted: (_) => _addContact(),
+              decoration: InputDecoration(
+                labelText: 'Telefone',
+                hintText: '+5521987654321',
+                prefixIcon: const Icon(Icons.phone),
+                suffixIcon: IconButton(
+                  tooltip: 'Adicionar contato',
+                  icon: const Icon(Icons.add_circle),
+                  onPressed: _addContact,
+                ),
+              ),
             ),
-          ),
+            if (_contacts.isNotEmpty)
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final phone in _contacts)
+                    InputChip(
+                      label: Text(phone),
+                      avatar: const Icon(Icons.chat_outlined, size: 18),
+                      deleteButtonTooltipMessage: 'Remover',
+                      onDeleted: () => setState(() => _contacts.remove(phone)),
+                    ),
+                ],
+              ),
+          ],
+        ),
       ],
     );
   }

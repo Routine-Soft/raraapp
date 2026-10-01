@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:raraapp/api/christian_group_api.dart';
 import 'package:raraapp/components/christian_group/christian_group_card.dart';
 import 'package:raraapp/components/christian_group/christian_group_form_dialog.dart';
-import 'package:raraapp/components/shared/empty_state.dart';
 import 'package:raraapp/components/shared/feedback.dart';
+import 'package:raraapp/components/shared/list_page.dart';
 import 'package:raraapp/hooks/use_christian_groups.dart';
 
 /// Tela de administração de grupos cristãos.
@@ -46,52 +46,25 @@ class _ChristianGroupAdminPageState extends State<ChristianGroupAdminPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => ChristianGroupFormDialog.show(context),
-        child: const Icon(Icons.add),
-      ),
-      body: _buildBody(useChristianGroups(context)),
-    );
-  }
+    final groups = useChristianGroups(context);
 
-  Widget _buildBody(ChristianGroupsHook groups) {
-    final list = groups.groups;
-
-    if (groups.isLoading && list.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (list.isEmpty) {
-      return EmptyState(
-        icon: Icons.groups,
-        message: groups.error ?? 'Nenhum grupo encontrado',
-        actionLabel: 'Criar Grupo',
-        onAction: () => ChristianGroupFormDialog.show(context),
-      );
-    }
-
-    return RefreshIndicator(
+    return ListPage(
+      icon: Icons.groups_outlined,
+      title: 'Christian Group Liderança',
+      loading: groups.isLoading,
       onRefresh: groups.load,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text(
-            'Grupos Cristãos (${list.length})',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+      emptyIcon: Icons.groups_outlined,
+      emptyMessage: groups.error ?? 'Nenhum grupo encontrado',
+      onAdd: () => ChristianGroupFormDialog.show(context),
+      addLabel: 'Novo grupo',
+      children: [
+        for (final group in groups.groups)
+          ChristianGroupCard(
+            group: group,
+            onEdit: () => ChristianGroupFormDialog.show(context, group: group),
+            onDelete: () => _delete(group),
           ),
-          const SizedBox(height: 16),
-          for (final group in list)
-            ChristianGroupCard(
-              group: group,
-              onEdit: () =>
-                  ChristianGroupFormDialog.show(context, group: group),
-              onDelete: () => _delete(group),
-            ),
-        ],
-      ),
+      ],
     );
   }
 }

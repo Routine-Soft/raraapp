@@ -22,10 +22,7 @@ class CustomDropdown<T> extends StatelessWidget {
       // A key força reconstruir quando o valor muda de fora (ex.: reset do form)
       key: ValueKey(value),
       initialValue: value,
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      ),
+      decoration: InputDecoration(labelText: label),
       items: items.map((item) {
         final label = itemLabel?.call(item) ?? item.toString();
         return DropdownMenuItem<T>(value: item, child: Text(label));

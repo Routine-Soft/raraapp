@@ -7,8 +7,16 @@ import 'package:raraapp/components/shared/custom_checkbox.dart';
 import 'package:raraapp/components/shared/custom_dropdown.dart';
 import 'package:raraapp/components/shared/custom_text_field.dart';
 import 'package:raraapp/components/shared/date_field.dart';
+import 'package:raraapp/components/shared/effects/fade_route.dart';
+import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
+import 'package:raraapp/components/shared/effects/floating.dart';
+import 'package:raraapp/components/shared/effects/glow_button.dart';
+import 'package:raraapp/components/shared/effects/gradient_text.dart';
 import 'package:raraapp/components/shared/feedback.dart';
 import 'package:raraapp/components/shared/input_formatters.dart';
+import 'package:raraapp/components/shared/rara_logo.dart';
+import 'package:raraapp/components/shared/section.dart';
+import 'package:raraapp/components/shared/showcase_page.dart';
 import 'package:raraapp/constants/register_constants.dart';
 import 'package:raraapp/hooks/use_auth.dart';
 import 'package:raraapp/utils/validators.dart';
@@ -77,143 +85,195 @@ class _RegisterPageState extends State<RegisterPage> {
       error: auth.error,
     );
     if (ok) {
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginPage()));
+      Navigator.of(context).pushReplacement(fadeRoute(const LoginPage()));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final isLoading = useAuth(context).isLoading;
-    const gap = SizedBox(height: 16);
+    final text = Theme.of(context).textTheme;
+    final muted = Theme.of(
+      context,
+    ).colorScheme.onSurface.withValues(alpha: 0.75);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
+    Widget reveal(int order, Widget child) =>
+        FadeSlideIn(delay: stagger(order), child: child);
+
+    return ShowcasePage(
+      maxWidth: 640,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Image.asset('assets/images/logorara.png', width: 32, height: 32),
-            const SizedBox(width: 8),
-            const Text('Cadastro'),
-          ],
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              CustomTextField(
-                label: 'Nome Completo',
-                controller: _name,
-                prefixIcon: Icons.person,
-                validator: RegisterValidators.validateName,
-              ),
-              gap,
-              CustomTextField(
-                label: 'Email',
-                controller: _email,
-                keyboardType: TextInputType.emailAddress,
-                prefixIcon: Icons.email,
-                validator: RegisterValidators.validateEmail,
-                inputFormatters: [LowercaseNoSpaceFormatter()],
-              ),
-              gap,
-              CustomDropdown<String>(
-                label: 'País',
-                value: _country,
-                items: RegisterConstants.countriesWithDDI.keys.toList(),
-                onChanged: (value) => setState(() => _country = value),
-              ),
-              gap,
-              CustomTextField(
-                label: 'Telefone',
-                controller: _phone,
-                keyboardType: TextInputType.phone,
-                prefixIcon: Icons.phone,
-                validator: RegisterValidators.validatePhone,
-                hintText: 'DDD + número',
-              ),
-              gap,
-              ChurchDropdown(
-                value: _churchId,
-                onChanged: (id) => setState(() => _churchId = id),
-              ),
-              gap,
-              CustomDropdown<String>(
-                label: 'Gênero',
-                value: _gender,
-                items: userGenders,
-                onChanged: (value) => setState(() => _gender = value),
-              ),
-              gap,
-              DateField(
-                label: 'Data de Nascimento',
-                value: _birthdate,
-                onChanged: (date) => setState(() => _birthdate = date),
-              ),
-              gap,
-              CustomTextField(
-                label: 'Senha',
-                controller: _password,
-                obscureText: true,
-                prefixIcon: Icons.lock,
-                validator: RegisterValidators.validatePassword,
-                inputFormatters: [NoSpaceFormatter()],
-              ),
-              gap,
-              CustomTextField(
-                label: 'Confirmar Senha',
-                controller: _passwordConfirm,
-                obscureText: true,
-                prefixIcon: Icons.lock,
-                validator: (v) => RegisterValidators.validatePasswordConfirm(
-                  v,
-                  _password.text,
+            reveal(1, Floating(child: const RaraLogo(height: 56))),
+            const SizedBox(height: 12),
+            reveal(
+              2,
+              GradientText(
+                'Criar conta',
+                style: text.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
                 ),
-                inputFormatters: [NoSpaceFormatter()],
               ),
-              const SizedBox(height: 24),
-              AddressFields(form: _address),
-              gap,
-              CustomCheckbox(
-                label: 'Batizado',
-                value: _baptized,
-                onChanged: (value) =>
-                    setState(() => _baptized = value ?? false),
+            ),
+            reveal(
+              3,
+              Text(
+                'Preencha seus dados para entrar na comunidade',
+                textAlign: TextAlign.center,
+                style: text.bodyMedium?.copyWith(color: muted),
               ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: isLoading ? null : _submit,
-                child: isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Cadastrar'),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+            ),
+            const SizedBox(height: 32),
+            reveal(
+              4,
+              FormSection(
+                icon: Icons.person_outline,
+                title: 'Sobre você',
                 children: [
-                  const Text('Já tem uma conta? '),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const LoginPage()),
-                    ),
-                    child: const Text(
-                      'Faça login',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
+                  CustomTextField(
+                    label: 'Nome Completo',
+                    controller: _name,
+                    prefixIcon: Icons.person,
+                    validator: RegisterValidators.validateName,
+                  ),
+
+                  CustomDropdown<String>(
+                    label: 'Gênero',
+                    value: _gender,
+                    items: userGenders,
+                    onChanged: (value) => setState(() => _gender = value),
+                  ),
+                  DateField(
+                    label: 'Data de Nascimento',
+                    value: _birthdate,
+                    onChanged: (date) => setState(() => _birthdate = date),
+                  ),
+                  CustomCheckbox(
+                    label: 'Batizado',
+                    value: _baptized,
+                    onChanged: (value) =>
+                        setState(() => _baptized = value ?? false),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 32),
+            reveal(
+              5,
+              FormSection(
+                icon: Icons.contact_mail_outlined,
+                title: 'Contato',
+                children: [
+                  CustomTextField(
+                    label: 'Email',
+                    controller: _email,
+                    keyboardType: TextInputType.emailAddress,
+                    prefixIcon: Icons.email,
+                    validator: RegisterValidators.validateEmail,
+                    inputFormatters: [LowercaseNoSpaceFormatter()],
+                  ),
+
+                  CustomDropdown<String>(
+                    label: 'País',
+                    value: _country,
+                    items: RegisterConstants.countriesWithDDI.keys.toList(),
+                    onChanged: (value) => setState(() => _country = value),
+                  ),
+                  CustomTextField(
+                    label: 'Telefone',
+                    controller: _phone,
+                    keyboardType: TextInputType.phone,
+                    prefixIcon: Icons.phone,
+                    validator: RegisterValidators.validatePhone,
+                    hintText: 'DDD + número',
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            reveal(
+              6,
+              FormSection(
+                icon: Icons.church_outlined,
+                title: 'Igreja',
+                children: [
+                  ChurchDropdown(
+                    value: _churchId,
+                    onChanged: (id) => setState(() => _churchId = id),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            reveal(
+              7,
+              FormSection(
+                icon: Icons.home_outlined,
+                title: 'Endereço',
+                children: [AddressFields(form: _address, showTitle: false)],
+              ),
+            ),
+            const SizedBox(height: 32),
+            reveal(
+              8,
+              FormSection(
+                icon: Icons.lock_outline,
+                title: 'Acesso',
+                children: [
+                  CustomTextField(
+                    label: 'Senha',
+                    controller: _password,
+                    obscureText: true,
+                    prefixIcon: Icons.lock,
+                    validator: RegisterValidators.validatePassword,
+                    inputFormatters: [NoSpaceFormatter()],
+                  ),
+                  CustomTextField(
+                    label: 'Confirmar Senha',
+                    controller: _passwordConfirm,
+                    obscureText: true,
+                    prefixIcon: Icons.lock,
+                    validator: (v) =>
+                        RegisterValidators.validatePasswordConfirm(
+                          v,
+                          _password.text,
+                        ),
+                    inputFormatters: [NoSpaceFormatter()],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            reveal(
+              9,
+              GlowButton(
+                label: 'Cadastrar',
+                icon: Icons.check_circle_outline,
+                loading: isLoading,
+                onPressed: _submit,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text('Já tem uma conta?', style: TextStyle(color: muted)),
+                TextButton(
+                  onPressed: () => Navigator.of(
+                    context,
+                  ).pushReplacement(fadeRoute(const LoginPage())),
+                  child: const Text(
+                    'Faça login',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

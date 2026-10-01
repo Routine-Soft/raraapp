@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:raraapp/api/lesson_api.dart';
+import 'package:raraapp/components/gift_test/gift_tests_card.dart';
 import 'package:raraapp/components/lesson/lesson_study_dialog.dart';
+import 'package:raraapp/components/lesson/module_progress.dart';
+import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
+import 'package:raraapp/components/shared/empty_state.dart';
+import 'package:raraapp/components/shared/list_page.dart';
+import 'package:raraapp/components/shared/page_header.dart';
 import 'package:raraapp/hooks/use_lesson_progress.dart';
 import 'package:raraapp/hooks/use_lessons.dart';
 
@@ -16,49 +22,92 @@ class _LessonPageState extends State<LessonPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      useLessons(context, listen: false).load();
-      useLessonProgress(context, listen: false).loadMine();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  Future<void> _load() async {
+    await Future.wait([
+      useLessons(context, listen: false).load(),
+      useLessonProgress(context, listen: false).loadMine(),
+    ]);
   }
 
   @override
   Widget build(BuildContext context) {
     final lessons = useLessons(context);
+    final modules = lessons.byModule.entries
+        .where((e) => e.value.isNotEmpty)
+        .toList();
 
-    if (lessons.isLoading && lessons.lessons.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (lessons.lessons.isEmpty) {
-      return Center(child: Text(lessons.error ?? 'Nenhuma lição disponível'));
-    }
-
-    final modules = lessons.byModule.entries.where((e) => e.value.isNotEmpty);
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        for (final module in modules)
-          Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            clipBehavior: Clip.antiAlias,
-            child: ExpansionTile(
-              title: Text(
-                module.key.toUpperCase(),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              subtitle: Text(
-                '${module.value.length} aula${module.value.length > 1 ? 's' : ''}',
-              ),
-              children: [
-                for (final lesson in module.value) _LessonTile(lesson: lesson),
-              ],
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        children: [
+          const FadeSlideIn(
+            child: PageHeader(
+              icon: Icons.menu_book_outlined,
+              title: 'Avançai',
+              subtitle: 'Suas aulas por módulo',
             ),
           ),
-      ],
+          const SizedBox(height: 20),
+          if (lessons.isLoading && lessons.lessons.isEmpty)
+            for (var i = 0; i < 3; i++) ...[
+              const CardSkeleton(),
+              const SizedBox(height: 12),
+            ]
+          else if (modules.isEmpty)
+            EmptyState(
+              icon: Icons.menu_book_outlined,
+              message: lessons.error ?? 'Nenhuma lição disponível',
+            )
+          else
+            for (final (i, module) in modules.indexed) ...[
+              FadeSlideIn(
+                delay: stagger(i + 1),
+                child: _ModuleCard(name: module.key, lessons: module.value),
+              ),
+              const SizedBox(height: 12),
+            ],
+          // Depois de todos os módulos
+          FadeSlideIn(
+            delay: stagger(modules.length + 1),
+            child: const GiftTestsCard(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Módulo: cabeçalho com a barra de progresso; abre a lista de aulas.
+class _ModuleCard extends StatelessWidget {
+  final String name;
+  final List<Lesson> lessons;
+
+  const _ModuleCard({required this.name, required this.lessons});
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = useLessonProgress(context);
+    final done = lessons
+        .where((l) => progress.mineForLesson(l.id) != null)
+        .length;
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.fromLTRB(20, 12, 16, 12),
+        childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+        title: ProgressBar(
+          label: moduleLabel(name),
+          completed: done,
+          total: lessons.length,
+        ),
+        children: [for (final lesson in lessons) _LessonTile(lesson: lesson)],
+      ),
     );
   }
 }
@@ -70,27 +119,38 @@ class _LessonTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final progress = useLessonProgress(context).mineForLesson(lesson.id);
     final done = progress != null;
 
     return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: done ? Colors.green[100] : Colors.grey[200],
-        child: Text(
-          '${lesson.number}',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: done ? Colors.green[900] : Colors.grey[700],
-          ),
+      leading: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        width: 40,
+        height: 40,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: done ? scheme.primary : Colors.transparent,
+          border: Border.all(color: done ? scheme.primary : scheme.outline),
         ),
+        child: done
+            ? Icon(Icons.check, color: scheme.onPrimary, size: 20)
+            : Text(
+                '${lesson.number}',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
       ),
-      title: Text(lesson.title),
-      subtitle: done
-          ? Text(
-              'Acertos: ${progress.score}/${progress.totalQuestions}',
-              style: const TextStyle(color: Colors.green),
-            )
-          : null,
+      title: Text(
+        lesson.title,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+      subtitle: Text(
+        done
+            ? 'Acertos: ${progress.score}/${progress.totalQuestions}'
+            : 'Aula ${lesson.number} • não iniciada',
+      ),
+      trailing: const Icon(Icons.chevron_right),
       onTap: () => LessonStudyDialog.show(context, lesson),
     );
   }

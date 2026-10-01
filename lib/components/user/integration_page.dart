@@ -1,19 +1,144 @@
 import 'package:flutter/material.dart';
+import 'package:raraapp/components/church/church_filter.dart';
+import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
+import 'package:raraapp/components/shared/empty_state.dart';
+import 'package:raraapp/components/shared/tabbed_page.dart';
+import 'package:raraapp/components/shared/tag.dart';
+import 'package:raraapp/components/theme/app_effects.dart';
 import 'package:raraapp/components/user/facilitator_user_form.dart';
+import 'package:raraapp/components/user/member_growth.dart';
 import 'package:raraapp/components/user/user_chips.dart';
 import 'package:raraapp/components/user/user_detail_dialog.dart';
 import 'package:raraapp/components/user/user_integration_dialog.dart';
+import 'package:raraapp/hooks/use_auth.dart';
 import 'package:raraapp/hooks/use_users.dart';
 
-/// Integração: números, cadastro de visitantes e acompanhamento.
-class IntegrationPage extends StatefulWidget {
-  const IntegrationPage({super.key});
+/// Membros Liderança: números e lista detalhada dos membros da própria
+/// igreja.
+class MembersLeadershipPage extends StatelessWidget {
+  const MembersLeadershipPage({super.key});
 
   @override
-  State<IntegrationPage> createState() => _IntegrationPageState();
+  Widget build(BuildContext context) {
+    final churchId = useAuth(context).user?.churchId;
+    if (churchId == null) {
+      return const _NoChurch();
+    }
+    return _UsersLoader(child: _MembersTabs(churchId: churchId));
+  }
 }
 
-class _IntegrationPageState extends State<IntegrationPage> {
+/// Membros Super Intendente Geral: o mesmo da Liderança, de todas as igrejas
+/// ou da igreja escolhida no filtro.
+class MembersGeneralPage extends StatefulWidget {
+  const MembersGeneralPage({super.key});
+
+  @override
+  State<MembersGeneralPage> createState() => _MembersGeneralPageState();
+}
+
+class _MembersGeneralPageState extends State<MembersGeneralPage> {
+  String? _churchId;
+
+  @override
+  Widget build(BuildContext context) {
+    return _UsersLoader(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: ChurchFilter(
+              value: _churchId,
+              onChanged: (id) => setState(() => _churchId = id),
+            ),
+          ),
+          Expanded(child: _MembersTabs(churchId: _churchId)),
+        ],
+      ),
+    );
+  }
+}
+
+class _MembersTabs extends StatelessWidget {
+  final String? churchId;
+
+  const _MembersTabs({required this.churchId});
+
+  @override
+  Widget build(BuildContext context) {
+    return TabbedPage(
+      tabs: [
+        (
+          icon: Icons.insights,
+          label: 'Dashboard',
+          child: _Dashboard(churchId: churchId),
+        ),
+        (
+          icon: Icons.person_search,
+          label: 'Membros Detalhado',
+          child: _MembersDetailed(churchId: churchId),
+        ),
+      ],
+    );
+  }
+}
+
+/// Facilitadores: números, cadastro de visitantes e lista detalhada da
+/// própria igreja.
+class FacilitatorsPage extends StatelessWidget {
+  const FacilitatorsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final churchId = useAuth(context).user?.churchId;
+    if (churchId == null) {
+      return const _NoChurch();
+    }
+    return _UsersLoader(
+      child: TabbedPage(
+        tabs: [
+          (
+            icon: Icons.insights,
+            label: 'Dashboard',
+            child: _Dashboard(churchId: churchId),
+          ),
+          (
+            icon: Icons.person_add_alt,
+            label: 'Criar Usuário',
+            child: const FacilitatorUserForm(),
+          ),
+          (
+            icon: Icons.person_search,
+            label: 'Membros Detalhado',
+            child: _MembersDetailed(churchId: churchId),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NoChurch extends StatelessWidget {
+  const _NoChurch();
+
+  @override
+  Widget build(BuildContext context) => const EmptyState(
+    icon: Icons.church_outlined,
+    message: 'Cadastre sua igreja em Minha Conta para ver os membros',
+  );
+}
+
+/// Carrega os usuários ao abrir a página.
+class _UsersLoader extends StatefulWidget {
+  final Widget child;
+
+  const _UsersLoader({required this.child});
+
+  @override
+  State<_UsersLoader> createState() => _UsersLoaderState();
+}
+
+class _UsersLoaderState extends State<_UsersLoader> {
   @override
   void initState() {
     super.initState();
@@ -23,64 +148,121 @@ class _IntegrationPageState extends State<IntegrationPage> {
   }
 
   @override
+  Widget build(BuildContext context) => widget.child;
+}
+
+/// Números dos usuários da igreja [churchId] (`null` = todas).
+class _Dashboard extends StatelessWidget {
+  final String? churchId;
+
+  const _Dashboard({this.churchId});
+
+  @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Integração'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(icon: Icon(Icons.dashboard), text: 'Dashboard'),
-              Tab(icon: Icon(Icons.person_add), text: 'Facilitador'),
-              Tab(icon: Icon(Icons.person_search), text: 'Integração'),
+    final users = useUsers(context);
+    final list = users.ofChurch(churchId);
+    final total = list.length;
+    final members = list.where((u) => u.member).length;
+    final baptized = list.where((u) => u.baptized).length;
+    final stats = [
+      ('Não Membros', total - members, Icons.person_outline),
+      ('Membros', members, Icons.verified_user_outlined),
+      ('Batizados', baptized, Icons.water_drop_outlined),
+      ('Não Batizados', total - baptized, Icons.water_drop),
+    ];
+
+    return RefreshIndicator(
+      onRefresh: users.load,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+        children: [
+          FadeSlideIn(child: _TotalCard(total: total)),
+          const SizedBox(height: 12),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 1.1,
+            children: [
+              for (final (i, (label, value, icon)) in stats.indexed)
+                FadeSlideIn(
+                  delay: stagger(i + 1, stepMs: 70),
+                  child: _StatCard(label, value, icon),
+                ),
             ],
           ),
-        ),
-        body: const TabBarView(
-          children: [_Dashboard(), _FacilitatorTab(), _SearchTab()],
-        ),
+          const SizedBox(height: 28),
+          MemberGrowth(key: ValueKey(churchId), churchId: churchId),
+        ],
       ),
     );
   }
 }
 
-class _Dashboard extends StatelessWidget {
-  const _Dashboard();
+/// Número que "conta" de 0 até [value] (CSS/JS: counter animation).
+class _CountUp extends StatelessWidget {
+  final int value;
+  final TextStyle? style;
+
+  const _CountUp(this.value, {this.style});
 
   @override
   Widget build(BuildContext context) {
-    final users = useUsers(context);
-    final total = users.users.length;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: value.toDouble()),
+      duration: MediaQuery.of(context).disableAnimations
+          ? Duration.zero
+          : const Duration(milliseconds: 900),
+      curve: Curves.easeOutCubic,
+      builder: (context, v, _) => Text('${v.round()}', style: style),
+    );
+  }
+}
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _StatCard(
-          'Não Membros',
-          users.nonMembers.length,
-          Icons.person_outline,
-          Colors.orange,
+/// Destaque com o total, no degradê do modo.
+class _TotalCard extends StatelessWidget {
+  final int total;
+
+  const _TotalCard({required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    final effects = AppEffects.of(context);
+    final text = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: effects.glassBorder),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: effects.backgroundGradient,
         ),
-        _StatCard(
-          'Membros',
-          users.members.length,
-          Icons.verified_user,
-          Colors.green,
-        ),
-        _StatCard(
-          'Batizados',
-          users.baptizedCount,
-          Icons.favorite,
-          Colors.blue,
-        ),
-        _StatCard(
-          'Não Batizados',
-          total - users.baptizedCount,
-          Icons.remove_circle_outline,
-          Colors.red,
-        ),
-      ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Pessoas cadastradas', style: text.titleMedium),
+                _CountUp(
+                  total,
+                  style: text.displayMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.groups_outlined, size: 48),
+        ],
+      ),
     );
   }
 }
@@ -89,39 +271,43 @@ class _StatCard extends StatelessWidget {
   final String label;
   final int value;
   final IconData icon;
-  final Color color;
 
-  const _StatCard(this.label, this.value, this.icon, this.color);
+  const _StatCard(this.label, this.value, this.icon);
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '$value',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-                  ),
-                ],
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: scheme.primary.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: scheme.primary, size: 20),
+            ),
+            const Spacer(),
+            FittedBox(
+              child: _CountUp(
+                value,
+                style: text.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
-            Icon(icon, size: 48, color: color),
+            Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: scheme.onSurface.withValues(alpha: 0.75)),
+            ),
           ],
         ),
       ),
@@ -129,125 +315,68 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _FacilitatorTab extends StatelessWidget {
-  const _FacilitatorTab();
+/// Pesquisa + lista com etiquetas, facilitador e edição da integração.
+class _MembersDetailed extends StatefulWidget {
+  final String? churchId;
+
+  const _MembersDetailed({this.churchId});
 
   @override
-  Widget build(BuildContext context) {
-    return const DefaultTabController(
-      length: 2,
-      child: Column(
-        children: [
-          TabBar(
-            tabs: [
-              Tab(text: 'Criar Usuário'),
-              Tab(text: 'Ver e Editar'),
-            ],
-          ),
-          Expanded(
-            child: TabBarView(children: [FacilitatorUserForm(), _EditList()]),
-          ),
-        ],
-      ),
-    );
-  }
+  State<_MembersDetailed> createState() => _MembersDetailedState();
 }
 
-class _EditList extends StatelessWidget {
-  const _EditList();
-
-  @override
-  Widget build(BuildContext context) {
-    final users = useUsers(context).users;
-    if (users.isEmpty) {
-      return const Center(child: Text('Nenhum usuário encontrado'));
-    }
-
-    return ListView(
-      padding: const EdgeInsets.all(12),
-      children: [
-        for (final user in users)
-          Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: ListTile(
-              leading: UserAvatar(user),
-              title: Text(user.name),
-              subtitle: Text(
-                user.facilitator != null
-                    ? 'Facilitador: ${user.facilitator}'
-                    : 'Sem facilitador atribuído',
-                style: TextStyle(
-                  color: user.facilitator != null
-                      ? Colors.grey[600]
-                      : Colors.red,
-                ),
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    tooltip: 'Editar usuário',
-                    icon: const Icon(Icons.edit),
-                    onPressed: () => UserIntegrationDialog.show(context, user),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.info_outline),
-                    onPressed: () => UserDetailDialog.show(context, user),
-                  ),
-                ],
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _SearchTab extends StatefulWidget {
-  const _SearchTab();
-
-  @override
-  State<_SearchTab> createState() => _SearchTabState();
-}
-
-class _SearchTabState extends State<_SearchTab> {
+class _MembersDetailedState extends State<_MembersDetailed> {
   String _query = '';
 
   @override
   Widget build(BuildContext context) {
-    final results = useUsers(context).search(_query);
+    final results = useUsers(context).search(_query, churchId: widget.churchId);
 
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
           child: TextField(
             onChanged: (value) => setState(() => _query = value),
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               hintText: 'Pesquisar por nome ou telefone...',
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              prefixIcon: Icon(Icons.search),
             ),
           ),
         ),
         Expanded(
           child: results.isEmpty
-              ? const Center(child: Text('Nenhum usuário encontrado'))
+              ? const EmptyState(
+                  icon: Icons.person_search,
+                  message: 'Nenhum usuário encontrado',
+                )
               : ListView(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
                   children: [
-                    for (final user in results)
-                      Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          leading: UserAvatar(user),
-                          title: Text(user.name),
-                          subtitle: UserChips(user: user),
-                          onTap: () => UserDetailDialog.show(context, user),
+                    for (final user in results) ...[
+                      UserTile(
+                        user: user,
+                        subtitle: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            UserChips(user: user),
+                            Tag(
+                              user.facilitator ?? 'Sem facilitador',
+                              icon: Icons.support_agent,
+                            ),
+                          ],
+                        ),
+                        onTap: () => UserDetailDialog.show(context, user),
+                        trailing: IconButton(
+                          tooltip: 'Editar integração',
+                          icon: const Icon(Icons.edit_outlined),
+                          onPressed: () =>
+                              UserIntegrationDialog.show(context, user),
                         ),
                       ),
+                      const SizedBox(height: 12),
+                    ],
                   ],
                 ),
         ),

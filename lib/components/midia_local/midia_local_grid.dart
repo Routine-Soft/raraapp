@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:raraapp/components/midia_local/midia_local_card.dart';
+import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
+import 'package:raraapp/components/shared/effects/hover_lift.dart';
+import 'package:raraapp/components/shared/list_page.dart';
 import 'package:raraapp/hooks/use_midia_locals.dart';
 
-/// Grade de mídias (Home). Carrega a lista sozinha.
+/// Lista de mídias (Home). Carrega a lista sozinha.
 class MidiaLocalGrid extends StatefulWidget {
   const MidiaLocalGrid({super.key});
 
@@ -25,23 +28,66 @@ class _MidiaLocalGridState extends State<MidiaLocalGrid> {
     final midias = useMidiaLocals(context);
 
     if (midias.isLoading && midias.midias.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return _Grid(children: List.filled(3, const CardSkeleton()));
     }
     if (midias.midias.isEmpty) {
-      return Text(midias.error ?? 'Nenhuma mídia local encontrada');
+      return _Empty(message: midias.error ?? 'Nenhuma mídia local encontrada');
     }
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: MediaQuery.of(context).size.width < 600 ? 2 : 3,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.85,
+    return _Grid(
+      children: [
+        for (var i = 0; i < midias.midias.length; i++)
+          FadeSlideIn(
+            delay: stagger(i + 3, stepMs: 70),
+            child: HoverLift(child: MidiaLocalCard(midia: midias.midias[i])),
+          ),
+      ],
+    );
+  }
+}
+
+/// Coluna de cards espaçados.
+class _Grid extends StatelessWidget {
+  final List<Widget> children;
+
+  const _Grid({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: 12,
+      children: children,
+    );
+  }
+}
+
+class _Empty extends StatelessWidget {
+  final String message;
+
+  const _Empty({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = Theme.of(
+      context,
+    ).colorScheme.onSurface.withValues(alpha: 0.6);
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+        child: Column(
+          children: [
+            Icon(Icons.inbox_outlined, size: 40, color: muted),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: muted),
+            ),
+          ],
+        ),
       ),
-      itemCount: midias.midias.length,
-      itemBuilder: (_, index) => MidiaLocalCard(midia: midias.midias[index]),
     );
   }
 }

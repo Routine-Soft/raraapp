@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:raraapp/api/user_api.dart';
 import 'package:raraapp/components/lesson/student_detail_dialog.dart';
+import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
+import 'package:raraapp/components/shared/empty_state.dart';
+import 'package:raraapp/components/shared/list_page.dart';
+import 'package:raraapp/components/shared/tabbed_page.dart';
+import 'package:raraapp/components/shared/tag.dart';
 import 'package:raraapp/components/user/user_chips.dart';
 import 'package:raraapp/hooks/use_lesson_progress.dart';
 import 'package:raraapp/hooks/use_lessons.dart';
@@ -28,71 +33,89 @@ class _LessonTeacherPageState extends State<LessonTeacherPage> {
   @override
   Widget build(BuildContext context) {
     final users = useUsers(context);
+    final loading = users.isLoading && users.users.isEmpty;
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Painel do Professor'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(icon: Icon(Icons.person), text: 'Alunos'),
-              Tab(icon: Icon(Icons.verified_user), text: 'Membros'),
-            ],
+    return TabbedPage(
+      tabs: [
+        (
+          icon: Icons.school_outlined,
+          label: 'Alunos',
+          child: _UserList(
+            users: users.nonMembers,
+            loading: loading,
+            onRefresh: users.load,
+            emptyMessage: 'Nenhum aluno encontrado',
           ),
         ),
-        body: users.isLoading && users.users.isEmpty
-            ? const Center(child: CircularProgressIndicator())
-            : TabBarView(
-                children: [
-                  _UserList(
-                    users: users.nonMembers,
-                    emptyMessage: 'Nenhum aluno encontrado',
-                  ),
-                  _UserList(
-                    users: users.members,
-                    emptyMessage: 'Nenhum membro encontrado',
-                  ),
-                ],
-              ),
-      ),
+        (
+          icon: Icons.verified_user_outlined,
+          label: 'Membros',
+          child: _UserList(
+            users: users.members,
+            loading: loading,
+            onRefresh: users.load,
+            emptyMessage: 'Nenhum membro encontrado',
+          ),
+        ),
+      ],
     );
   }
 }
 
 class _UserList extends StatelessWidget {
   final List<User> users;
+  final bool loading;
+  final Future<void> Function() onRefresh;
   final String emptyMessage;
 
-  const _UserList({required this.users, required this.emptyMessage});
+  const _UserList({
+    required this.users,
+    required this.loading,
+    required this.onRefresh,
+    required this.emptyMessage,
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (users.isEmpty) return Center(child: Text(emptyMessage));
     final progress = useLessonProgress(context);
 
-    return ListView(
-      padding: const EdgeInsets.all(12),
-      children: [
-        for (final user in users)
-          Card(
-            margin: const EdgeInsets.only(bottom: 8),
-            child: ListTile(
-              leading: UserAvatar(user),
-              title: Text(user.name),
-              subtitle: Wrap(
-                spacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  UserChips(user: user, showMember: false),
-                  Text('${progress.forUser(user.id).length} aula(s)'),
-                ],
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+        children: [
+          if (loading)
+            for (var i = 0; i < 4; i++) ...[
+              const CardSkeleton(),
+              const SizedBox(height: 12),
+            ]
+          else if (users.isEmpty)
+            EmptyState(icon: Icons.person_search, message: emptyMessage)
+          else
+            for (final (i, user) in users.indexed) ...[
+              FadeSlideIn(
+                delay: stagger(i.clamp(0, 8), stepMs: 50),
+                child: UserTile(
+                  user: user,
+                  subtitle: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      UserChips(user: user, showMember: false),
+                      Tag(
+                        '${progress.forUser(user.id).length} aula(s)',
+                        icon: Icons.menu_book_outlined,
+                      ),
+                    ],
+                  ),
+                  onTap: () => StudentDetailDialog.show(context, user),
+                ),
               ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => StudentDetailDialog.show(context, user),
-            ),
-          ),
-      ],
+              const SizedBox(height: 12),
+            ],
+        ],
+      ),
     );
   }
 }
