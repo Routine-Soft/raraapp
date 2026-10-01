@@ -25,11 +25,28 @@ android {
         versionName = flutter.versionName
     }
 
+    // Assinatura do APK: sempre a mesma chave, cujo SHA-1 está cadastrado no
+    // Google Cloud (sem ela o "Continuar com Google" dá "[16] Account reauth
+    // failed"). No GitHub Actions a chave vem do segredo e o caminho chega por
+    // RARA_KEYSTORE; no notebook usa a chave de debug padrão.
+    signingConfigs {
+        create("rara") {
+            storeFile = file(
+                System.getenv("RARA_KEYSTORE")
+                    ?: "${System.getProperty("user.home")}/.android/debug.keystore"
+            )
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("rara")
+        }
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("rara")
         }
     }
 }

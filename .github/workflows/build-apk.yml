@@ -27,7 +27,6 @@ jobs:
           flutter-version: 3.44.9
           cache: true
 
-      # O release é assinado com a chave de debug (android/app/build.gradle.kts).
       # Usa a MESMA chave do notebook, cujo SHA-1 está no Google Cloud —
       # sem ela o "Continuar com Google" não funciona no APK.
       - name: Chave de assinatura
@@ -38,14 +37,14 @@ jobs:
             echo "::error::O segredo ANDROID_DEBUG_KEYSTORE_BASE64 não foi encontrado. Crie em Settings → Secrets and variables → Actions → aba 'Secrets' → 'New repository secret' (não em 'Variables' nem em 'Environments')."
             exit 1
           fi
-          mkdir -p ~/.android
+          KEYSTORE="$RUNNER_TEMP/rara.keystore"
           # Tira espaços/quebras de linha que possam ter vindo ao colar
-          if ! printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]' | base64 --decode > ~/.android/debug.keystore; then
+          if ! printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]' | base64 --decode > "$KEYSTORE"; then
             echo "::error::O texto do segredo não é um base64 válido. Copie de novo o conteúdo inteiro, sem cortar o começo nem o fim."
             exit 1
           fi
-          echo "Chave com $(stat -c %s ~/.android/debug.keystore) bytes"
-          if ! keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey \
+          echo "Chave com $(stat -c %s "$KEYSTORE") bytes"
+          if ! keytool -list -v -keystore "$KEYSTORE" -alias androiddebugkey \
                -storepass android -keypass android > keytool.txt 2>&1; then
             cat keytool.txt
             echo "::error::A chave decodificada não abriu. O texto colado provavelmente está incompleto."
@@ -53,6 +52,8 @@ jobs:
           fi
           grep -E "SHA1:|SHA-1:" keytool.txt || cat keytool.txt
           rm keytool.txt
+          # android/app/build.gradle.kts assina com o arquivo indicado aqui
+          echo "RARA_KEYSTORE=$KEYSTORE" >> "$GITHUB_ENV"
 
       - run: flutter pub get
 
@@ -62,6 +63,18 @@ jobs:
 
       - name: Build
         run: flutter build apk --release
+
+      # Trava: o APK tem que sair com a chave cadastrada no Google Cloud
+      - name: Conferir assinatura
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          SHA1=$("$APKSIGNER" verify --print-certs build/app/outputs/flutter-apk/app-release.apk \
+            | grep -i "SHA-1 digest" | head -1 | awk '{print $NF}')
+          echo "SHA-1 do APK: $SHA1"
+          if [ "$SHA1" != "a2ddf2d3031b597138e03a1afe882ee9ab427899" ]; then
+            echo "::error::O APK saiu assinado com outra chave ($SHA1). O login com Google não vai funcionar."
+            exit 1
+          fi
 
       - name: Nome do arquivo
         run: |
