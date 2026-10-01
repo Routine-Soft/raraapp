@@ -6,7 +6,9 @@ import 'package:raraapp/components/shared/tabbed_page.dart';
 import 'package:raraapp/components/shared/tag.dart';
 import 'package:raraapp/components/theme/app_effects.dart';
 import 'package:raraapp/components/user/facilitator_user_form.dart';
+import 'package:raraapp/components/user/general_dashboard.dart';
 import 'package:raraapp/components/user/member_growth.dart';
+import 'package:raraapp/components/user/people_stats.dart';
 import 'package:raraapp/components/user/user_chips.dart';
 import 'package:raraapp/components/user/user_detail_dialog.dart';
 import 'package:raraapp/components/user/user_integration_dialog.dart';
@@ -28,8 +30,8 @@ class MembersLeadershipPage extends StatelessWidget {
   }
 }
 
-/// Membros Super Intendente Geral: o mesmo da Liderança, de todas as igrejas
-/// ou da igreja escolhida no filtro.
+/// Membros Super Intendente Geral: dashboard próprio (visão geral + um card
+/// por igreja) e a lista detalhada com filtro de igreja.
 class MembersGeneralPage extends StatefulWidget {
   const MembersGeneralPage({super.key});
 
@@ -43,16 +45,34 @@ class _MembersGeneralPageState extends State<MembersGeneralPage> {
   @override
   Widget build(BuildContext context) {
     return _UsersLoader(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: ChurchFilter(
-              value: _churchId,
-              onChanged: (id) => setState(() => _churchId = id),
+      child: TabbedPage(
+        tabs: [
+          (
+            icon: Icons.insights,
+            label: 'Dashboard',
+            child: const GeneralDashboard(),
+          ),
+          (
+            icon: Icons.person_search,
+            label: 'Membros Detalhado',
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: ChurchFilter(
+                    value: _churchId,
+                    onChanged: (id) => setState(() => _churchId = id),
+                  ),
+                ),
+                Expanded(
+                  child: _MembersDetailed(
+                    key: ValueKey(_churchId),
+                    churchId: _churchId,
+                  ),
+                ),
+              ],
             ),
           ),
-          Expanded(child: _MembersTabs(churchId: _churchId)),
         ],
       ),
     );
@@ -151,25 +171,28 @@ class _UsersLoaderState extends State<_UsersLoader> {
   Widget build(BuildContext context) => widget.child;
 }
 
-/// Números dos usuários da igreja [churchId] (`null` = todas).
-class _Dashboard extends StatelessWidget {
+/// Números dos usuários da igreja [churchId] (`null` = todas), com filtro
+/// de quem entra nos números (membros / não membros, gênero).
+class _Dashboard extends StatefulWidget {
   final String? churchId;
 
   const _Dashboard({this.churchId});
 
   @override
+  State<_Dashboard> createState() => _DashboardState();
+}
+
+class _DashboardState extends State<_Dashboard> {
+  PeopleScope _scope = PeopleScope.all;
+  String? _gender;
+
+  @override
   Widget build(BuildContext context) {
     final users = useUsers(context);
-    final list = users.ofChurch(churchId);
-    final total = list.length;
-    final members = list.where((u) => u.member).length;
-    final baptized = list.where((u) => u.baptized).length;
-    final stats = [
-      ('Não Membros', total - members, Icons.person_outline),
-      ('Membros', members, Icons.verified_user_outlined),
-      ('Batizados', baptized, Icons.water_drop_outlined),
-      ('Não Batizados', total - baptized, Icons.water_drop),
-    ];
+    final total = users.ofChurch(widget.churchId).length;
+    final stats = PeopleStats.of(
+      users.people(churchId: widget.churchId, scope: _scope, gender: _gender),
+    );
 
     return RefreshIndicator(
       onRefresh: users.load,
@@ -178,46 +201,46 @@ class _Dashboard extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
           FadeSlideIn(child: _TotalCard(total: total)),
-          const SizedBox(height: 12),
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 1.1,
-            children: [
-              for (final (i, (label, value, icon)) in stats.indexed)
-                FadeSlideIn(
-                  delay: stagger(i + 1, stepMs: 70),
-                  child: _StatCard(label, value, icon),
-                ),
-            ],
+          const SizedBox(height: 16),
+          PeopleFilterBar(
+            scope: _scope,
+            gender: _gender,
+            onChanged: (scope, gender) => setState(() {
+              _scope = scope;
+              _gender = gender;
+            }),
+          ),
+          const SizedBox(height: 16),
+          StatGrid(peopleCounts(stats)),
+          const SizedBox(height: 28),
+          StatsSection(
+            title: 'Cargo eclesiástico',
+            icon: Icons.workspace_premium_outlined,
+            child: StatGrid(
+              ecclesiasticalCounts(stats),
+              columns: 3,
+              dense: true,
+            ),
           ),
           const SizedBox(height: 28),
-          MemberGrowth(key: ValueKey(churchId), churchId: churchId),
+          StatsSection(
+            title: 'Faixa etária',
+            icon: Icons.pie_chart_outline,
+            child: Card(
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: AgePieChart(stats: stats),
+              ),
+            ),
+          ),
+          const SizedBox(height: 28),
+          MemberGrowth(
+            key: ValueKey(widget.churchId),
+            churchId: widget.churchId,
+          ),
         ],
       ),
-    );
-  }
-}
-
-/// Número que "conta" de 0 até [value] (CSS/JS: counter animation).
-class _CountUp extends StatelessWidget {
-  final int value;
-  final TextStyle? style;
-
-  const _CountUp(this.value, {this.style});
-
-  @override
-  Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: value.toDouble()),
-      duration: MediaQuery.of(context).disableAnimations
-          ? Duration.zero
-          : const Duration(milliseconds: 900),
-      curve: Curves.easeOutCubic,
-      builder: (context, v, _) => Text('${v.round()}', style: style),
     );
   }
 }
@@ -251,7 +274,7 @@ class _TotalCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Pessoas cadastradas', style: text.titleMedium),
-                _CountUp(
+                CountUpText(
                   total,
                   style: text.displayMedium?.copyWith(
                     fontWeight: FontWeight.w800,
@@ -267,59 +290,11 @@ class _TotalCard extends StatelessWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
-  final String label;
-  final int value;
-  final IconData icon;
-
-  const _StatCard(this.label, this.value, this.icon);
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: scheme.primary.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: scheme.primary, size: 20),
-            ),
-            const Spacer(),
-            FittedBox(
-              child: _CountUp(
-                value,
-                style: text.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-            Text(
-              label,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: scheme.onSurface.withValues(alpha: 0.75)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// Pesquisa + lista com etiquetas, facilitador e edição da integração.
 class _MembersDetailed extends StatefulWidget {
   final String? churchId;
 
-  const _MembersDetailed({this.churchId});
+  const _MembersDetailed({super.key, this.churchId});
 
   @override
   State<_MembersDetailed> createState() => _MembersDetailedState();

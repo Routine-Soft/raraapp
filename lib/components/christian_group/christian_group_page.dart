@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:raraapp/components/christian_group/christian_group_card.dart';
+import 'package:raraapp/components/shared/brand_logo.dart';
 import 'package:raraapp/components/shared/list_page.dart';
 import 'package:raraapp/hooks/use_christian_groups.dart';
 
@@ -32,6 +33,11 @@ class _ChristianGroupPageState extends State<ChristianGroupPage> {
       onRefresh: groups.load,
       emptyIcon: Icons.groups_outlined,
       emptyMessage: groups.error ?? 'Nenhum grupo encontrado',
+      header: const BrandLogo(
+        'cg',
+        height: 110,
+        semanticLabel: 'Christian Group',
+      ),
       children: [
         for (final group in groups.groups) ChristianGroupCard(group: group),
       ],

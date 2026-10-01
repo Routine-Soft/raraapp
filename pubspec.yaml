@@ -47,6 +47,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   google_sign_in: ^7.2.0
+  font_awesome_flutter: ^11.0.0
+  flutter_secure_storage: ^11.2.0
 
 dev_dependencies:
   flutter_test:
@@ -54,6 +56,7 @@ dev_dependencies:
 
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.8
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -96,10 +99,22 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
 
-# Configuration for flutter_launcher_icons
+# Ícone do app: chama branca no fundo preto (gerado de assets/images/logorara_mark.png).
+# Rodar `dart run flutter_launcher_icons` depois de trocar as imagens.
 flutter_launcher_icons:
   android: "ic_launcher"
   ios: true
-  image_path: "assets/images/logorara.png"
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#000000"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
   min_sdk_android: 21
   remove_alpha_ios: true
+
+# Tela de abertura nativa (antes do Flutter carregar): preta com a chama, que
+# emenda com a animação de abertura. Rodar `dart run flutter_native_splash:create`.
+flutter_native_splash:
+  color: "#000000"
+  image: assets/icon/splash.png
+  android_12:
+    color: "#000000"
+    image: assets/icon/splash.png

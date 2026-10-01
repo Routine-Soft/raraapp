@@ -26,6 +26,10 @@ class ContributionPage extends StatefulWidget {
 }
 
 class _ContributionPageState extends State<ContributionPage> {
+  int? _year;
+  int? _month;
+  int? _day;
+
   // Volta do Mercado Pago -> recarrega para mostrar o pagamento confirmado
   late final _lifecycle = AppLifecycleListener(onResume: _load);
 
@@ -67,9 +71,14 @@ class _ContributionPageState extends State<ContributionPage> {
   @override
   Widget build(BuildContext context) {
     final contributions = useContributions(context);
-    final months = contributions.months;
+    final months = contributions.filteredMonths(
+      year: _year,
+      month: _month,
+      day: _day,
+    );
+    final filtering = _year != null || _month != null || _day != null;
     final now = DateTime.now();
-    final current = months
+    final current = contributions.months
         .where((m) => m.month == DateTime(now.year, now.month))
         .firstOrNull;
 
@@ -108,15 +117,31 @@ class _ContributionPageState extends State<ContributionPage> {
             const _PendingNotice(),
           ],
           const SizedBox(height: 28),
+          if (contributions.mine.isNotEmpty) ...[
+            _Filters(
+              years: contributions.years,
+              year: _year,
+              month: _month,
+              day: _day,
+              onChanged: (y, m, d) => setState(() {
+                _year = y;
+                _month = m;
+                _day = d;
+              }),
+            ),
+            const SizedBox(height: 16),
+          ],
           if (contributions.isLoading && contributions.mine.isEmpty)
             for (var i = 0; i < 2; i++) ...[
               const CardSkeleton(),
               const SizedBox(height: 12),
             ]
           else if (months.isEmpty)
-            const EmptyState(
+            EmptyState(
               icon: Icons.volunteer_activism_outlined,
-              message: 'Nenhuma contribuição registrada ainda',
+              message: filtering
+                  ? 'Nenhuma contribuição nesse período'
+                  : 'Nenhuma contribuição registrada ainda',
             )
           else
             for (final (i, month) in months.indexed) ...[
@@ -128,6 +153,105 @@ class _ContributionPageState extends State<ContributionPage> {
             ],
         ],
       ),
+    );
+  }
+}
+
+/// Filtro do histórico por dia, mês e ano ("Todos" = sem filtro).
+class _Filters extends StatelessWidget {
+  final List<int> years;
+  final int? year;
+  final int? month;
+  final int? day;
+  final void Function(int? year, int? month, int? day) onChanged;
+
+  const _Filters({
+    required this.years,
+    required this.year,
+    required this.month,
+    required this.day,
+    required this.onChanged,
+  });
+
+  Widget _select(
+    String label,
+    int? value,
+    List<int> options,
+    String Function(int) text,
+    ValueChanged<int?> changed,
+  ) => DropdownButtonFormField<int?>(
+    key: ValueKey('$label-$value'),
+    initialValue: value,
+    isExpanded: true,
+    decoration: InputDecoration(labelText: label, isDense: true),
+    items: [
+      const DropdownMenuItem(value: null, child: Text('Todos')),
+      for (final o in options) DropdownMenuItem(value: o, child: Text(text(o))),
+    ],
+    onChanged: changed,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final any = year != null || month != null || day != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: 10,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Histórico',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+            if (any)
+              TextButton.icon(
+                onPressed: () => onChanged(null, null, null),
+                icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
+                label: const Text('Limpar'),
+              ),
+          ],
+        ),
+        Row(
+          spacing: 8,
+          children: [
+            Expanded(
+              flex: 3,
+              child: _select(
+                'Dia',
+                day,
+                [for (var d = 1; d <= 31; d++) d],
+                (d) => '$d',
+                (d) => onChanged(year, month, d),
+              ),
+            ),
+            Expanded(
+              flex: 5,
+              child: _select(
+                'Mês',
+                month,
+                [for (var m = 1; m <= 12; m++) m],
+                monthName,
+                (m) => onChanged(year, m, day),
+              ),
+            ),
+            Expanded(
+              flex: 4,
+              child: _select(
+                'Ano',
+                year,
+                years,
+                (y) => '$y',
+                (y) => onChanged(y, month, day),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

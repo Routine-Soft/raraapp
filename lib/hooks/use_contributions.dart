@@ -25,10 +25,23 @@ class ContributionsHook extends Hook {
   bool get hasPending => _mine.any((c) => c.isPending);
 
   /// Histórico mês a mês (mais recente primeiro). Só soma o que foi aprovado.
-  List<ContributionMonth> get months {
+  List<ContributionMonth> get months => filteredMonths();
+
+  /// Anos que têm contribuição (para o filtro), do mais recente.
+  List<int> get years =>
+      ({for (final c in _mine) c.date.toLocal().year}.toList()
+        ..sort((a, b) => b.compareTo(a)));
+
+  /// Histórico filtrado por [year], [month] (1–12) e [day] (`null` = todos).
+  List<ContributionMonth> filteredMonths({int? year, int? month, int? day}) {
     final groups = <DateTime, List<Contribution>>{};
     for (final c in _mine) {
       final local = c.date.toLocal();
+      if ((year != null && local.year != year) ||
+          (month != null && local.month != month) ||
+          (day != null && local.day != day)) {
+        continue;
+      }
       groups.putIfAbsent(DateTime(local.year, local.month), () => []).add(c);
     }
     final keys = groups.keys.toList()..sort((a, b) => b.compareTo(a));

@@ -15,6 +15,11 @@ class Contribution {
   /// Nome do usuário (vem populado na visão da tesouraria).
   final String? userName;
 
+  /// Email e telefone do usuário (populados na visão da tesouraria; usados
+  /// na busca dos lançamentos).
+  final String? userEmail;
+  final String? userPhone;
+
   /// Nome de quem contribuiu quando não tem conta no app.
   final String? donorName;
   final String churchId;
@@ -36,6 +41,8 @@ class Contribution {
     required this.id,
     this.userId,
     this.userName,
+    this.userEmail,
+    this.userPhone,
     this.donorName,
     required this.churchId,
     this.tithe,
@@ -51,10 +58,25 @@ class Contribution {
   bool get isPending => status == 'pendente';
   String get personName => userName ?? donorName ?? 'Sem nome';
 
+  /// Busca por nome (ou de quem doou sem conta), email ou telefone.
+  bool matches(String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return true;
+    final digits = q.replaceAll(RegExp(r'[^0-9]'), '');
+    return personName.toLowerCase().contains(q) ||
+        (userEmail ?? '').toLowerCase().contains(q) ||
+        (digits.isNotEmpty &&
+            (userPhone ?? '')
+                .replaceAll(RegExp(r'[^0-9]'), '')
+                .contains(digits));
+  }
+
   factory Contribution.fromJson(Map<String, dynamic> json) => Contribution(
     id: json['_id'] ?? '',
     userId: refId(json['userId']),
     userName: json['userId'] is Map ? json['userId']['name'] : null,
+    userEmail: json['userId'] is Map ? json['userId']['email'] : null,
+    userPhone: json['userId'] is Map ? json['userId']['phone'] : null,
     donorName: json['donorName'],
     churchId: refId(json['churchId']) ?? '',
     tithe: _money(json['tithe']),

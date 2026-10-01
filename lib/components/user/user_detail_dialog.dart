@@ -73,6 +73,12 @@ class UserDetailDialog extends StatelessWidget {
               hideEmpty: true,
             ),
             DetailRow(
+              'Cargo eclesiástico',
+              user.ecclesiasticalRoles.map(ecclesiasticalRoleLabel).join(', '),
+              icon: Icons.workspace_premium_outlined,
+              hideEmpty: true,
+            ),
+            DetailRow(
               'Endereço',
               addressText,
               icon: Icons.place_outlined,

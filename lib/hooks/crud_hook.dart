@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:raraapp/hooks/hook.dart';
 
 /// Base para entidades com CRUD simples (listar, criar, editar, apagar).
@@ -36,6 +37,13 @@ abstract class CrudHook<T> extends Hook {
       _items = [for (final i in _items) idOf(i) == idOf(saved) ? saved : i];
     }
   });
+
+  /// Troca a lista inteira (ex.: nova ordem), para os hooks filhos.
+  @protected
+  set items(List<T> value) {
+    _items = value;
+    notifyListeners();
+  }
 
   Future<bool> remove(String id) => run(() async {
     await destroy(id);

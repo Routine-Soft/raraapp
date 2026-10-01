@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:raraapp/components/app/authenticated_app.dart';
-import 'package:raraapp/components/app/welcome_page.dart';
+import 'package:raraapp/components/app/signing_out_page.dart';
 import 'package:raraapp/components/auth/complete_profile_page.dart';
 import 'package:raraapp/components/auth/google_sign_in_button.dart';
 import 'package:raraapp/components/shared/effects/fade_route.dart';
@@ -82,11 +82,6 @@ class ResetPasswordPage extends StatelessWidget {
   void _go(BuildContext context, Widget page) =>
       Navigator.of(context).pushAndRemoveUntil(fadeRoute(page), (_) => false);
 
-  Future<void> _logout(BuildContext context) async {
-    await useAuth(context, listen: false).logout();
-    if (context.mounted) _go(context, const WelcomePage());
-  }
-
   @override
   Widget build(BuildContext context) {
     return ShowcasePage(
@@ -101,7 +96,7 @@ class ResetPasswordPage extends StatelessWidget {
                   child: const Text('Agora não'),
                 )
               : TextButton.icon(
-                  onPressed: () => _logout(context),
+                  onPressed: () => SigningOutPage.open(context),
                   icon: const Icon(Icons.logout),
                   label: const Text('Sair'),
                 ),

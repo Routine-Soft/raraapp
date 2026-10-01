@@ -17,6 +17,9 @@ class ListPage extends StatelessWidget {
   final IconData emptyIcon;
   final String emptyMessage;
 
+  /// Topo no lugar do cabeçalho padrão (ex.: a logo do ministério).
+  final Widget? header;
+
   /// Botão flutuante "+ [addLabel]". Sem [onAdd], não aparece.
   final VoidCallback? onAdd;
   final String addLabel;
@@ -33,6 +36,7 @@ class ListPage extends StatelessWidget {
     this.emptyIcon = Icons.inbox_outlined,
     this.onAdd,
     this.addLabel = 'Novo',
+    this.header,
   });
 
   @override
@@ -55,15 +59,17 @@ class ListPage extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
           children: [
             FadeSlideIn(
-              child: PageHeader(
-                icon: icon,
-                title: title,
-                subtitle:
-                    subtitle ??
-                    (loading && count == 0
-                        ? null
-                        : '$count ${count == 1 ? 'item' : 'itens'}'),
-              ),
+              child:
+                  header ??
+                  PageHeader(
+                    icon: icon,
+                    title: title,
+                    subtitle:
+                        subtitle ??
+                        (loading && count == 0
+                            ? null
+                            : '$count ${count == 1 ? 'item' : 'itens'}'),
+                  ),
             ),
             const SizedBox(height: 20),
             if (loading && count == 0)

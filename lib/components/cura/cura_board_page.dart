@@ -25,6 +25,25 @@ class CuraBoardPage extends StatefulWidget {
 }
 
 class _CuraBoardPageState extends State<CuraBoardPage> {
+  String _query = '';
+
+  /// Busca da lista simples: nome, telefone ou email de quem pediu.
+  List<Cura> _search(List<Cura> curas) {
+    final q = _query.trim().toLowerCase();
+    if (q.isEmpty) return curas;
+    final digits = q.replaceAll(RegExp(r'[^0-9]'), '');
+    return curas.where((c) {
+      final u = c.user;
+      if (u == null) return false;
+      return u.name.toLowerCase().contains(q) ||
+          u.email.toLowerCase().contains(q) ||
+          (digits.isNotEmpty &&
+              (u.phone ?? '')
+                  .replaceAll(RegExp(r'[^0-9]'), '')
+                  .contains(digits));
+    }).toList();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -109,6 +128,14 @@ class _CuraBoardPageState extends State<CuraBoardPage> {
                 selected: {curas.view},
                 onSelectionChanged: (v) => curas.setView(v.first),
               ),
+              if (simple)
+                TextField(
+                  onChanged: (value) => setState(() => _query = value),
+                  decoration: const InputDecoration(
+                    hintText: 'Buscar por nome, telefone ou email...',
+                    prefixIcon: Icon(Icons.search),
+                  ),
+                ),
             ],
           ),
         ),
@@ -118,7 +145,7 @@ class _CuraBoardPageState extends State<CuraBoardPage> {
             child: simple
                 ? CuraSimpleList(
                     key: const ValueKey('simple'),
-                    curas: curas.all,
+                    curas: _search(curas.all),
                     loading: loading,
                     onRefresh: curas.loadAll,
                     onMove: _move,
@@ -159,7 +186,8 @@ class _Board extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         // Cada coluna ocupa quase a tela toda; a próxima "espia" do lado
-        final width = constraints.maxWidth * 0.85;
+        // Colunas estreitas (51% da tela) para ver mais de uma por vez
+        final width = constraints.maxWidth * 0.51;
         return ListView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),

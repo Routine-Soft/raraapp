@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Abre a conversa no WhatsApp (https://wa.me/DDI+DDD+NUMERO).
@@ -54,7 +55,11 @@ class WhatsAppLink extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.chat_outlined, size: 18),
+                const FaIcon(
+                  FontAwesomeIcons.whatsapp,
+                  size: 18,
+                  color: Color(0xFF25D366), // verde do WhatsApp
+                ),
                 const SizedBox(width: 8),
                 Text(
                   phone,

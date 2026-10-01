@@ -4,9 +4,11 @@ import 'package:raraapp/components/shared/custom_dropdown.dart';
 import 'package:raraapp/components/shared/custom_text_field.dart';
 import 'package:raraapp/components/shared/feedback.dart';
 import 'package:raraapp/components/shared/form_dialog.dart';
+import 'package:raraapp/components/user/ecclesiastical_roles_field.dart';
 import 'package:raraapp/hooks/use_users.dart';
 
-/// Edita os dados de integração (facilitador, convite da graça, status).
+/// Edita os dados de integração (facilitador, convite da graça, status,
+/// cargo eclesiástico).
 class UserIntegrationDialog extends StatefulWidget {
   final User user;
 
@@ -28,6 +30,7 @@ class _UserIntegrationDialogState extends State<UserIntegrationDialog> {
   );
   late String? _invitation = widget.user.invitationofgrace;
   late String? _status = widget.user.status;
+  late List<String> _ecclesiastical = widget.user.ecclesiasticalRoles;
 
   @override
   void dispose() {
@@ -43,6 +46,7 @@ class _UserIntegrationDialogState extends State<UserIntegrationDialog> {
       facilitator: facilitator.isEmpty ? null : facilitator,
       invitationofgrace: _invitation,
       status: _status,
+      ecclesiasticalRoles: _ecclesiastical,
     );
     if (!mounted) return;
     showResult(
@@ -80,6 +84,10 @@ class _UserIntegrationDialogState extends State<UserIntegrationDialog> {
           value: userStatuses.contains(_status) ? _status : null,
           items: userStatuses,
           onChanged: (v) => setState(() => _status = v),
+        ),
+        EcclesiasticalRolesField(
+          value: _ecclesiastical,
+          onChanged: (v) => setState(() => _ecclesiastical = v),
         ),
       ],
     );

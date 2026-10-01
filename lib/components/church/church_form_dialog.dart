@@ -30,16 +30,13 @@ class _ChurchFormDialogState extends State<ChurchFormDialog> {
   late final _pastor1 = TextEditingController(text: widget.church?.pastor1);
   late final _pastor2 = TextEditingController(text: widget.church?.pastor2);
   late final _cnpj = TextEditingController(text: widget.church?.cnpj);
-  late final _totalMembers = TextEditingController(
-    text: widget.church?.totalMembers.toString(),
-  );
   late final _address = AddressForm(widget.church?.address);
 
   bool get _isEditing => widget.church != null;
 
   @override
   void dispose() {
-    for (final c in [_name, _pastor1, _pastor2, _cnpj, _totalMembers]) {
+    for (final c in [_name, _pastor1, _pastor2, _cnpj]) {
       c.dispose();
     }
     _address.dispose();
@@ -59,7 +56,6 @@ class _ChurchFormDialogState extends State<ChurchFormDialog> {
       pastor2: _text(_pastor2),
       cnpj: _text(_cnpj),
       logoUrl: widget.church?.logoUrl,
-      totalMembers: int.tryParse(_totalMembers.text) ?? 0,
       address: _address.toAddress(),
     );
 
@@ -103,11 +99,6 @@ class _ChurchFormDialogState extends State<ChurchFormDialog> {
               label: 'CNPJ',
               controller: _cnpj,
               hintText: '00.000.000/0000-00',
-            ),
-            CustomTextField(
-              label: 'Total de Membros',
-              controller: _totalMembers,
-              keyboardType: TextInputType.number,
             ),
           ],
         ),

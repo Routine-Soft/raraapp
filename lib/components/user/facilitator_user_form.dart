@@ -9,6 +9,7 @@ import 'package:raraapp/components/shared/effects/glow_button.dart';
 import 'package:raraapp/components/shared/feedback.dart';
 import 'package:raraapp/components/shared/input_formatters.dart';
 import 'package:raraapp/components/shared/section.dart';
+import 'package:raraapp/components/user/ecclesiastical_roles_field.dart';
 import 'package:raraapp/hooks/use_auth.dart';
 import 'package:raraapp/hooks/use_churches.dart';
 import 'package:raraapp/hooks/use_users.dart';
@@ -35,6 +36,7 @@ class _FacilitatorUserFormState extends State<FacilitatorUserForm> {
   String? _status;
   DateTime? _birthdate;
   bool _baptized = false;
+  List<String> _ecclesiastical = [];
 
   @override
   void dispose() {
@@ -54,6 +56,7 @@ class _FacilitatorUserFormState extends State<FacilitatorUserForm> {
       _gender = _invitation = _status = null;
       _birthdate = null;
       _baptized = false;
+      _ecclesiastical = [];
     });
   }
 
@@ -74,6 +77,7 @@ class _FacilitatorUserFormState extends State<FacilitatorUserForm> {
         status: _status,
         facilitator: facilitator.isEmpty ? null : facilitator,
         baptized: _baptized,
+        ecclesiasticalRoles: _ecclesiastical,
       ),
     );
     if (!mounted) return;
@@ -174,6 +178,10 @@ class _FacilitatorUserFormState extends State<FacilitatorUserForm> {
                   label: 'Batizado',
                   value: _baptized,
                   onChanged: (v) => setState(() => _baptized = v ?? false),
+                ),
+                EcclesiasticalRolesField(
+                  value: _ecclesiastical,
+                  onChanged: (v) => setState(() => _ecclesiastical = v),
                 ),
               ],
             ),

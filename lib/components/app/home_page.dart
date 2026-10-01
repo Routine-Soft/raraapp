@@ -39,14 +39,18 @@ class _HomePageState extends State<HomePage> {
         children: [
           FadeSlideIn(
             offsetY: 0.08,
-            child: _Hero(name: user?.name ?? 'Usuário', churchName: churchName),
+            child: _Hero(
+              // Só o primeiro nome: nomes completos longos quebram o card
+              name: user?.name.trim().split(RegExp(r'\s+')).first ?? 'Usuário',
+              churchName: churchName,
+            ),
           ),
           const SizedBox(height: 32),
           FadeSlideIn(
             delay: stagger(2),
             child: const PageHeader(
               icon: Icons.campaign_outlined,
-              title: 'Mídias Locais',
+              title: 'Agenda Semanal',
               subtitle: 'Avisos e eventos da sua igreja',
             ),
           ),

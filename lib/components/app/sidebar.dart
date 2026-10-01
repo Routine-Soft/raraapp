@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:raraapp/components/app/appearance_controls.dart';
-import 'package:raraapp/components/app/welcome_page.dart';
-import 'package:raraapp/components/shared/effects/fade_route.dart';
+import 'package:raraapp/components/app/signing_out_page.dart';
 import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
 import 'package:raraapp/components/shared/effects/gradient_text.dart';
 import 'package:raraapp/components/shared/effects/motion.dart';
 import 'package:raraapp/components/shared/initials_avatar.dart';
 import 'package:raraapp/components/shared/rara_logo.dart';
 import 'package:raraapp/components/theme/app_effects.dart';
-import 'package:raraapp/hooks/providers.dart';
 import 'package:raraapp/hooks/use_auth.dart';
 
 class Sidebar extends StatelessWidget {
@@ -66,7 +64,7 @@ class Sidebar extends StatelessWidget {
               icon: Icons.logout,
               label: 'Sair',
               danger: true,
-              onTap: () => _logout(context),
+              onTap: () => SigningOutPage.open(context),
             ),
           ),
         ],
@@ -237,12 +235,6 @@ class Sidebar extends StatelessWidget {
               ),
         ],
     ];
-  }
-
-  Future<void> _logout(BuildContext context) async {
-    final navigator = Navigator.of(context);
-    await logoutAndClear(context);
-    navigator.pushAndRemoveUntil(fadeRoute(const WelcomePage()), (_) => false);
   }
 }
 

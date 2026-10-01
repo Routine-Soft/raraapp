@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:raraapp/api/api_client.dart';
 
 /// Login nativo do Google (Android/iOS). Só entrega o idToken; quem troca
 /// ele pela sessão do app é o `UserApi.loginWithGoogle`.
@@ -27,14 +28,27 @@ class GoogleSignInApi {
     try {
       final account = await GoogleSignIn.instance.authenticate();
       final token = account.authentication.idToken;
-      if (token == null) throw Exception('O Google não retornou o token');
+      if (token == null) throw ApiException('O Google não retornou o token', 0);
       return token;
     } on GoogleSignInException catch (e) {
-      if (e.code == GoogleSignInExceptionCode.canceled ||
-          e.code == GoogleSignInExceptionCode.interrupted) {
+      final detail = e.description ?? '';
+      // O Android também usa "cancelado" quando o Google recusa o login
+      // depois de escolher a conta (ex.: "[16] Account reauth failed" =
+      // app mal cadastrado no Google Cloud). Só é silêncio se a pessoa
+      // realmente fechou a janela.
+      final userClosed =
+          detail.isEmpty ||
+          detail.toLowerCase().contains('cancelled by the user');
+      if ((e.code == GoogleSignInExceptionCode.canceled ||
+              e.code == GoogleSignInExceptionCode.interrupted) &&
+          userClosed) {
         return null;
       }
-      throw Exception(e.description ?? 'Falha no login com Google');
+      throw ApiException(
+        'O Google não autorizou o login'
+        '${detail.isEmpty ? '' : ' ($detail)'}',
+        0,
+      );
     }
   }
 

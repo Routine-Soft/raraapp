@@ -60,4 +60,8 @@ class MidiaLocalApi {
       );
 
   static Future<void> delete(String id) => ApiClient.delete('/midialocal/$id');
+
+  /// Grava a ordem da Agenda Semanal (ids na sequência de exibição).
+  static Future<void> reorder(List<String> ids) =>
+      ApiClient.put('/midialocal/order', {'ids': ids});
 }

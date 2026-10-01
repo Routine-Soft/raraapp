@@ -27,6 +27,24 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
+  bool _remember = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fillRemembered();
+  }
+
+  /// Preenche com os dados lembrados no último login, se houver.
+  Future<void> _fillRemembered() async {
+    final saved = await useAuth(context, listen: false).rememberedLogin();
+    if (saved == null || !mounted) return;
+    setState(() {
+      _email.text = saved.email;
+      _password.text = saved.password;
+      _remember = true;
+    });
+  }
 
   @override
   void dispose() {
@@ -39,7 +57,11 @@ class _LoginPageState extends State<LoginPage> {
     if (!_formKey.currentState!.validate()) return;
 
     final auth = useAuth(context, listen: false);
-    final ok = await auth.login(_email.text.trim(), _password.text);
+    final ok = await auth.login(
+      _email.text.trim(),
+      _password.text,
+      remember: _remember,
+    );
     if (!mounted) return;
 
     showResult(
@@ -118,14 +140,46 @@ class _LoginPageState extends State<LoginPage> {
                 validator: (v) => (v ?? '').isEmpty ? 'Informe a senha' : null,
               ),
             ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () => Navigator.of(
-                  context,
-                ).push(fadeRoute(const ForgotPasswordPage())),
-                child: const Text('Esqueceu a senha?'),
-              ),
+            Row(
+              children: [
+                // "Lembrar meus dados": preenche email e senha no próximo login
+                Expanded(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () => setState(() => _remember = !_remember),
+                    child: Row(
+                      children: [
+                        Checkbox(
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          value: _remember,
+                          onChanged: (v) =>
+                              setState(() => _remember = v ?? false),
+                        ),
+                        const Flexible(
+                          child: Text(
+                            'Lembrar meus dados',
+                            maxLines: 1,
+                            overflow: TextOverflow.fade,
+                            softWrap: false,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  onPressed: () => Navigator.of(
+                    context,
+                  ).push(fadeRoute(const ForgotPasswordPage())),
+                  child: const Text('Esqueceu a senha?'),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             reveal(

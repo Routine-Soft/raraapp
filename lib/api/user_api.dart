@@ -26,6 +26,26 @@ const userRoles = [
   'programador',
 ];
 
+/// Cargos eclesiásticos — enum `ECCLESIASTICAL_ROLES` do backend.
+const ecclesiasticalRoles = [
+  'pastor',
+  'presbitero',
+  'apostolo',
+  'diacono',
+  'obreiro',
+  'evangelista',
+];
+
+String ecclesiasticalRoleLabel(String role) => switch (role) {
+  'pastor' => 'Pastor(a)',
+  'presbitero' => 'Presbítero(a)',
+  'apostolo' => 'Apóstolo(a)',
+  'diacono' => 'Diácono(a)',
+  'obreiro' => 'Obreiro(a)',
+  'evangelista' => 'Evangelista',
+  _ => role,
+};
+
 /// Nome do cargo na tela.
 String roleLabel(String role) => switch (role) {
   'facilitador' => 'Facilitador',
@@ -67,6 +87,9 @@ class User {
   /// Senha provisória ("123", cadastro pelo facilitador): precisa trocar.
   final bool mustChangePassword;
 
+  /// Pastor(a), Presbítero(a)... (quantos tiver).
+  final List<String> ecclesiasticalRoles;
+
   /// Último resultado de cada Teste dos Dons.
   final List<GiftTestResult> giftTests;
 
@@ -89,6 +112,7 @@ class User {
     this.hasPassword = true,
     this.mustChangePassword = false,
     this.giftTests = const [],
+    this.ecclesiasticalRoles = const [],
   });
 
   /// super_admin (Super Intendente Geral) acessa tudo.
@@ -119,6 +143,9 @@ class User {
     giftTests: [
       for (final r in json['giftTests'] ?? const []) GiftTestResult.fromJson(r),
     ],
+    ecclesiasticalRoles: List<String>.from(
+      json['ecclesiasticalRoles'] ?? const [],
+    ),
   );
 
   /// Também usado para salvar o usuário logado no storage.
@@ -141,6 +168,7 @@ class User {
     'hasPassword': hasPassword,
     'mustChangePassword': mustChangePassword,
     'giftTests': [for (final r in giftTests) r.toJson()],
+    'ecclesiasticalRoles': ecclesiasticalRoles,
   };
 
   /// Campos que o `PATCH /users/:id` aceita.
@@ -269,12 +297,14 @@ class UserApi {
     String? status,
     bool? baptized,
     String? facilitator,
+    List<String>? ecclesiasticalRoles,
   }) async => User.fromJson(
     await ApiClient.patch('/users/facilitator/$id', {
       'invitationofgrace': ?invitationofgrace,
       'status': ?status,
       'baptized': ?baptized,
       'facilitator': ?facilitator,
+      'ecclesiasticalRoles': ?ecclesiasticalRoles,
     }),
   );
 }

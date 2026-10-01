@@ -27,6 +27,7 @@ class ChurchCard extends StatelessWidget {
         InfoLine('Pastor', church.pastor1, icon: Icons.person_outline),
         InfoLine('Pastor', church.pastor2, icon: Icons.person_outline),
         InfoLine('CNPJ', church.cnpj, icon: Icons.badge_outlined),
+        // Contado sozinho pelo backend (usuários marcados como membro)
         InfoLine(
           'Membros',
           '${church.totalMembers}',

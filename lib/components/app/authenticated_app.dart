@@ -28,8 +28,44 @@ class _AuthenticatedAppState extends State<AuthenticatedApp> {
   String _selectedMenuKey = 'home';
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  /// Páginas abertas antes da atual: o "voltar" do celular volta por elas
+  /// até a Página Principal, e só lá fecha o app.
+  final List<String> _history = [];
+
+  void _open(String key) {
+    if (key == _selectedMenuKey) return;
+    setState(() {
+      _history
+        ..remove(key) // reabrir uma página não duplica o caminho
+        ..add(_selectedMenuKey);
+      _selectedMenuKey = key;
+    });
+  }
+
+  void _back() {
+    if (_scaffoldKey.currentState?.isDrawerOpen ?? false) {
+      _scaffoldKey.currentState!.closeDrawer();
+      return;
+    }
+    setState(() {
+      _selectedMenuKey = _history.isNotEmpty ? _history.removeLast() : 'home';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final atRoot = _selectedMenuKey == 'home' && _history.isEmpty;
+
+    return PopScope(
+      canPop: atRoot,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _back();
+      },
+      child: _buildScaffold(context),
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
       drawer: Drawer(
@@ -38,7 +74,7 @@ class _AuthenticatedAppState extends State<AuthenticatedApp> {
         ),
         child: Sidebar(
           onMenuItemSelected: (key) {
-            setState(() => _selectedMenuKey = key);
+            _open(key);
             Navigator.of(context).pop(); // Fecha o drawer
           },
           currentSelected: _selectedMenuKey,

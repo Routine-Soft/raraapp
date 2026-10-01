@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
+import 'package:raraapp/api/credentials_storage.dart';
 import 'package:raraapp/api/google_sign_in_api.dart';
 import 'package:raraapp/api/session_storage.dart';
 import 'package:raraapp/api/user_api.dart';
@@ -24,10 +25,20 @@ class AuthHook extends Hook {
     return isLoggedIn;
   }
 
-  Future<bool> login(String email, String password) => run(() async {
-    _session = await UserApi.login(email, password);
-    await SessionStorage.save(_session!);
-  });
+  /// [remember]: guarda email e senha para preencher no próximo login
+  /// (desmarcado, apaga o que estava guardado).
+  Future<bool> login(String email, String password, {bool remember = false}) =>
+      run(() async {
+        _session = await UserApi.login(email, password);
+        await SessionStorage.save(_session!);
+        remember
+            ? await CredentialsStorage.save(email, password)
+            : await CredentialsStorage.clear();
+      });
+
+  /// Dados lembrados no último login (para preencher a tela de login).
+  Future<({String email, String password})?> rememberedLogin() =>
+      CredentialsStorage.load();
 
   /// Login pelo Google. `false` sem [error] = a pessoa cancelou.
   Future<bool> loginWithGoogle() async {

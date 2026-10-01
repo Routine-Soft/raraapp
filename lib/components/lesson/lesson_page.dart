@@ -6,7 +6,7 @@ import 'package:raraapp/components/lesson/module_progress.dart';
 import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
 import 'package:raraapp/components/shared/empty_state.dart';
 import 'package:raraapp/components/shared/list_page.dart';
-import 'package:raraapp/components/shared/page_header.dart';
+import 'package:raraapp/components/shared/brand_logo.dart';
 import 'package:raraapp/hooks/use_lesson_progress.dart';
 import 'package:raraapp/hooks/use_lessons.dart';
 
@@ -46,11 +46,7 @@ class _LessonPageState extends State<LessonPage> {
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: [
           const FadeSlideIn(
-            child: PageHeader(
-              icon: Icons.menu_book_outlined,
-              title: 'Avançai',
-              subtitle: 'Suas aulas por módulo',
-            ),
+            child: BrandLogo('avancai', height: 110, semanticLabel: 'Avançai'),
           ),
           const SizedBox(height: 20),
           if (lessons.isLoading && lessons.lessons.isEmpty)

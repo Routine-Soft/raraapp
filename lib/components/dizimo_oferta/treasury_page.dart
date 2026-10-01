@@ -32,6 +32,9 @@ class TreasuryPage extends StatefulWidget {
 }
 
 class _TreasuryPageState extends State<TreasuryPage> {
+  /// Busca nos lançamentos.
+  String _query = '';
+
   @override
   void initState() {
     super.initState();
@@ -198,13 +201,30 @@ class _TreasuryPageState extends State<TreasuryPage> {
                   icon: Icons.receipt_long,
                 ),
                 const SizedBox(height: 12),
+                if (treasury.entries.isNotEmpty) ...[
+                  TextField(
+                    onChanged: (value) => setState(() => _query = value),
+                    decoration: const InputDecoration(
+                      hintText: 'Buscar por nome, telefone ou email...',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 if (treasury.entries.isEmpty)
                   const EmptyState(
                     icon: Icons.receipt_long,
                     message: 'Nenhuma contribuição neste período',
                   )
+                else if (!treasury.entries.any((c) => c.matches(_query)))
+                  const EmptyState(
+                    icon: Icons.search_off,
+                    message: 'Nenhum lançamento encontrado',
+                  )
                 else
-                  for (final c in treasury.entries) ...[
+                  for (final c in treasury.entries.where(
+                    (c) => c.matches(_query),
+                  )) ...[
                     _EntryCard(contribution: c, onDelete: _delete),
                     const SizedBox(height: 10),
                   ],

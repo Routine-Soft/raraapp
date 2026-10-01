@@ -19,4 +19,17 @@ class MidiaLocalsHook extends CrudHook<MidiaLocal> {
   Future<MidiaLocal> update(MidiaLocal midia) => MidiaLocalApi.update(midia);
   @override
   Future<void> destroy(String id) => MidiaLocalApi.delete(id);
+
+  /// Move o card de [from] para [to] e salva a ordem (a tela já muda na
+  /// hora; se o backend falhar, recarrega a ordem salva).
+  Future<bool> move(int from, int to) async {
+    final list = [...midias];
+    list.insert(to, list.removeAt(from));
+    items = list;
+    final ok = await run(
+      () => MidiaLocalApi.reorder([for (final m in list) m.id]),
+    );
+    if (!ok) await load();
+    return ok;
+  }
 }

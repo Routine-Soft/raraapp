@@ -9,8 +9,8 @@ void main() {
 
     await tester.pumpWidget(const MyApp());
     // O fundo animado roda sem parar, então não dá para usar pumpAndSettle:
-    // avança o tempo o suficiente para a sessão ser lida e as entradas terminarem.
-    for (var i = 0; i < 5; i++) {
+    // avança o tempo da abertura animada + leitura da sessão + entradas.
+    for (var i = 0; i < 10; i++) {
       await tester.pump(const Duration(milliseconds: 500));
     }
 

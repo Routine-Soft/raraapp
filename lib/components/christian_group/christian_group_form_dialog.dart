@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:raraapp/api/christian_group_api.dart';
 import 'package:raraapp/components/shared/address_fields.dart';
 import 'package:raraapp/components/shared/custom_text_field.dart';
 import 'package:raraapp/components/shared/feedback.dart';
 import 'package:raraapp/components/shared/form_dialog.dart';
 import 'package:raraapp/components/shared/section.dart';
+import 'package:raraapp/constants/register_constants.dart';
 import 'package:raraapp/hooks/use_auth.dart';
 import 'package:raraapp/hooks/use_christian_groups.dart';
 
@@ -33,6 +35,11 @@ class _ChristianGroupFormDialogState extends State<ChristianGroupFormDialog> {
   late final _host = TextEditingController(text: widget.group?.host);
   late final _address = AddressForm(widget.group?.address);
   final _newContact = TextEditingController();
+
+  /// DDI de quem está cadastrando (o da conta), colocado sozinho no número.
+  late final String _ddi = RegisterConstants.ddiFromPhone(
+    useAuth(context, listen: false).user?.phone,
+  );
   late final List<String> _contacts = [...?widget.group?.contact];
 
   bool get _isEditing => widget.group != null;
@@ -50,8 +57,15 @@ class _ChristianGroupFormDialogState extends State<ChristianGroupFormDialog> {
       c.text.trim().isEmpty ? null : c.text.trim();
 
   void _addContact() {
-    final phone = _newContact.text.trim();
-    if (phone.isEmpty || _contacts.contains(phone)) return;
+    final typed = _newContact.text.trim();
+    final digits = typed.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.isEmpty) return;
+    // Digitou com "+": já veio com DDI; senão, usa o da conta
+    final phone = typed.startsWith('+') ? '+$digits' : '$_ddi$digits';
+    if (_contacts.contains(phone)) {
+      _newContact.clear();
+      return;
+    }
     setState(() {
       _contacts.add(phone);
       _newContact.clear();
@@ -124,20 +138,27 @@ class _ChristianGroupFormDialogState extends State<ChristianGroupFormDialog> {
           title: 'Contatos',
           icon: Icons.chat_outlined,
           children: [
-            TextField(
-              controller: _newContact,
-              keyboardType: TextInputType.phone,
-              onSubmitted: (_) => _addContact(),
-              decoration: InputDecoration(
-                labelText: 'Telefone',
-                hintText: '+5521987654321',
-                prefixIcon: const Icon(Icons.phone),
-                suffixIcon: IconButton(
-                  tooltip: 'Adicionar contato',
-                  icon: const Icon(Icons.add_circle),
-                  onPressed: _addContact,
+            Row(
+              spacing: 8,
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _newContact,
+                    keyboardType: TextInputType.phone,
+                    onSubmitted: (_) => _addContact(),
+                    decoration: InputDecoration(
+                      labelText: 'Telefone',
+                      hintText: 'DDD + número',
+                      prefixIcon: const Icon(Icons.phone),
+                      prefixText: '$_ddi ',
+                    ),
+                  ),
                 ),
-              ),
+                FilledButton.tonal(
+                  onPressed: _addContact,
+                  child: const Text('Adicionar'),
+                ),
+              ],
             ),
             if (_contacts.isNotEmpty)
               Wrap(
@@ -147,7 +168,11 @@ class _ChristianGroupFormDialogState extends State<ChristianGroupFormDialog> {
                   for (final phone in _contacts)
                     InputChip(
                       label: Text(phone),
-                      avatar: const Icon(Icons.chat_outlined, size: 18),
+                      avatar: const FaIcon(
+                        FontAwesomeIcons.whatsapp,
+                        size: 16,
+                        color: Color(0xFF25D366),
+                      ),
                       deleteButtonTooltipMessage: 'Remover',
                       onDeleted: () => setState(() => _contacts.remove(phone)),
                     ),
