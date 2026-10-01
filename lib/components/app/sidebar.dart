@@ -87,7 +87,7 @@ class Sidebar extends StatelessWidget {
               'christian-group',
               'Christian Group',
               Icons.group,
-              ['facilitador', 'super_admin'],
+              ['user'],
             ),
             ('cura', 'Cura da Alma', Icons.favorite, ['user']),
             (

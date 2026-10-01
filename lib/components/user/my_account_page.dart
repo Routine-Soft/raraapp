@@ -13,6 +13,7 @@ import 'package:raraapp/components/shared/initials_avatar.dart';
 import 'package:raraapp/components/shared/section.dart';
 import 'package:raraapp/components/shared/tabbed_page.dart';
 import 'package:raraapp/components/theme/app_effects.dart';
+import 'package:raraapp/components/user/ecclesiastical_roles_field.dart';
 import 'package:raraapp/components/user/password_form.dart';
 import 'package:raraapp/hooks/use_auth.dart';
 
@@ -45,6 +46,7 @@ class _ProfileTabState extends State<_ProfileTab> {
   String? _churchId;
   DateTime? _birthdate;
   bool _baptized = false;
+  List<String> _ecclesiastical = [];
   bool _editing = false;
 
   @override
@@ -62,6 +64,7 @@ class _ProfileTabState extends State<_ProfileTab> {
     _churchId = user?.churchId;
     _birthdate = user?.birthdate;
     _baptized = user?.baptized ?? false;
+    _ecclesiastical = user?.ecclesiasticalRoles ?? [];
   }
 
   @override
@@ -77,6 +80,24 @@ class _ProfileTabState extends State<_ProfileTab> {
     final current = auth.user!;
     final phone = _phone.text.trim();
 
+    // Liderança é por igreja: avisa antes de trocar e perder os cargos
+    final lost = current.roles.where((r) => !globalRoles.contains(r)).toList();
+    if (_churchId != current.churchId && lost.isNotEmpty) {
+      if (!await confirmAction(
+        context,
+        title: 'Trocar de igreja',
+        message:
+            'Seus cargos de liderança valem só na igreja atual. Ao trocar, '
+            'você entra na nova igreja como usuário comum e perde: '
+            '${lost.map(roleLabel).join(', ')}.',
+        confirmLabel: 'Trocar',
+        icon: Icons.swap_horiz,
+      )) {
+        return;
+      }
+      if (!mounted) return;
+    }
+
     final ok = await auth.updateProfile(
       User(
         id: current.id,
@@ -91,6 +112,7 @@ class _ProfileTabState extends State<_ProfileTab> {
         status: current.status,
         baptized: _baptized,
         member: current.member,
+        ecclesiasticalRoles: _ecclesiastical,
       ),
     );
     if (!mounted) return;
@@ -176,6 +198,10 @@ class _ProfileTabState extends State<_ProfileTab> {
                       ChurchDropdown(
                         value: _churchId,
                         onChanged: (id) => setState(() => _churchId = id),
+                      ),
+                      EcclesiasticalRolesField(
+                        value: _ecclesiastical,
+                        onChanged: (v) => setState(() => _ecclesiastical = v),
                       ),
                     ],
                   ),

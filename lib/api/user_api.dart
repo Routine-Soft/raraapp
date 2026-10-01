@@ -46,6 +46,10 @@ String ecclesiasticalRoleLabel(String role) => switch (role) {
   _ => role,
 };
 
+/// Cargos que valem em todas as igrejas (backend `GLOBAL_ROLES`). Os demais
+/// são da igreja onde foram dados e caem ao trocar de igreja.
+const globalRoles = ['super_admin', 'programador'];
+
 /// Nome do cargo na tela.
 String roleLabel(String role) => switch (role) {
   'facilitador' => 'Facilitador',
@@ -184,6 +188,7 @@ class User {
     'status': status,
     'baptized': baptized,
     'member': member,
+    'ecclesiasticalRoles': ecclesiasticalRoles,
   };
 }
 
