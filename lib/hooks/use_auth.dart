@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:raraapp/api/credentials_storage.dart';
@@ -23,6 +25,21 @@ class AuthHook extends Hook {
     _session = await SessionStorage.load();
     notifyListeners();
     return isLoggedIn;
+  }
+
+  /// Busca de novo os dados do usuário logado (cargos, igreja...) para que
+  /// um poder dado ou tirado pela liderança valha sem sair e entrar.
+  /// Silencioso: sem internet, fica com o que já tinha.
+  Future<void> refreshUser() async {
+    final current = user;
+    if (current == null) return;
+    try {
+      final fresh = await UserApi.getById(current.id);
+      if (user?.id != current.id) return; // saiu enquanto buscava
+      if (jsonEncode(fresh.toJson()) == jsonEncode(user!.toJson())) return;
+      await _setUser(fresh);
+      notifyListeners();
+    } catch (_) {}
   }
 
   /// [remember]: guarda email e senha para preencher no próximo login

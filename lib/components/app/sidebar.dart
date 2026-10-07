@@ -217,15 +217,29 @@ class Sidebar extends StatelessWidget {
     return 'Página Principal';
   }
 
+  /// Item liberado para [roles] (cargos efetivos)? 'user' = todo logado.
+  static bool _allowed(List<String> required, List<String> roles) =>
+      required.contains('user') ||
+      roles.contains('super_admin') ||
+      required.any(roles.contains);
+
+  /// A página [key] ainda está liberada para [roles]?
+  static bool canOpen(String key, List<String> roles) {
+    if (key == 'home') return true;
+    for (final (_, items) in _sections) {
+      for (final (k, _, _, required) in items) {
+        if (k == key) return _allowed(required, roles);
+      }
+    }
+    return false;
+  }
+
   /// Seção que aparece para todos (mesmo sem acesso a nenhum item), com o
   /// (?) explicando quem pode usar.
   static const _leadersSection = 'Líderes de Departamento';
 
   List<Widget> _buildMenuItems(BuildContext context, List<String> roles) {
-    bool allowed(List<String> required) =>
-        required.contains('user') ||
-        roles.contains('super_admin') ||
-        required.any(roles.contains);
+    bool allowed(List<String> required) => _allowed(required, roles);
 
     return [
       for (final (title, items) in _sections)

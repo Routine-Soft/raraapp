@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:raraapp/api/user_api.dart';
+import 'package:raraapp/hooks/use_auth.dart';
 import 'package:raraapp/components/app/home_page.dart';
 import 'package:raraapp/components/app/sidebar.dart';
 import 'package:raraapp/components/lesson/lesson_page.dart';
@@ -29,6 +31,26 @@ class _AuthenticatedAppState extends State<AuthenticatedApp> {
   String _selectedMenuKey = 'home';
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  // Poderes dados/tirados pela liderança valem sem sair e entrar: os dados
+  // do usuário são buscados de novo ao abrir, ao voltar para o app e ao
+  // abrir o menu (sem timer: só quando a pessoa interage).
+  late final AppLifecycleListener _lifecycle;
+
+  void _refreshUser() => useAuth(context, listen: false).refreshUser();
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(onResume: _refreshUser);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshUser());
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
   /// Páginas abertas antes da atual: o "voltar" do celular volta por elas
   /// até a Página Principal, e só lá fecha o app.
   final List<String> _history = [];
@@ -55,6 +77,18 @@ class _AuthenticatedAppState extends State<AuthenticatedApp> {
 
   @override
   Widget build(BuildContext context) {
+    // Perdeu o poder da página aberta: volta para a Página Principal
+    final roles = effectiveRoles(useAuth(context).user?.roles ?? const []);
+    if (!Sidebar.canOpen(_selectedMenuKey, roles)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() {
+          _history.removeWhere((key) => !Sidebar.canOpen(key, roles));
+          _selectedMenuKey = 'home';
+        });
+      });
+    }
+
     final atRoot = _selectedMenuKey == 'home' && _history.isEmpty;
 
     return PopScope(
@@ -69,6 +103,10 @@ class _AuthenticatedAppState extends State<AuthenticatedApp> {
   Widget _buildScaffold(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
+      // Abriu o menu: busca os poderes atualizados
+      onDrawerChanged: (opened) {
+        if (opened) _refreshUser();
+      },
       drawer: Drawer(
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.horizontal(right: Radius.circular(28)),
