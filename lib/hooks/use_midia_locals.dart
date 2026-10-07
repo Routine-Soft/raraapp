@@ -20,14 +20,21 @@ class MidiaLocalsHook extends CrudHook<MidiaLocal> {
   @override
   Future<void> destroy(String id) => MidiaLocalApi.delete(id);
 
-  /// Move o card de [from] para [to] e salva a ordem (a tela já muda na
-  /// hora; se o backend falhar, recarrega a ordem salva).
-  Future<bool> move(int from, int to) async {
-    final list = [...midias];
-    list.insert(to, list.removeAt(from));
-    items = list;
+  /// Move o card de [from] para [to] dentro de [visible] (as mídias de uma
+  /// igreja) e salva essa ordem. A tela já muda na hora; se o backend
+  /// falhar, recarrega a ordem salva.
+  Future<bool> move(List<MidiaLocal> visible, int from, int to) async {
+    final ordered = [...visible];
+    ordered.insert(to, ordered.removeAt(from));
+    // As outras igrejas ficam onde estavam; as visíveis trocam de lugar
+    final ids = {for (final m in visible) m.id};
+    final queue = ordered.iterator;
+    items = [
+      for (final m in midias)
+        if (ids.contains(m.id)) (queue..moveNext()).current else m,
+    ];
     final ok = await run(
-      () => MidiaLocalApi.reorder([for (final m in list) m.id]),
+      () => MidiaLocalApi.reorder([for (final m in ordered) m.id]),
     );
     if (!ok) await load();
     return ok;

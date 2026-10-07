@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:raraapp/api/midia_local_api.dart';
+import 'package:raraapp/components/church/church_dropdown.dart';
 import 'package:raraapp/components/midia_local/midia_local_card.dart';
 import 'package:raraapp/components/midia_local/midia_local_form_dialog.dart';
 import 'package:raraapp/components/shared/feedback.dart';
 import 'package:raraapp/components/shared/format.dart';
 import 'package:raraapp/components/shared/list_page.dart';
 import 'package:raraapp/components/shared/page_header.dart';
+import 'package:raraapp/hooks/use_auth.dart';
 import 'package:raraapp/hooks/use_midia_locals.dart';
 
-/// Tela de administração de mídias locais.
+/// Tela de administração de mídias locais. Cada um vê as mídias da sua
+/// igreja; o Super Intendente escolhe a igreja (ou vê todas).
 class MidiaLocalAdminPage extends StatefulWidget {
   const MidiaLocalAdminPage({super.key});
 
@@ -20,8 +23,28 @@ class _MidiaLocalAdminPageState extends State<MidiaLocalAdminPage> {
   /// Modo "Ordenar": arrasta os cards para mudar a ordem da Agenda Semanal.
   bool _reordering = false;
 
-  Future<void> _move(int from, int to) async {
-    final ok = await useMidiaLocals(context, listen: false).move(from, to);
+  /// Igreja escolhida pelo super admin (null = todas).
+  late String? _churchId = useAuth(context, listen: false).user?.churchId;
+
+  bool get _isSuperAdmin =>
+      useAuth(context, listen: false).user?.roles.contains('super_admin') ??
+      false;
+
+  /// Mídias mostradas: o backend já manda só as da igreja de quem não é
+  /// super admin; o super admin filtra pela igreja escolhida.
+  List<MidiaLocal> _visible(MidiaLocalsHook midias) =>
+      _isSuperAdmin && _churchId != null
+      ? midias.midias.where((m) => m.churchId == _churchId).toList()
+      : midias.midias;
+
+  /// Só dá para ordenar dentro de uma igreja.
+  bool get _canReorder => !_isSuperAdmin || _churchId != null;
+
+  Future<void> _move(List<MidiaLocal> visible, int from, int to) async {
+    final ok = await useMidiaLocals(
+      context,
+      listen: false,
+    ).move(visible, from, to);
     if (!ok && mounted) {
       showResult(
         context,
@@ -63,7 +86,8 @@ class _MidiaLocalAdminPageState extends State<MidiaLocalAdminPage> {
   @override
   Widget build(BuildContext context) {
     final midias = useMidiaLocals(context);
-    if (_reordering) return _buildReorder(midias);
+    final visible = _visible(midias);
+    if (_reordering) return _buildReorder(visible);
 
     return ListPage(
       icon: Icons.campaign_outlined,
@@ -77,7 +101,24 @@ class _MidiaLocalAdminPageState extends State<MidiaLocalAdminPage> {
             title: 'Mídia Liderança',
             subtitle: 'Na Agenda Semanal os cards aparecem nesta ordem',
           ),
-          if (midias.midias.length > 1)
+          if (_isSuperAdmin)
+            Row(
+              spacing: 8,
+              children: [
+                Expanded(
+                  child: ChurchDropdown(
+                    value: _churchId,
+                    onChanged: (id) => setState(() => _churchId = id),
+                  ),
+                ),
+                if (_churchId != null)
+                  TextButton(
+                    onPressed: () => setState(() => _churchId = null),
+                    child: const Text('Ver todas'),
+                  ),
+              ],
+            ),
+          if (_canReorder && visible.length > 1)
             Align(
               alignment: Alignment.centerRight,
               child: OutlinedButton.icon(
@@ -92,10 +133,10 @@ class _MidiaLocalAdminPageState extends State<MidiaLocalAdminPage> {
       onRefresh: midias.load,
       emptyIcon: Icons.campaign_outlined,
       emptyMessage: midias.error ?? 'Nenhuma mídia encontrada',
-      onAdd: () => MidiaLocalFormDialog.show(context),
+      onAdd: () => MidiaLocalFormDialog.show(context, churchId: _churchId),
       addLabel: 'Nova mídia',
       children: [
-        for (final midia in midias.midias)
+        for (final midia in visible)
           MidiaLocalCard(
             midia: midia,
             onEdit: () => MidiaLocalFormDialog.show(context, midia: midia),
@@ -105,7 +146,7 @@ class _MidiaLocalAdminPageState extends State<MidiaLocalAdminPage> {
     );
   }
 
-  Widget _buildReorder(MidiaLocalsHook midias) {
+  Widget _buildReorder(List<MidiaLocal> visible) {
     final scheme = Theme.of(context).colorScheme;
     return Column(
       children: [
@@ -131,10 +172,10 @@ class _MidiaLocalAdminPageState extends State<MidiaLocalAdminPage> {
           child: ReorderableListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             buildDefaultDragHandles: false,
-            itemCount: midias.midias.length,
-            onReorderItem: _move,
+            itemCount: visible.length,
+            onReorderItem: (from, to) => _move(visible, from, to),
             itemBuilder: (context, i) {
-              final midia = midias.midias[i];
+              final midia = visible[i];
               return Card(
                 key: ValueKey(midia.id),
                 margin: const EdgeInsets.only(bottom: 10),

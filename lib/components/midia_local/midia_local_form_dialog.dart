@@ -12,13 +12,19 @@ import 'package:raraapp/hooks/use_midia_locals.dart';
 class MidiaLocalFormDialog extends StatefulWidget {
   final MidiaLocal? midia;
 
-  const MidiaLocalFormDialog({super.key, this.midia});
+  /// Igreja da mídia nova (o super admin escolhe; os demais, a própria).
+  final String? churchId;
 
-  static Future<void> show(BuildContext context, {MidiaLocal? midia}) =>
-      showDialog(
-        context: context,
-        builder: (_) => MidiaLocalFormDialog(midia: midia),
-      );
+  const MidiaLocalFormDialog({super.key, this.midia, this.churchId});
+
+  static Future<void> show(
+    BuildContext context, {
+    MidiaLocal? midia,
+    String? churchId,
+  }) => showDialog(
+    context: context,
+    builder: (_) => MidiaLocalFormDialog(midia: midia, churchId: churchId),
+  );
 
   @override
   State<MidiaLocalFormDialog> createState() => _MidiaLocalFormDialogState();
@@ -63,6 +69,7 @@ class _MidiaLocalFormDialogState extends State<MidiaLocalFormDialog> {
       image: widget.midia?.image,
       churchId:
           widget.midia?.churchId ??
+          widget.churchId ??
           useAuth(context, listen: false).user?.churchId,
     );
 
