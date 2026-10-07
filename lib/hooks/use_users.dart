@@ -203,6 +203,16 @@ class UsersHook extends Hook {
     ),
   );
 
+  /// Exclui a pessoa (pastor local, facilitador e super admin).
+  Future<bool> remove(String id) => run(() async {
+    await UserApi.delete(id);
+    _users = _users.where((u) => u.id != id).toList();
+  });
+
+  /// Põe ([add]) ou tira a pessoa da equipe do departamento [team].
+  Future<bool> setTeam(String id, String team, bool add) =>
+      run(() async => _replace(await UserApi.setTeam(id, team, add)));
+
   /// Troca os cargos de [id] (marcados nas Poderes).
   Future<bool> setRoles(String id, List<String> roles) =>
       run(() async => _replace(await UserApi.updateRoles(id, roles)));

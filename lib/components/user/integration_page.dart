@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:raraapp/components/shared/feedback.dart';
+import 'package:raraapp/components/shared/entity_card.dart';
+import 'package:raraapp/api/user_api.dart';
 import 'package:raraapp/components/church/church_filter.dart';
 import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
 import 'package:raraapp/components/shared/empty_state.dart';
@@ -9,6 +12,8 @@ import 'package:raraapp/components/user/facilitator_user_form.dart';
 import 'package:raraapp/components/user/general_dashboard.dart';
 import 'package:raraapp/components/user/member_growth.dart';
 import 'package:raraapp/components/user/people_stats.dart';
+import 'package:raraapp/components/user/status_tag.dart';
+import 'package:raraapp/components/user/team_tab.dart';
 import 'package:raraapp/components/user/user_chips.dart';
 import 'package:raraapp/components/user/user_detail_dialog.dart';
 import 'package:raraapp/components/user/user_integration_dialog.dart';
@@ -132,6 +137,12 @@ class FacilitatorsPage extends StatelessWidget {
             label: 'Membros Detalhado',
             child: _MembersDetailed(churchId: churchId),
           ),
+          if (useAuth(context).user?.canManageTeam('facilitadores') ?? false)
+            (
+              icon: Icons.groups_2_outlined,
+              label: 'Minha Equipe',
+              child: const TeamTab(team: 'facilitadores'),
+            ),
         ],
       ),
     );
@@ -190,9 +201,12 @@ class _DashboardState extends State<_Dashboard> {
   Widget build(BuildContext context) {
     final users = useUsers(context);
     final total = users.ofChurch(widget.churchId).length;
-    final stats = PeopleStats.of(
-      users.people(churchId: widget.churchId, scope: _scope, gender: _gender),
+    final people = users.people(
+      churchId: widget.churchId,
+      scope: _scope,
+      gender: _gender,
     );
+    final stats = PeopleStats.of(people);
 
     return RefreshIndicator(
       onRefresh: users.load,
@@ -211,13 +225,14 @@ class _DashboardState extends State<_Dashboard> {
             }),
           ),
           const SizedBox(height: 16),
-          StatGrid(peopleCounts(stats)),
+          PeopleStatGrid(peopleCategories(), people),
           const SizedBox(height: 28),
           StatsSection(
             title: 'Cargo eclesiástico',
             icon: Icons.workspace_premium_outlined,
-            child: StatGrid(
-              ecclesiasticalCounts(stats),
+            child: PeopleStatGrid(
+              ecclesiasticalCategories(),
+              people,
               columns: 3,
               dense: true,
             ),
@@ -303,9 +318,43 @@ class _MembersDetailed extends StatefulWidget {
 class _MembersDetailedState extends State<_MembersDetailed> {
   String _query = '';
 
+  Future<void> _delete(BuildContext context, User user) async {
+    if (!await confirmAction(
+      context,
+      title: 'Excluir pessoa',
+      message:
+          '${user.name} será excluída do app, junto com o progresso nas aulas '
+          'e os pedidos de Cura. As contribuições continuam no financeiro, '
+          'com o nome dela. Não dá para desfazer.',
+      confirmLabel: 'Excluir',
+      icon: Icons.person_remove_outlined,
+    )) {
+      return;
+    }
+    if (!context.mounted) return;
+    final users = useUsers(context, listen: false);
+    final ok = await users.remove(user.id);
+    if (!context.mounted) return;
+    showResult(
+      context,
+      ok: ok,
+      success: '${user.name} foi excluída',
+      error: users.error,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final results = useUsers(context).search(_query, churchId: widget.churchId);
+    final auth = useAuth(context);
+    // Mesmas regras do backend: PATCH /users/facilitator/:id e DELETE /users/:id
+    final canEdit = auth.hasAnyRole([
+      'pastor_local',
+      'secretaria_igreja',
+      'christian_group_lider',
+      'facilitador',
+    ]);
+    final canDelete = auth.hasAnyRole(['pastor_local', 'facilitador']);
 
     return Column(
       children: [
@@ -336,6 +385,7 @@ class _MembersDetailedState extends State<_MembersDetailed> {
                           runSpacing: 8,
                           children: [
                             UserChips(user: user),
+                            if (user.status != null) StatusTag(user.status!),
                             Tag(
                               user.facilitator ?? 'Sem facilitador',
                               icon: Icons.support_agent,
@@ -343,12 +393,22 @@ class _MembersDetailedState extends State<_MembersDetailed> {
                           ],
                         ),
                         onTap: () => UserDetailDialog.show(context, user),
-                        trailing: IconButton(
-                          tooltip: 'Editar integração',
-                          icon: const Icon(Icons.edit_outlined),
-                          onPressed: () =>
-                              UserIntegrationDialog.show(context, user),
-                        ),
+                        // Editar integração: quem o backend permite
+                        // (PATCH /users/facilitator/:id)
+                        trailing:
+                            (canEdit || canDelete) && user.id != auth.user?.id
+                            ? ItemMenu(
+                                onEdit: canEdit
+                                    ? () => UserIntegrationDialog.show(
+                                        context,
+                                        user,
+                                      )
+                                    : null,
+                                onDelete: canDelete
+                                    ? () => _delete(context, user)
+                                    : null,
+                              )
+                            : null,
                       ),
                       const SizedBox(height: 12),
                     ],

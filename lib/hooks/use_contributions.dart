@@ -61,8 +61,18 @@ class ContributionsHook extends Hook {
     double? Function(Contribution) f,
   ) => list.where((c) => !c.isPending).fold(0, (sum, c) => sum + (f(c) ?? 0));
 
-  Future<bool> load() =>
-      run(() async => _mine = await DizimoOfertaApi.getMine());
+  /// Pagamento pelo app ativo na igreja da pessoa (`null` = ainda não sabe).
+  bool? _paymentAvailable;
+  bool? get paymentAvailable => _paymentAvailable;
+
+  Future<bool> load() => run(() async {
+    final results = await Future.wait([
+      DizimoOfertaApi.getMine(),
+      DizimoOfertaApi.paymentAvailable().catchError((_) => false),
+    ]);
+    _mine = results[0] as List<Contribution>;
+    _paymentAvailable = results[1] as bool;
+  });
 
   Future<bool> declare({
     double? tithe,
@@ -97,6 +107,7 @@ class ContributionsHook extends Hook {
 
   void reset() {
     _mine = [];
+    _paymentAvailable = null;
     notifyListeners();
   }
 }

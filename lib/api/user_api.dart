@@ -22,9 +22,67 @@ const userRoles = [
   'midia_lider',
   'pastor_local',
   'tesouraria',
+  'secretaria_igreja',
   'super_admin',
   'programador',
+  ...teamRoles,
 ];
+
+/// Equipes dos departamentos (backend `utils/teams.js`): quem é "membro da
+/// equipe" tem os mesmos poderes do líder; só o líder monta a equipe.
+typedef Team = ({String key, String leader, String role, String label});
+
+const teams = <Team>[
+  (
+    key: 'avancai',
+    leader: 'avancai_lider',
+    role: 'avancai_equipe',
+    label: 'Avançai',
+  ),
+  (
+    key: 'christian_group',
+    leader: 'christian_group_lider',
+    role: 'christian_group_equipe',
+    label: 'Christian Group',
+  ),
+  (key: 'midia', leader: 'midia_lider', role: 'midia_equipe', label: 'Mídia'),
+  (
+    key: 'cura',
+    leader: 'secretaria_cura',
+    role: 'cura_equipe',
+    label: 'Cura da Alma',
+  ),
+  (
+    key: 'financeiro',
+    leader: 'tesouraria',
+    role: 'tesouraria_equipe',
+    label: 'Financeiro',
+  ),
+  (
+    key: 'facilitadores',
+    leader: 'facilitador',
+    role: 'facilitadores_equipe',
+    label: 'Facilitadores',
+  ),
+];
+
+const teamRoles = [
+  'avancai_equipe',
+  'christian_group_equipe',
+  'midia_equipe',
+  'cura_equipe',
+  'tesouraria_equipe',
+  'facilitadores_equipe',
+];
+
+Team teamOf(String key) => teams.firstWhere((t) => t.key == key);
+
+/// Cargos efetivos: cada cargo de equipe vale como o do líder.
+List<String> effectiveRoles(List<String> roles) => {
+  ...roles,
+  for (final t in teams)
+    if (roles.contains(t.role)) t.leader,
+}.toList();
 
 /// Cargos eclesiásticos — enum `ECCLESIASTICAL_ROLES` do backend.
 const ecclesiasticalRoles = [
@@ -60,6 +118,9 @@ String roleLabel(String role) => switch (role) {
   'midia_lider' => 'Líder de Mídia',
   'pastor_local' => 'Pastor Local',
   'tesouraria' => 'Tesouraria',
+  'secretaria_igreja' => 'Secretária da Igreja',
+  _ when teamRoles.contains(role) =>
+    'Equipe ${teams.firstWhere((t) => t.role == role).label}',
   'super_admin' => 'Super Intendente Geral',
   'programador' => 'Programador',
   _ => role,
@@ -123,8 +184,21 @@ class User {
   GiftTestResult? giftTest(String key) =>
       giftTests.where((r) => r.test == key).firstOrNull;
 
-  bool hasAnyRole(List<String> allowed) =>
-      roles.contains('super_admin') || roles.any(allowed.contains);
+  /// Equipe de departamento conta como o líder (ver [effectiveRoles]).
+  bool hasAnyRole(List<String> allowed) {
+    final effective = effectiveRoles(roles);
+    return effective.contains('super_admin') || effective.any(allowed.contains);
+  }
+
+  /// Pode montar a equipe [key]? Só pelos cargos reais (a equipe não monta
+  /// a própria equipe).
+  bool canManageTeam(String key) =>
+      roles.contains('super_admin') ||
+      roles.contains('pastor_local') ||
+      roles.contains('secretaria_igreja') ||
+      roles.contains(teamOf(key).leader);
+
+  bool isInTeam(String key) => roles.contains(teamOf(key).role);
 
   factory User.fromJson(Map<String, dynamic> json) => User(
     id: json['_id'] ?? '',
@@ -285,6 +359,14 @@ class UserApi {
   });
 
   static Future<void> delete(String id) => ApiClient.delete('/users/$id');
+
+  /// "Tornar membro da equipe" ([add]) ou tirar da equipe [team].
+  static Future<User> setTeam(String id, String team, bool add) async =>
+      User.fromJson(
+        add
+            ? await ApiClient.put('/users/$id/team/$team', {})
+            : await ApiClient.delete('/users/$id/team/$team'),
+      );
 
   static Future<User> updateRoles(String id, List<String> roles) async =>
       User.fromJson(

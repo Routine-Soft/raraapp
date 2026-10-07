@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:raraapp/components/dizimo_oferta/contribution_labels.dart';
 import 'package:raraapp/components/dizimo_oferta/money_field.dart';
-import 'package:raraapp/components/shared/custom_text_field.dart';
 import 'package:raraapp/components/shared/date_field.dart';
 import 'package:raraapp/components/shared/feedback.dart';
 import 'package:raraapp/components/shared/form_dialog.dart';
@@ -24,13 +23,12 @@ class _DeclareDialogState extends State<DeclareDialog> {
   final _formKey = GlobalKey<FormState>();
   final _tithe = TextEditingController();
   final _offering = TextEditingController();
-  final _notes = TextEditingController();
   String? _method;
   DateTime? _date = DateTime.now();
 
   @override
   void dispose() {
-    for (final c in [_tithe, _offering, _notes]) {
+    for (final c in [_tithe, _offering]) {
       c.dispose();
     }
     super.dispose();
@@ -55,7 +53,6 @@ class _DeclareDialogState extends State<DeclareDialog> {
       offering: offering,
       method: _method!,
       date: _date ?? DateTime.now(),
-      notes: _notes.text.trim().isEmpty ? null : _notes.text.trim(),
     );
     if (!mounted) return;
     showResult(
@@ -85,16 +82,7 @@ class _DeclareDialogState extends State<DeclareDialog> {
             ).colorScheme.onSurface.withValues(alpha: 0.75),
           ),
         ),
-        MoneyField(
-          label: 'Dízimo (opcional)',
-          controller: _tithe,
-          icon: Icons.volunteer_activism_outlined,
-        ),
-        MoneyField(
-          label: 'Oferta (opcional)',
-          controller: _offering,
-          icon: Icons.card_giftcard,
-        ),
+        // Ordem: forma de pagamento, data, depois os valores
         MethodSelector(
           value: _method,
           onChanged: (m) => setState(() => _method = m),
@@ -104,10 +92,15 @@ class _DeclareDialogState extends State<DeclareDialog> {
           value: _date,
           onChanged: (d) => setState(() => _date = d),
         ),
-        CustomTextField(
-          label: 'Observação (opcional)',
-          controller: _notes,
-          prefixIcon: Icons.notes,
+        MoneyField(
+          label: 'Dízimo (opcional)',
+          controller: _tithe,
+          icon: Icons.volunteer_activism_outlined,
+        ),
+        MoneyField(
+          label: 'Oferta (opcional)',
+          controller: _offering,
+          icon: Icons.card_giftcard,
         ),
       ],
     );

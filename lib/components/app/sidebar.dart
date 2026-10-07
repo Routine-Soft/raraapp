@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:raraapp/api/user_api.dart';
 import 'package:raraapp/components/app/appearance_controls.dart';
 import 'package:raraapp/components/app/signing_out_page.dart';
 import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
@@ -24,8 +25,9 @@ class Sidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = useAuth(context).user;
-    final roles = user?.roles ?? const <String>[];
-    final items = _buildMenuItems(roles);
+    // Equipe de departamento vê o mesmo que o líder
+    final roles = effectiveRoles(user?.roles ?? const <String>[]);
+    final items = _buildMenuItems(context, roles);
 
     return SafeArea(
       child: Column(
@@ -83,12 +85,7 @@ class Sidebar extends StatelessWidget {
           [
             ('home', 'Página Principal', Icons.home, ['user']),
             ('lesson', 'Avançai', Icons.book, ['user']),
-            (
-              'christian-group',
-              'Christian Group',
-              Icons.group,
-              ['user'],
-            ),
+            ('christian-group', 'Christian Group', Icons.group, ['user']),
             ('cura', 'Cura da Alma', Icons.favorite, ['user']),
             (
               'dizimo',
@@ -106,54 +103,59 @@ class Sidebar extends StatelessWidget {
               'lesson-professor',
               'Avançai Liderança',
               Icons.dashboard,
-              ['super_admin', 'avancai_lider'],
+              ['pastor_local', 'secretaria_igreja', 'avancai_lider'],
             ),
             (
               'christian-group-admin',
               'Christian Group Liderança',
               Icons.admin_panel_settings,
-              ['super_admin'],
+              ['pastor_local', 'christian_group_lider'],
             ),
             (
               'midialocal-admin',
               'Mídia Liderança',
               Icons.image,
-              ['super_admin'],
+              ['pastor_local', 'secretaria_igreja', 'midia_lider'],
             ),
             (
               'cura-admin',
               'Cura da Alma Liderança',
               Icons.healing,
-              ['super_admin', 'pastor_local', 'secretaria_cura'],
+              ['pastor_local', 'secretaria_igreja', 'secretaria_cura'],
             ),
             (
               'financeiro',
               'Financeiro Liderança',
               Icons.account_balance_wallet_outlined,
-              ['super_admin', 'pastor_local', 'tesouraria'],
+              ['pastor_local', 'secretaria_igreja', 'tesouraria'],
             ),
             (
               'integration',
               'Membros Liderança',
               Icons.groups_outlined,
-              ['super_admin'],
-            ),
-            (
-              'facilitadores',
-              'Facilitadores',
-              Icons.support_agent,
               [
-                'super_admin',
                 'pastor_local',
+                'secretaria_igreja',
+                'tesouraria',
+                'midia_lider',
+                'avancai_lider',
+                'secretaria_cura',
+                'departamento_lider',
                 'christian_group_lider',
                 'facilitador',
               ],
             ),
             (
+              'facilitadores',
+              'Facilitadores',
+              Icons.support_agent,
+              ['pastor_local', 'secretaria_igreja', 'facilitador'],
+            ),
+            (
               'poderes',
               'Poderes Liderança',
               Icons.manage_accounts_outlined,
-              ['pastor_local'],
+              ['pastor_local', 'secretaria_igreja'],
             ),
           ],
         ),
@@ -215,7 +217,11 @@ class Sidebar extends StatelessWidget {
     return 'Página Principal';
   }
 
-  List<Widget> _buildMenuItems(List<String> roles) {
+  /// Seção que aparece para todos (mesmo sem acesso a nenhum item), com o
+  /// (?) explicando quem pode usar.
+  static const _leadersSection = 'Líderes de Departamento';
+
+  List<Widget> _buildMenuItems(BuildContext context, List<String> roles) {
     bool allowed(List<String> required) =>
         required.contains('user') ||
         roles.contains('super_admin') ||
@@ -223,8 +229,14 @@ class Sidebar extends StatelessWidget {
 
     return [
       for (final (title, items) in _sections)
-        if (items.any((item) => allowed(item.$4))) ...[
-          _SectionLabel(title),
+        if (title == _leadersSection ||
+            items.any((item) => allowed(item.$4))) ...[
+          _SectionLabel(
+            title,
+            onHelp: title == _leadersSection
+                ? () => _showLeadersHelp(context)
+                : null,
+          ),
           for (final (key, label, icon, required) in items)
             if (allowed(required))
               _MenuItem(
@@ -433,10 +445,60 @@ class _MenuItemState extends State<_MenuItem> {
 }
 
 /// Título de seção do menu ("MEMBROS", "PROGRAMADOR"...).
+/// "(?)" de Líderes de Departamento: área restrita e os poderes que dão
+/// acesso a ela.
+void _showLeadersHelp(BuildContext context) => showDialog(
+  context: context,
+  builder: (context) => AlertDialog(
+    icon: const Icon(Icons.lock_outline),
+    title: const Text('Área restrita'),
+    content: SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 6,
+        children: [
+          const Text(
+            'Esta parte é restrita a pessoas que tenham um destes poderes:',
+          ),
+          const SizedBox(height: 4),
+          for (final role in userRoles)
+            Row(
+              children: [
+                Icon(
+                  Icons.verified_user_outlined,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: Text(roleLabel(role))),
+              ],
+            ),
+          const SizedBox(height: 8),
+          Text(
+            'Cada poder libera só as páginas da sua função. Para receber um '
+            'poder, fale com o pastor local da sua igreja.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    ),
+    actions: [
+      FilledButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Entendi'),
+      ),
+    ],
+  ),
+);
+
 class _SectionLabel extends StatelessWidget {
   final String text;
 
-  const _SectionLabel(this.text);
+  /// Mostra o (?) ao lado do título.
+  final VoidCallback? onHelp;
+
+  const _SectionLabel(this.text, {this.onHelp});
 
   @override
   Widget build(BuildContext context) {
@@ -455,6 +517,14 @@ class _SectionLabel extends StatelessWidget {
                 letterSpacing: 1.2,
               ),
             ),
+            if (onHelp != null)
+              IconButton(
+                tooltip: 'Quem pode acessar',
+                visualDensity: VisualDensity.compact,
+                iconSize: 18,
+                onPressed: onHelp,
+                icon: const Icon(Icons.help_outline),
+              ),
             const SizedBox(width: 10),
             Expanded(child: Divider(color: scheme.outlineVariant)),
           ],

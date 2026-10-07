@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:raraapp/api/lesson_api.dart';
 import 'package:raraapp/components/gift_test/gift_tests_card.dart';
+import 'package:raraapp/components/lesson/journey_map.dart';
 import 'package:raraapp/components/lesson/lesson_study_dialog.dart';
 import 'package:raraapp/components/lesson/module_progress.dart';
 import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
@@ -48,7 +49,23 @@ class _LessonPageState extends State<LessonPage> {
           const FadeSlideIn(
             child: BrandLogo('avancai', height: 110, semanticLabel: 'Avançai'),
           ),
+          const SizedBox(height: 12),
+          FadeSlideIn(
+            delay: stagger(1),
+            child: Text(
+              'Ao terminar todas as aulas, você se tornará membro no culto '
+              'da família. 1º domingo de cada mês.',
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
           const SizedBox(height: 20),
+          if (!(lessons.isLoading && lessons.lessons.isEmpty)) ...[
+            FadeSlideIn(delay: stagger(2), child: const JourneyMap()),
+            const SizedBox(height: 20),
+          ],
           if (lessons.isLoading && lessons.lessons.isEmpty)
             for (var i = 0; i < 3; i++) ...[
               const CardSkeleton(),

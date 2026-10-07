@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:raraapp/api/user_api.dart';
 import 'package:raraapp/components/lesson/student_detail_dialog.dart';
+import 'package:raraapp/components/user/status_tag.dart';
 import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
 import 'package:raraapp/components/shared/empty_state.dart';
 import 'package:raraapp/components/shared/list_page.dart';
@@ -102,9 +103,15 @@ class _UserList extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      UserChips(user: user, showMember: false),
+                      UserChips(user: user),
+                      if (user.status != null) StatusTag(user.status!),
                       Tag(
-                        '${progress.forUser(user.id).length} aula(s)',
+                        user.facilitator ?? 'Sem facilitador',
+                        icon: Icons.support_agent,
+                      ),
+                      Tag(
+                        '${progress.forUser(user.id).length} '
+                        '${progress.forUser(user.id).length == 1 ? 'aula' : 'aulas'}',
                         icon: Icons.menu_book_outlined,
                       ),
                     ],

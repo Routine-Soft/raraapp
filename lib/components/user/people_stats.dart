@@ -2,7 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:raraapp/api/user_api.dart';
+import 'package:raraapp/components/shared/content_dialog.dart';
 import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
+import 'package:raraapp/components/user/user_chips.dart';
+import 'package:raraapp/components/user/user_detail_dialog.dart';
 import 'package:raraapp/hooks/use_users.dart';
 
 /// Filtro dos dashboards: quem entra nos números (todas / membros / não
@@ -82,12 +85,16 @@ class StatTile extends StatelessWidget {
   /// Versão menor, para os cards de cada igreja.
   final bool dense;
 
+  /// Toque no card (ex.: abrir a lista dessas pessoas).
+  final VoidCallback? onTap;
+
   const StatTile(
     this.label,
     this.value,
     this.icon, {
     super.key,
     this.dense = false,
+    this.onTap,
   });
 
   @override
@@ -97,55 +104,105 @@ class StatTile extends StatelessWidget {
 
     return Card(
       margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
       color: dense ? scheme.surfaceContainerHigh : null,
-      child: Padding(
-        padding: EdgeInsets.all(dense ? 10 : 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: EdgeInsets.all(dense ? 5 : 8),
-              decoration: BoxDecoration(
-                color: scheme.primary.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.all(dense ? 10 : 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: EdgeInsets.all(dense ? 5 : 8),
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: scheme.primary, size: dense ? 16 : 20),
               ),
-              child: Icon(icon, color: scheme.primary, size: dense ? 16 : 20),
-            ),
-            const Spacer(),
-            FittedBox(
-              child: CountUpText(
-                value,
-                style: (dense ? text.titleLarge : text.headlineMedium)
-                    ?.copyWith(fontWeight: FontWeight.w800),
+              const Spacer(),
+              FittedBox(
+                child: CountUpText(
+                  value,
+                  style: (dense ? text.titleLarge : text.headlineMedium)
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
               ),
-            ),
-            Text(
-              label,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style:
-                  (dense ? text.bodySmall : null)?.copyWith(
-                    color: scheme.onSurface.withValues(alpha: 0.75),
-                  ) ??
-                  TextStyle(color: scheme.onSurface.withValues(alpha: 0.75)),
-            ),
-          ],
+              Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style:
+                    (dense ? text.bodySmall : null)?.copyWith(
+                      color: scheme.onSurface.withValues(alpha: 0.75),
+                    ) ??
+                    TextStyle(color: scheme.onSurface.withValues(alpha: 0.75)),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-/// Grade de [StatTile]s.
-class StatGrid extends StatelessWidget {
-  final List<(String, int, IconData)> stats;
+/// Um card do dashboard: nome, ícone e quem entra nele.
+typedef PeopleCategory = ({
+  String label,
+  IconData icon,
+  bool Function(User) test,
+});
+
+/// Números gerais: cadastradas, membros, batizados, homens e mulheres.
+List<PeopleCategory> peopleCategories({bool withTotal = false}) => [
+  if (withTotal)
+    (
+      label: 'Pessoas cadastradas',
+      icon: Icons.groups_outlined,
+      test: (_) => true,
+    ),
+  (label: 'Não Membros', icon: Icons.person_outline, test: (u) => !u.member),
+  (label: 'Membros', icon: Icons.verified_user_outlined, test: (u) => u.member),
+  (
+    label: 'Batizados',
+    icon: Icons.water_drop_outlined,
+    test: (u) => u.baptized,
+  ),
+  (label: 'Não Batizados', icon: Icons.water_drop, test: (u) => !u.baptized),
+  (label: 'Homens', icon: Icons.man, test: (u) => u.gender == 'Masculino'),
+  (label: 'Mulheres', icon: Icons.woman, test: (u) => u.gender == 'Feminino'),
+];
+
+/// Um card por cargo eclesiástico.
+List<PeopleCategory> ecclesiasticalCategories() => [
+  for (final role in ecclesiasticalRoles)
+    (
+      label: ecclesiasticalRoleLabel(role),
+      icon: Icons.workspace_premium_outlined,
+      test: (u) => u.ecclesiasticalRoles.contains(role),
+    ),
+];
+
+/// Grade de cards contados a partir de [people]; tocar num card abre a
+/// lista dessas pessoas (e tocar numa pessoa, os dados dela).
+class PeopleStatGrid extends StatelessWidget {
+  final List<PeopleCategory> categories;
+  final List<User> people;
   final int columns;
   final bool dense;
 
-  const StatGrid(this.stats, {super.key, this.columns = 2, this.dense = false});
+  const PeopleStatGrid(
+    this.categories,
+    this.people, {
+    super.key,
+    this.columns = 2,
+    this.dense = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final groups = [for (final c in categories) people.where(c.test).toList()];
     return GridView.count(
       crossAxisCount: columns,
       shrinkWrap: true,
@@ -155,39 +212,85 @@ class StatGrid extends StatelessWidget {
       crossAxisSpacing: dense ? 8 : 12,
       childAspectRatio: dense ? 1.05 : 1.1,
       children: [
-        for (final (i, (label, value, icon)) in stats.indexed)
+        for (final (i, c) in categories.indexed)
           FadeSlideIn(
             delay: stagger(i + 1, stepMs: 50),
-            child: StatTile(label, value, icon, dense: dense),
+            child: StatTile(
+              c.label,
+              groups[i].length,
+              c.icon,
+              dense: dense,
+              onTap: () => PeopleListDialog.show(context, c.label, groups[i]),
+            ),
           ),
       ],
     );
   }
 }
 
-/// Números gerais: cadastradas, membros, batizados, homens e mulheres.
-List<(String, int, IconData)> peopleCounts(
-  PeopleStats s, {
-  bool withTotal = false,
-}) => [
-  if (withTotal) ('Pessoas cadastradas', s.total, Icons.groups_outlined),
-  ('Não Membros', s.nonMembers, Icons.person_outline),
-  ('Membros', s.members, Icons.verified_user_outlined),
-  ('Batizados', s.baptized, Icons.water_drop_outlined),
-  ('Não Batizados', s.notBaptized, Icons.water_drop),
-  ('Homens', s.men, Icons.man),
-  ('Mulheres', s.women, Icons.woman),
-];
+/// Lista das pessoas de um card; tocar abre os dados da pessoa.
+class PeopleListDialog extends StatelessWidget {
+  final String title;
+  final List<User> people;
 
-/// Um card por cargo eclesiástico.
-List<(String, int, IconData)> ecclesiasticalCounts(PeopleStats s) => [
-  for (final role in ecclesiasticalRoles)
-    (
-      ecclesiasticalRoleLabel(role),
-      s.ecclesiastical[role] ?? 0,
-      Icons.workspace_premium_outlined,
+  const PeopleListDialog({
+    super.key,
+    required this.title,
+    required this.people,
+  });
+
+  static Future<void> show(
+    BuildContext context,
+    String title,
+    List<User> people,
+  ) => showDialog(
+    context: context,
+    builder: (_) => PeopleListDialog(
+      title: title,
+      people: [...people]..sort((a, b) => a.name.compareTo(b.name)),
     ),
-];
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return ContentDialog(
+      title: title,
+      subtitle: '${people.length} ${people.length == 1 ? 'pessoa' : 'pessoas'}',
+      actions: [
+        OutlinedButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Fechar'),
+        ),
+      ],
+      children: [
+        if (people.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Text('Ninguém aqui ainda.'),
+          )
+        else
+          Column(
+            children: [
+              for (final user in people)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: UserAvatar(user, size: 40),
+                  title: Text(
+                    user.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(user.phone ?? user.email),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => UserDetailDialog.show(context, user),
+                ),
+            ],
+          ),
+      ],
+    );
+  }
+}
 
 /// Faixa etária em pizza (rosca) + legenda com quantidade e porcentagem.
 /// A faixa com mais pessoas aparece em destaque.

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:raraapp/api/church_api.dart';
+import 'package:raraapp/api/user_api.dart';
 import 'package:raraapp/components/dizimo_oferta/contribution_labels.dart';
 import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
 import 'package:raraapp/components/theme/app_effects.dart';
@@ -34,9 +35,8 @@ class _GeneralDashboardState extends State<GeneralDashboard> {
     final users = useUsers(context);
     final churches = [...useChurches(context).churches]
       ..sort((a, b) => a.name.compareTo(b.name));
-    PeopleStats statsOf(String? churchId) => PeopleStats.of(
-      users.people(churchId: churchId, scope: _scope, gender: _gender),
-    );
+    List<User> peopleOf(String? churchId) =>
+        users.people(churchId: churchId, scope: _scope, gender: _gender);
 
     // "Novos membros" do mês anterior (o mês que já fechou)
     final now = DateTime.now();
@@ -59,7 +59,7 @@ class _GeneralDashboardState extends State<GeneralDashboard> {
           const SizedBox(height: 16),
           FadeSlideIn(
             child: _SupremeCard(
-              stats: statsOf(null),
+              people: peopleOf(null),
               churchCount: churches.length,
             ),
           ),
@@ -76,7 +76,7 @@ class _GeneralDashboardState extends State<GeneralDashboard> {
               delay: stagger(i.clamp(0, 8) + 1, stepMs: 60),
               child: _ChurchCard(
                 church: church,
-                stats: statsOf(church.id),
+                people: peopleOf(church.id),
                 newMembers: users
                     .newMembers(
                       previous.year,
@@ -97,13 +97,14 @@ class _GeneralDashboardState extends State<GeneralDashboard> {
 
 /// Visão geral: todas as igrejas juntas.
 class _SupremeCard extends StatelessWidget {
-  final PeopleStats stats;
+  final List<User> people;
   final int churchCount;
 
-  const _SupremeCard({required this.stats, required this.churchCount});
+  const _SupremeCard({required this.people, required this.churchCount});
 
   @override
   Widget build(BuildContext context) {
+    final stats = PeopleStats.of(people);
     final effects = AppEffects.of(context);
     final text = Theme.of(context).textTheme;
 
@@ -142,8 +143,9 @@ class _SupremeCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          StatGrid(
-            peopleCounts(stats, withTotal: true),
+          PeopleStatGrid(
+            peopleCategories(withTotal: true),
+            people,
             columns: 3,
             dense: true,
           ),
@@ -151,8 +153,9 @@ class _SupremeCard extends StatelessWidget {
           StatsSection(
             title: 'Cargo eclesiástico',
             icon: Icons.workspace_premium_outlined,
-            child: StatGrid(
-              ecclesiasticalCounts(stats),
+            child: PeopleStatGrid(
+              ecclesiasticalCategories(),
+              people,
               columns: 3,
               dense: true,
             ),
@@ -176,13 +179,13 @@ class _SupremeCard extends StatelessWidget {
 /// cargos e faixa etária.
 class _ChurchCard extends StatefulWidget {
   final Church church;
-  final PeopleStats stats;
+  final List<User> people;
   final int newMembers;
   final DateTime previousMonth;
 
   const _ChurchCard({
     required this.church,
-    required this.stats,
+    required this.people,
     required this.newMembers,
     required this.previousMonth,
   });
@@ -198,7 +201,8 @@ class _ChurchCardState extends State<_ChurchCard> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final stats = widget.stats;
+    final people = widget.people;
+    final stats = PeopleStats.of(people);
 
     return Card(
       margin: EdgeInsets.zero,
@@ -222,8 +226,9 @@ class _ChurchCardState extends State<_ChurchCard> {
               ],
             ),
             const SizedBox(height: 12),
-            StatGrid(
-              peopleCounts(stats, withTotal: true),
+            PeopleStatGrid(
+              peopleCategories(withTotal: true),
+              people,
               columns: 3,
               dense: true,
             ),
@@ -266,8 +271,9 @@ class _ChurchCardState extends State<_ChurchCard> {
                           StatsSection(
                             title: 'Cargo eclesiástico',
                             icon: Icons.workspace_premium_outlined,
-                            child: StatGrid(
-                              ecclesiasticalCounts(stats),
+                            child: PeopleStatGrid(
+                              ecclesiasticalCategories(),
+                              people,
                               columns: 3,
                               dense: true,
                             ),

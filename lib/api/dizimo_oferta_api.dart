@@ -164,6 +164,10 @@ class DizimoOfertaApi {
   );
 
   /// Cria o pagamento no Mercado Pago. Devolve o link da página de pagamento.
+  /// A igreja da pessoa já tem o pagamento pelo app (Mercado Pago) ativo?
+  static Future<bool> paymentAvailable() async =>
+      (await ApiClient.get('/dizimo-oferta/me/available'))['available'] == true;
+
   static Future<String> checkout({double? tithe, double? offering}) async {
     final data = await ApiClient.post('/dizimo-oferta/checkout', {
       'tithe': tithe,

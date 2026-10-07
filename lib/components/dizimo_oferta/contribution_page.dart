@@ -101,6 +101,7 @@ class _ContributionPageState extends State<ContributionPage> {
             child: _ThisMonth(
               tithe: current?.tithe ?? 0,
               offering: current?.offering ?? 0,
+              canGive: contributions.paymentAvailable ?? false,
             ),
           ),
           const SizedBox(height: 12),
@@ -261,7 +262,14 @@ class _ThisMonth extends StatelessWidget {
   final double tithe;
   final double offering;
 
-  const _ThisMonth({required this.tithe, required this.offering});
+  /// Igreja sem as chaves do Mercado Pago: botão fosco e desabilitado.
+  final bool canGive;
+
+  const _ThisMonth({
+    required this.tithe,
+    required this.offering,
+    required this.canGive,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -307,11 +315,20 @@ class _ThisMonth extends StatelessWidget {
             spacing: 12,
             children: [amount('Dízimo', tithe), amount('Oferta', offering)],
           ),
-          GlowButton(
-            label: 'Dizimar / Ofertar pelo app',
-            icon: Icons.favorite,
-            onPressed: () => GiveSheet.show(context),
+          Opacity(
+            opacity: canGive ? 1 : 0.45,
+            child: GlowButton(
+              label: 'Dizimar / Ofertar pelo app',
+              icon: Icons.favorite,
+              onPressed: canGive ? () => GiveSheet.show(context) : null,
+            ),
           ),
+          if (!canGive)
+            Text(
+              'Ainda não está disponível na sua igreja',
+              textAlign: TextAlign.center,
+              style: text.bodySmall,
+            ),
         ],
       ),
     );

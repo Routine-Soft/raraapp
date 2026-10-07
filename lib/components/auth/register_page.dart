@@ -17,6 +17,7 @@ import 'package:raraapp/components/shared/input_formatters.dart';
 import 'package:raraapp/components/shared/rara_logo.dart';
 import 'package:raraapp/components/shared/section.dart';
 import 'package:raraapp/components/shared/showcase_page.dart';
+import 'package:raraapp/components/user/ecclesiastical_roles_field.dart';
 import 'package:raraapp/constants/register_constants.dart';
 import 'package:raraapp/hooks/use_auth.dart';
 import 'package:raraapp/utils/validators.dart';
@@ -42,6 +43,7 @@ class _RegisterPageState extends State<RegisterPage> {
   String? _churchId;
   DateTime? _birthdate;
   bool _baptized = false;
+  List<String> _ecclesiastical = [];
 
   @override
   void dispose() {
@@ -72,6 +74,7 @@ class _RegisterPageState extends State<RegisterPage> {
       churchId: _churchId,
       address: _address.toAddress(),
       baptized: _baptized,
+      ecclesiasticalRoles: _ecclesiastical,
     );
 
     final auth = useAuth(context, listen: false);
@@ -203,6 +206,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   ChurchDropdown(
                     value: _churchId,
                     onChanged: (id) => setState(() => _churchId = id),
+                  ),
+                  EcclesiasticalRolesField(
+                    value: _ecclesiastical,
+                    onChanged: (v) => setState(() => _ecclesiastical = v),
                   ),
                 ],
               ),

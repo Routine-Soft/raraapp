@@ -16,6 +16,7 @@ import 'package:raraapp/components/dizimo_oferta/treasury_page.dart';
 import 'package:raraapp/components/user/integration_page.dart';
 import 'package:raraapp/components/user/my_account_page.dart';
 import 'package:raraapp/components/user/powers_page.dart';
+import 'package:raraapp/components/user/team_tab.dart';
 
 class AuthenticatedApp extends StatefulWidget {
   const AuthenticatedApp({super.key});
@@ -118,18 +119,34 @@ class _AuthenticatedAppState extends State<AuthenticatedApp> {
     return switch (menuKey) {
       'home' => const HomePage(),
       'lesson' => const LessonPage(),
-      'lesson-professor' => const LessonTeacherPage(),
+      // Departamentos: o líder ganha a aba "Minha Equipe"
+      'lesson-professor' => const DepartmentPage(
+        team: 'avancai',
+        child: LessonTeacherPage(),
+      ),
       'lesson-supremo' => const LessonAdminPage(),
       'christian-group' => const ChristianGroupPage(),
-      'christian-group-admin' => const ChristianGroupAdminPage(),
-      'midialocal-admin' => const MidiaLocalAdminPage(),
+      'christian-group-admin' => const DepartmentPage(
+        team: 'christian_group',
+        child: ChristianGroupAdminPage(),
+      ),
+      'midialocal-admin' => const DepartmentPage(
+        team: 'midia',
+        child: MidiaLocalAdminPage(),
+      ),
       'church-admin' => const ChurchAdminPage(),
       'integration' => const MembersLeadershipPage(),
       'facilitadores' => const FacilitatorsPage(),
       'cura' => const CuraPage(),
-      'cura-admin' => const CuraBoardPage(),
+      'cura-admin' => const DepartmentPage(
+        team: 'cura',
+        child: CuraBoardPage(),
+      ),
       'dizimo' => const ContributionPage(),
-      'financeiro' => const TreasuryPage(),
+      'financeiro' => const DepartmentPage(
+        team: 'financeiro',
+        child: TreasuryPage(),
+      ),
       'financeiro-geral' => const TreasuryPage(allChurches: true),
       'membros-geral' => const MembersGeneralPage(),
       'poderes' => const PowersPage(),

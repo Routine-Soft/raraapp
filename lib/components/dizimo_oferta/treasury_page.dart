@@ -35,6 +35,17 @@ class _TreasuryPageState extends State<TreasuryPage> {
   /// Busca nos lançamentos.
   String _query = '';
 
+  /// Filtro dos lançamentos: tudo, só dízimo ou só oferta.
+  _Kind _kind = _Kind.all;
+
+  bool _visible(Contribution c) =>
+      c.matches(_query) &&
+      switch (_kind) {
+        _Kind.all => true,
+        _Kind.tithe => (c.tithe ?? 0) > 0,
+        _Kind.offering => (c.offering ?? 0) > 0,
+      };
+
   @override
   void initState() {
     super.initState();
@@ -210,21 +221,33 @@ class _TreasuryPageState extends State<TreasuryPage> {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  SegmentedButton<_Kind>(
+                    showSelectedIcon: false,
+                    segments: const [
+                      ButtonSegment(value: _Kind.all, label: Text('Tudo')),
+                      ButtonSegment(value: _Kind.tithe, label: Text('Dízimo')),
+                      ButtonSegment(
+                        value: _Kind.offering,
+                        label: Text('Oferta'),
+                      ),
+                    ],
+                    selected: {_kind},
+                    onSelectionChanged: (v) => setState(() => _kind = v.first),
+                  ),
+                  const SizedBox(height: 12),
                 ],
                 if (treasury.entries.isEmpty)
                   const EmptyState(
                     icon: Icons.receipt_long,
                     message: 'Nenhuma contribuição neste período',
                   )
-                else if (!treasury.entries.any((c) => c.matches(_query)))
+                else if (!treasury.entries.any(_visible))
                   const EmptyState(
                     icon: Icons.search_off,
                     message: 'Nenhum lançamento encontrado',
                   )
                 else
-                  for (final c in treasury.entries.where(
-                    (c) => c.matches(_query),
-                  )) ...[
+                  for (final c in treasury.entries.where(_visible)) ...[
                     _EntryCard(contribution: c, onDelete: _delete),
                     const SizedBox(height: 10),
                   ],
@@ -236,6 +259,8 @@ class _TreasuryPageState extends State<TreasuryPage> {
     );
   }
 }
+
+enum _Kind { all, tithe, offering }
 
 /// ‹ Setembro de 2026 › — tocar no meio abre o calendário.
 class _PeriodNavigator extends StatelessWidget {
@@ -344,7 +369,11 @@ class _TotalCard extends StatelessWidget {
             report.total,
             style: text.displaySmall?.copyWith(fontWeight: FontWeight.w800),
           ),
-          Text('${report.count} contribuição(ões)', style: text.bodyMedium),
+          Text(
+            '${report.count} '
+            '${report.count == 1 ? 'contribuição' : 'contribuições'}',
+            style: text.bodyMedium,
+          ),
         ],
       ),
     );
