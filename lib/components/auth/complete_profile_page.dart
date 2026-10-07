@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:raraapp/api/user_api.dart';
 import 'package:raraapp/components/app/authenticated_app.dart';
+import 'package:raraapp/components/app/signing_out_page.dart';
 import 'package:raraapp/components/church/church_dropdown.dart';
 import 'package:raraapp/components/shared/address_fields.dart';
 import 'package:raraapp/components/shared/custom_checkbox.dart';
@@ -22,6 +23,7 @@ import 'package:raraapp/utils/validators.dart';
 
 /// Depois do primeiro login com Google: o Google só entrega nome e email,
 /// então a pessoa completa o resto do cadastro (igual ao "Criar conta").
+/// Não dá para pular: quem não tem igreja volta para cá ao entrar.
 class CompleteProfilePage extends StatefulWidget {
   const CompleteProfilePage({super.key});
 
@@ -232,9 +234,13 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
               ),
             ),
             const SizedBox(height: 12),
-            TextButton(
-              onPressed: auth.isLoading ? null : _enterApp,
-              child: const Text('Completar depois'),
+            // Sem "completar depois": o cadastro é feito todo aqui
+            TextButton.icon(
+              onPressed: auth.isLoading
+                  ? null
+                  : () => SigningOutPage.open(context),
+              icon: const Icon(Icons.logout),
+              label: const Text('Sair'),
             ),
           ],
         ),

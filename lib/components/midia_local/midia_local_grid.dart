@@ -3,9 +3,11 @@ import 'package:raraapp/components/midia_local/midia_local_card.dart';
 import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
 import 'package:raraapp/components/shared/effects/hover_lift.dart';
 import 'package:raraapp/components/shared/list_page.dart';
+import 'package:raraapp/hooks/use_auth.dart';
 import 'package:raraapp/hooks/use_midia_locals.dart';
 
-/// Lista de mídias (Home). Carrega a lista sozinha.
+/// Lista de mídias da igreja da pessoa (Home). Carrega a lista sozinha.
+/// Sem igreja escolhida não mostra nenhuma mídia.
 class MidiaLocalGrid extends StatefulWidget {
   const MidiaLocalGrid({super.key});
 
@@ -26,20 +28,27 @@ class _MidiaLocalGridState extends State<MidiaLocalGrid> {
   @override
   Widget build(BuildContext context) {
     final midias = useMidiaLocals(context);
+    final churchId = useAuth(context).user?.churchId;
 
+    if (churchId == null) {
+      return const _Empty(
+        message: 'Escolha a sua igreja em Minha Conta para ver os avisos',
+      );
+    }
     if (midias.isLoading && midias.midias.isEmpty) {
       return _Grid(children: List.filled(3, const CardSkeleton()));
     }
-    if (midias.midias.isEmpty) {
+    final mine = midias.midias.where((m) => m.churchId == churchId).toList();
+    if (mine.isEmpty) {
       return _Empty(message: midias.error ?? 'Nenhuma mídia local encontrada');
     }
 
     return _Grid(
       children: [
-        for (var i = 0; i < midias.midias.length; i++)
+        for (var i = 0; i < mine.length; i++)
           FadeSlideIn(
             delay: stagger(i + 3, stepMs: 70),
-            child: HoverLift(child: MidiaLocalCard(midia: midias.midias[i])),
+            child: HoverLift(child: MidiaLocalCard(midia: mine[i])),
           ),
       ],
     );

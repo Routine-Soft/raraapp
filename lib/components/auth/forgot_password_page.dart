@@ -106,7 +106,10 @@ class ResetPasswordPage extends StatelessWidget {
   }
 }
 
-/// Primeira tela depois de entrar: pede a troca da senha provisória.
-Widget homeAfterLogin(AuthHook auth) => auth.mustChangePassword
+/// Primeira tela depois de entrar: termina o cadastro (sem igreja) ou pede
+/// a troca da senha provisória.
+Widget homeAfterLogin(AuthHook auth) => auth.needsProfile
+    ? const CompleteProfilePage()
+    : auth.mustChangePassword
     ? ResetPasswordPage(canSkip: auth.viaGoogle)
     : const AuthenticatedApp();
