@@ -55,6 +55,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
         prefixIcon: widget.prefixIcon != null ? Icon(widget.prefixIcon) : null,
         suffixIcon: widget.obscureText
             ? IconButton(
+                tooltip: _obscureText ? 'Mostrar senha' : 'Ocultar senha',
                 icon: Icon(
                   _obscureText ? Icons.visibility_off : Icons.visibility,
                 ),
