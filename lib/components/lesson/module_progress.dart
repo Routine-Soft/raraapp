@@ -20,7 +20,7 @@ class ModuleProgress extends StatelessWidget {
     return Column(
       spacing: 16,
       children: [
-        for (final module in lessonModules)
+        for (final module in lessonsByModule.keys)
           ProgressBar(
             label: moduleLabel(module),
             completed: (lessonsByModule[module] ?? const [])

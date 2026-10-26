@@ -10,11 +10,13 @@ class LessonsHook extends CrudHook<Lesson> {
   List<Lesson> get lessons => items;
 
   /// Aulas agrupadas por módulo (na ordem de [lessonModules]) e por número.
-  Map<String, List<Lesson>> get byModule {
+  /// Quem é batizado não faz o RESET: o módulo some da trilha e do total.
+  Map<String, List<Lesson>> byModule({bool baptized = false}) {
     final grouped = {for (final m in lessonModules) m: <Lesson>[]};
     for (final lesson in items) {
       grouped.putIfAbsent(lesson.module, () => []).add(lesson);
     }
+    if (baptized) grouped.remove('reset');
     for (final list in grouped.values) {
       list.sort((a, b) => a.number.compareTo(b.number));
     }

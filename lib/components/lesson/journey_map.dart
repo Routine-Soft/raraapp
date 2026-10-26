@@ -62,13 +62,15 @@ class _JourneyMapState extends State<JourneyMap>
   }
 
   List<_Step> _steps(BuildContext context) {
-    final byModule = useLessons(context).byModule;
     final progress = useLessonProgress(context);
     final user = useAuth(context).user;
+    final byModule = useLessons(
+      context,
+    ).byModule(baptized: user?.baptized ?? false);
     final tests = useGiftTests(context);
     return [
-      for (final module in lessonModules)
-        for (final lesson in byModule[module] ?? const <Lesson>[])
+      for (final MapEntry(key: module, value: lessons) in byModule.entries)
+        for (final lesson in lessons)
           _Step(
             module: module,
             done: progress.mineForLesson(lesson.id) != null,

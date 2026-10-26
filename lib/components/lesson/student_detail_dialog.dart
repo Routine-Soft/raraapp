@@ -69,7 +69,9 @@ class StudentDetailDialog extends StatelessWidget {
         _MembershipCard(user: current),
         const SectionTitle('Progresso por Módulo', icon: Icons.insights),
         ModuleProgress(
-          lessonsByModule: useLessons(context).byModule,
+          lessonsByModule: useLessons(
+            context,
+          ).byModule(baptized: current.baptized),
           progresses: progresses,
         ),
         const SectionTitle('Testes de Dons', icon: Icons.auto_awesome_outlined),

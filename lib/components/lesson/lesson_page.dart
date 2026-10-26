@@ -8,6 +8,7 @@ import 'package:raraapp/components/shared/effects/fade_slide_in.dart';
 import 'package:raraapp/components/shared/empty_state.dart';
 import 'package:raraapp/components/shared/list_page.dart';
 import 'package:raraapp/components/shared/brand_logo.dart';
+import 'package:raraapp/hooks/use_auth.dart';
 import 'package:raraapp/hooks/use_lesson_progress.dart';
 import 'package:raraapp/hooks/use_lessons.dart';
 
@@ -36,7 +37,10 @@ class _LessonPageState extends State<LessonPage> {
   @override
   Widget build(BuildContext context) {
     final lessons = useLessons(context);
-    final modules = lessons.byModule.entries
+    final baptized = useAuth(context).user?.baptized ?? false;
+    final modules = lessons
+        .byModule(baptized: baptized)
+        .entries
         .where((e) => e.value.isNotEmpty)
         .toList();
 
