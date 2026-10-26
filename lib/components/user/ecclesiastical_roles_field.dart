@@ -31,9 +31,14 @@ class EcclesiasticalRolesField extends StatelessWidget {
                 label: Text(ecclesiasticalRoleLabel(role)),
                 selected: value.contains(role),
                 onSelected: (selected) => onChanged([
-                  // mantém a ordem da lista oficial
+                  // mantém a ordem da lista oficial; "Nenhum" é sozinho
                   for (final r in ecclesiasticalRoles)
-                    if (r == role ? selected : value.contains(r)) r,
+                    if (r == role
+                        ? selected
+                        : value.contains(r) &&
+                              !(selected &&
+                                  (r == 'nenhum' || role == 'nenhum')))
+                      r,
                 ]),
               ),
           ],

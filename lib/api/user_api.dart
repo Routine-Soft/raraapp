@@ -85,7 +85,9 @@ List<String> effectiveRoles(List<String> roles) => {
 }.toList();
 
 /// Cargos eclesiásticos — enum `ECCLESIASTICAL_ROLES` do backend.
+/// 'nenhum' é para quem não tem cargo (não se mistura com os outros).
 const ecclesiasticalRoles = [
+  'nenhum',
   'pastor',
   'presbitero',
   'apostolo',
@@ -95,6 +97,7 @@ const ecclesiasticalRoles = [
 ];
 
 String ecclesiasticalRoleLabel(String role) => switch (role) {
+  'nenhum' => 'Nenhum',
   'pastor' => 'Pastor(a)',
   'presbitero' => 'Presbítero(a)',
   'apostolo' => 'Apóstolo(a)',
